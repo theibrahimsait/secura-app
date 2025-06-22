@@ -1,5 +1,3 @@
-/// <reference types="https://esm.sh/@supabase/functions-js@2.4.1/src/edge-runtime.d.ts" />
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { Resend } from "npm:resend@2.0.0";
@@ -43,10 +41,24 @@ const handler = async (req: Request): Promise<Response> => {
       createdBy
     }: CreateUserRequest = await req.json();
 
+    // Get the user's JWT from the request headers
+    const authHeader = req.headers.get('Authorization')!;
+
     // Create Supabase admin client with service role key
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    
+    // Create a client that impersonates the user to respect RLS
+    const userSupabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      }
     );
 
     let authData;
@@ -81,7 +93,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       // Create a record in public.users for the new agent
       if (role === 'agent' && fullName && agencyId && createdBy) {
-        const { error: dbError } = await supabase.from('users').insert({
+        const { error: dbError } = await userSupabase.from('users').insert({
           auth_user_id: authData.user.id,
           email,
           full_name: fullName,
