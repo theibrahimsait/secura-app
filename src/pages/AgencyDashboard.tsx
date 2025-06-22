@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,6 +62,15 @@ const AgencyDashboard = () => {
     }
   };
 
+  const generateSecurePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
   const createAgent = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateLoading(true);
@@ -76,20 +84,26 @@ const AgencyDashboard = () => {
         body: {
           email: form.email,
           password: tempPassword,
-          agencyName: userProfile?.agency_id, // Will be resolved to agency name in the function
-          adminName: form.fullName,
           role: 'agent',
           fullName: form.fullName,
           phone: form.phone,
           agencyId: userProfile?.agency_id,
           createdBy: userProfile?.id,
-        }
+        },
       });
 
-      if (error) throw error;
+      if (error) {
+        // This catches network errors or function invocation errors
+        throw error;
+      }
+
+      if (!data.success) {
+        // This catches errors reported by the function itself
+        throw new Error(data.error || 'Failed to create agent account');
+      }
 
       toast({
-        title: "Agent Created Successfully",
+        title: 'Agent Created Successfully',
         description: `Welcome email sent to ${form.email}`,
       });
 
@@ -101,22 +115,13 @@ const AgencyDashboard = () => {
     } catch (error: any) {
       console.error('Error creating agent:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to create agent",
-        variant: "destructive",
+        title: 'Error',
+        description: error.message || 'Failed to create agent',
+        variant: 'destructive',
       });
     } finally {
       setCreateLoading(false);
     }
-  };
-
-  const generateSecurePassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
-    let password = '';
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
   };
 
   useEffect(() => {

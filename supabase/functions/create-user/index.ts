@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { Resend } from "npm:resend@2.0.0";
@@ -28,12 +27,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { 
-      email, 
-      password, 
-      agencyName, 
-      adminName, 
-      isPasswordReset, 
+    const {
+      email,
+      password,
+      agencyName,
+      adminName,
+      isPasswordReset,
       userId,
       role = 'agency_admin',
       fullName,
@@ -61,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
         console.error('Password update error:', updateError);
         throw updateError;
       }
-      
+
       authData = { data: updateData };
     } else {
       // Create new auth user
@@ -75,7 +74,7 @@ const handler = async (req: Request): Promise<Response> => {
         console.error('Auth creation error:', authError);
         throw authError;
       }
-      
+
       authData = createData;
 
       // Create user record in public.users table
@@ -101,34 +100,34 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send welcome email with credentials
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-    
+
     if (resend) {
       try {
-        const emailSubject = isPasswordReset 
+        const emailSubject = isPasswordReset
           ? "Secura - Your Account Credentials Have Been Updated"
           : role === 'agent'
           ? "Welcome to Secura - Your Agent Account"
           : "Welcome to Secura - Your Agency Account";
-          
+
         const emailContent = isPasswordReset
           ? `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h1 style="color: #2563eb;">Account Credentials Updated</h1>
               <p>Hello ${adminName || 'Admin'},</p>
               <p>Your account credentials for <strong>${agencyName || 'your agency'}</strong> have been updated.</p>
-              
+
               <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3>Your Updated Login Credentials:</h3>
                 <p><strong>Email:</strong> ${email}</p>
                 <p><strong>New Password:</strong> <code style="background-color: #e5e7eb; padding: 4px 8px; border-radius: 4px;">${password}</code></p>
               </div>
-              
+
               <p><strong>Important:</strong> Please change your password after logging in for security purposes.</p>
-              
-              <p>You can access your dashboard at: <a href="https://login.secura.me/auth/login">https://login.secura.me/auth/login</a></p>
-              
+
+              <p>You can access your dashboard at: <a href="${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.secura.app') || 'your-app-url'}/auth/login">Login Here</a></p>
+
               <p>If you have any questions, please don't hesitate to contact our support team.</p>
-              
+
               <p>Best regards,<br>The Secura Team</p>
             </div>
           `
@@ -138,19 +137,19 @@ const handler = async (req: Request): Promise<Response> => {
               <h1 style="color: #2563eb;">Welcome to Secura</h1>
               <p>Hello ${fullName || adminName},</p>
               <p>Your agent account has been created successfully.</p>
-              
+
               <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3>Your Login Credentials:</h3>
                 <p><strong>Email:</strong> ${email}</p>
                 <p><strong>Temporary Password:</strong> <code style="background-color: #e5e7eb; padding: 4px 8px; border-radius: 4px;">${password}</code></p>
               </div>
-              
+
               <p><strong>Important:</strong> Please change your password after your first login for security purposes.</p>
-              
-              <p>You can access your dashboard at: <a href="https://login.secura.me/auth/login">https://login.secura.me/auth/login</a></p>
-              
+
+              <p>You can access your dashboard at: <a href="${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.secura.app') || 'your-app-url'}/auth/login">Login Here</a></p>
+
               <p>If you have any questions, please don't hesitate to contact our support team.</p>
-              
+
               <p>Best regards,<br>The Secura Team</p>
             </div>
           `
@@ -159,19 +158,19 @@ const handler = async (req: Request): Promise<Response> => {
               <h1 style="color: #2563eb;">Welcome to Secura</h1>
               <p>Hello ${adminName || 'Admin'},</p>
               <p>Your agency account for <strong>${agencyName || 'your agency'}</strong> has been created successfully.</p>
-              
+
               <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3>Your Login Credentials:</h3>
                 <p><strong>Email:</strong> ${email}</p>
                 <p><strong>Temporary Password:</strong> <code style="background-color: #e5e7eb; padding: 4px 8px; border-radius: 4px;">${password}</code></p>
               </div>
-              
+
               <p><strong>Important:</strong> Please change your password after your first login for security purposes.</p>
-              
-              <p>You can access your dashboard at: <a href="https://login.secura.me/auth/login">https://login.secura.me/auth/login</a></p>
-              
+
+              <p>You can access your dashboard at: <a href="${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.secura.app') || 'your-app-url'}/auth/login">Login Here</a></p>
+
               <p>If you have any questions, please don't hesitate to contact our support team.</p>
-              
+
               <p>Best regards,<br>The Secura Team</p>
             </div>
           `;
@@ -182,7 +181,7 @@ const handler = async (req: Request): Promise<Response> => {
           subject: emailSubject,
           html: emailContent,
         });
-        
+
         console.log('Email sent successfully');
       } catch (emailError) {
         console.error('Email sending failed:', emailError);
@@ -190,19 +189,19 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    const message = isPasswordReset 
+    const message = isPasswordReset
       ? 'Password updated successfully. Welcome email sent.'
       : role === 'agent'
       ? 'Agent created successfully. Welcome email sent.'
       : 'User created successfully. Welcome email sent.';
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        data: { 
+      JSON.stringify({
+        success: true,
+        data: {
           user: authData.data.user,
           message
-        } 
+        }
       }),
       {
         status: 200,
@@ -213,9 +212,9 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error('Error in create-user function:', error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message || 'Failed to process request' 
+      JSON.stringify({
+        success: false,
+        error: error.message || 'Failed to process request'
       }),
       {
         status: 400,
