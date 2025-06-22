@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,19 +38,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async (user: User) => {
     try {
-      console.log('Fetching user profile for auth_user_id:', userId);
+      console.log('Fetching user profile for auth_user_id:', user.id);
       
-      // First try to find user by auth_user_id
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('auth_user_id', userId)
+        .eq('auth_user_id', user.id)
         .maybeSingle();
 
       if (error) {
         console.error('Error fetching user profile:', error);
+        toast({ title: "Error", description: "Could not fetch user profile.", variant: "destructive" });
         return null;
       }
 
@@ -60,15 +59,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return data;
       }
 
-      // If no user found by auth_user_id, try by email (for superadmin)
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (authUser?.email) {
-        console.log('Trying to find user by email:', authUser.email);
-        
+      if (user.email) {
+        console.log('No profile found by auth_user_id, trying by email:', user.email);
         const { data: emailData, error: emailError } = await supabase
           .from('users')
           .select('*')
-          .eq('email', authUser.email)
+          .eq('email', user.email)
           .maybeSingle();
 
         if (emailError) {
@@ -77,27 +73,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (emailData) {
-          console.log('Found user by email, updating auth_user_id:', emailData);
-          
-          // Update the user record with the auth_user_id
+          console.log('Found user by email, updating auth_user_id...');
           const { error: updateError } = await supabase
             .from('users')
-            .update({ auth_user_id: userId })
+            .update({ auth_user_id: user.id })
             .eq('id', emailData.id);
 
           if (updateError) {
             console.error('Error updating auth_user_id:', updateError);
-            return emailData; // Return the data even if update fails
           }
-
           return emailData;
         }
       }
 
-      console.log('No user profile found');
+      console.log('No user profile found for user:', user.id);
       return null;
     } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
+      console.error('Exception in fetchUserProfile:', error);
       return null;
     }
   };
@@ -127,35 +119,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    const getSessionAndProfile = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        const session = data?.session;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth event:', event);
+      setLoading(true);
 
-        if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
-          setSession(session);
-          setUser(session.user);
-          setUserProfile(profile);
+      if (session?.user) {
+        const profile = await fetchUserProfile(session.user);
+        
+        setSession(session);
+        setUser(session.user);
+        setUserProfile(profile);
 
-          if (!session || !profile) {
-            console.log("logout - no session or profile");
-            await supabase.auth.signOut();
-          }
-        } else {
-          setSession(null);
-          setUser(null);
-          setUserProfile(null);
+        if (!profile) {
+          console.log("No profile found, signing out.");
+          await supabase.auth.signOut();
         }
-      } catch (err) {
-        console.error('Error in useEffect:', err);
-      } finally {
-        setLoading(false);
+      } else {
+        setSession(null);
+        setUser(null);
+        setUserProfile(null);
       }
-    };
+      
+      setLoading(false);
+    });
 
-    getSessionAndProfile();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
