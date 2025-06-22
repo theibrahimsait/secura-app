@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,10 @@ const SuperAdminLogin = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, isSuperAdmin, isAuthenticated } = useAuth();
+  console.log({signIn, isSuperAdmin, isAuthenticated});
+  
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Redirect if already authenticated as superadmin
   if (isAuthenticated && isSuperAdmin) {
@@ -39,6 +42,8 @@ const SuperAdminLogin = () => {
           description: error,
           variant: "destructive",
         });
+      } else {
+        window.location.reload();
       }
     } catch (error) {
       toast({
