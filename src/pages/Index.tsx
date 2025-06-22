@@ -3,10 +3,8 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, ArrowRight, Lock, Users, FileText } from 'lucide-react';
-
 const Index = () => {
-  return (
-    <div className="min-h-screen bg-white">
+  return <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="border-b bg-white">
         <div className="max-w-7xl mx-auto px-6 py-4">
@@ -166,24 +164,18 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-secura-black text-white py-12 px-6">
+      <footer className="bg-secura-black text-white py-12 px-6 bg-lime-50">
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <img src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" alt="Secura" className="h-8 w-auto" />
-            <span className="text-2xl font-bold">Secura</span>
+            
           </div>
-          <p className="text-white/70 mb-8">
+          <p className="mb-8 text-green-950">
             Secure document sharing for the UAE real estate industry
           </p>
-          <div className="flex justify-center space-x-8 text-sm text-white/60">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-            <a href="mailto:support@secura.me" className="hover:text-white transition-colors">Support</a>
-          </div>
+          
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
