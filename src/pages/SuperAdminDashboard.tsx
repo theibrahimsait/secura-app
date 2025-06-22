@@ -103,16 +103,21 @@ const SuperAdminDashboard = () => {
 
       if (userError) throw userError;
 
-      // Create auth user
+      // Create auth user with email notification
       const { data: authData, error: authError } = await supabase.functions.invoke('create-user', {
         body: {
           email: form.adminEmail,
           password: tempPassword,
+          agencyName: form.agencyName,
+          adminName: form.adminName,
         },
-      })
-
+      });
 
       if (authError) throw authError;
+
+      if (!authData.success) {
+        throw new Error(authData.error || 'Failed to create user account');
+      }
 
       // Update user record with auth_user_id
       const { error: updateError } = await supabase
@@ -124,8 +129,8 @@ const SuperAdminDashboard = () => {
 
       toast({
         title: "Agency Created Successfully",
-        description: `Temporary password: ${tempPassword}`,
-        duration: 10000,
+        description: `Welcome email with login credentials has been sent to ${form.adminEmail}`,
+        duration: 8000,
       });
 
       // Reset form and close dialog
