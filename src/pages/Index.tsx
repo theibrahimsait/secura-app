@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -173,7 +172,12 @@ const Index = () => {
             {/* Brand Section */}
             <div className="lg:col-span-2 space-y-4">
               <div className="flex items-center space-x-3 mb-4">
-                <img src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" alt="Secura" className="h-8 w-auto" />
+                <img 
+                  src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" 
+                  alt="Secura" 
+                  className="h-8 w-auto brightness-0 invert" 
+                  style={{filter: 'brightness(0) saturate(100%) invert(82%) sepia(19%) saturate(1234%) hue-rotate(40deg) brightness(95%) contrast(88%)'}}
+                />
               </div>
               <p className="text-secura-mint max-w-md">
                 Secure document sharing platform designed specifically for the UAE real estate industry. 
