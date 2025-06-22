@@ -41,8 +41,12 @@ const handler = async (req: Request): Promise<Response> => {
       createdBy
     }: CreateUserRequest = await req.json();
 
+    console.log('--- New Request ---');
+    console.log('Request Body:', { email, agencyName, adminName, isPasswordReset, userId, role, fullName, phone, agencyId, createdBy });
+
     // Get the user's JWT from the request headers
     const authHeader = req.headers.get('Authorization')!;
+    console.log('Authorization Header:', authHeader ? 'Present' : 'Missing');
 
     // Create Supabase admin client with service role key
     const supabase = createClient(
@@ -90,10 +94,12 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       authData = createData;
+      console.log('Auth user created successfully:', authData.user.id);
 
       // Create a record in public.users for the new agent
       if (role === 'agent' && fullName && agencyId && createdBy) {
-        const { error: dbError } = await userSupabase.from('users').insert({
+        console.log('Attempting to insert agent into public.users');
+        const { data: dbData, error: dbError } = await userSupabase.from('users').insert({
           auth_user_id: authData.user.id,
           email,
           full_name: fullName,
@@ -101,14 +107,16 @@ const handler = async (req: Request): Promise<Response> => {
           role: 'agent',
           agency_id: agencyId,
           created_by: createdBy,
-        });
+        }).select();
 
         if (dbError) {
           console.error('Database insert error:', dbError);
           // If the DB insert fails, we should delete the auth user to avoid orphans
           await supabase.auth.admin.deleteUser(authData.user.id);
+          console.log('Orphaned auth user deleted.');
           throw dbError;
         }
+        console.log('Agent inserted into public.users successfully:', dbData);
       } else if (role !== 'agent') {
         // This part handles the original agency admin creation logic
         // The trigger on_auth_user_created will link the auth user to the public user
@@ -207,6 +215,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    console.log('Function completed successfully.');
     const message = isPasswordReset
       ? 'Password updated successfully. Welcome email sent.'
       : role === 'agent'
