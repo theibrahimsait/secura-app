@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -86,21 +85,15 @@ const SuperAdminDashboard = () => {
       // Generate new secure password
       const newPassword = generateSecurePassword();
 
-      // Update auth user password
-      const { error: passwordError } = await supabase.auth.admin.updateUserById(
-        userData.auth_user_id,
-        { password: newPassword }
-      );
-
-      if (passwordError) throw passwordError;
-
-      // Send welcome email with new credentials
+      // Use the edge function to reset password and send email
       const { data: emailData, error: emailError } = await supabase.functions.invoke('create-user', {
         body: {
           email: agency.email,
           password: newPassword,
           agencyName: agency.name,
           adminName: userData.full_name,
+          isPasswordReset: true,
+          userId: userData.auth_user_id,
         },
       });
 
