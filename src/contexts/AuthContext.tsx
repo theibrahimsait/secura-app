@@ -91,6 +91,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  useEffect(() => {
+    const getSessionAndProfile = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        const session = data?.session;
+
+        const profile = await fetchUserProfile(session.user.id);
+
+        setSession(session);
+        setUser(session?.user ?? null);
+        setUserProfile(profile);
+
+        if (Object.keys(session).length === 0 || Object.keys(profile).length === 0) {
+          console.log("logout");
+          await supabase.auth.signOut();
+        }
+      } catch (err) {
+        console.error('Error in useEffect:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getSessionAndProfile();
+  }, [])
+
   const signOut = async () => {
     try {
       // Log audit event before signing out
@@ -113,58 +140,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+  // useEffect(() => {
+  //   // Set up auth state listener
+  //   const { data: { subscription } } = supabase.auth.onAuthStateChange(
+  //     async (event, session) => {
+  //       setSession(session);
+  //       setUser(session?.user ?? null);
 
-        if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
-          setUserProfile(profile);
-          
-          if (!profile) {
-            toast({
-              title: "Access Denied",
-              description: "Your account is not authorized to access this system.",
-              variant: "destructive",
-            });
-            await supabase.auth.signOut();
-          }
-        } else {
-          setUserProfile(null);
-        }
-        
-        setLoading(false);
-      }
-    );
+  //       if (session?.user) {
+  //         const profile = await fetchUserProfile(session.user.id);
+  //         setUserProfile(profile);
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id).then((profile) => {
-          setUserProfile(profile);
-          if (!profile) {
-            toast({
-              title: "Access Denied",
-              description: "Your account is not authorized to access this system.",
-              variant: "destructive",
-            });
-            supabase.auth.signOut();
-          }
-          setLoading(false);
-        });
-      } else {
-        setLoading(false);
-      }
-    });
+  //         if (!profile) {
+  //           toast({
+  //             title: "Access Denied",
+  //             description: "Your account is not authorized to access this system.",
+  //             variant: "destructive",
+  //           });
+  //           // await supabase.auth.signOut();
+  //         }
+  //       } else {
+  //         setUserProfile(null);
+  //       }
 
-    return () => subscription.unsubscribe();
-  }, [toast]);
+  //       setLoading(false);
+  //     }
+  //   );
+
+  //   return () => subscription.unsubscribe();
+  // }, [toast]);
 
   const value: AuthContextType = {
     user,

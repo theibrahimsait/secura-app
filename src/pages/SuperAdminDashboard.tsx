@@ -104,18 +104,20 @@ const SuperAdminDashboard = () => {
       if (userError) throw userError;
 
       // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: form.adminEmail,
-        password: tempPassword,
-        email_confirm: true,
-      });
+      const { data: authData, error: authError } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: form.adminEmail,
+          password: tempPassword,
+        },
+      })
+
 
       if (authError) throw authError;
 
       // Update user record with auth_user_id
       const { error: updateError } = await supabase
         .from('users')
-        .update({ auth_user_id: authData.user.id })
+        .update({ auth_user_id: authData.data.user.id })
         .eq('id', userData.id);
 
       if (updateError) throw updateError;
