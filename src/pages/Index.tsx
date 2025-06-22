@@ -167,7 +167,7 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-secura-black text-white py-16 px-6">
+      <footer className="bg-secura-teal text-white py-16 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-4 gap-8 mb-12">
             {/* Brand Section */}
@@ -175,18 +175,18 @@ const Index = () => {
               <div className="flex items-center space-x-3 mb-4">
                 <img src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" alt="Secura" className="h-8 w-auto" />
               </div>
-              <p className="text-gray-300 max-w-md">
+              <p className="text-secura-mint max-w-md">
                 Secure document sharing platform designed specifically for the UAE real estate industry. 
                 Compliant, encrypted, and trusted by leading agencies.
               </p>
               <div className="flex items-center space-x-4 pt-4">
                 <div className="flex items-center space-x-2">
                   <Shield className="h-4 w-4 text-secura-lime" />
-                  <span className="text-sm text-gray-300">UAE Compliant</span>
+                  <span className="text-sm text-secura-mint">UAE Compliant</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Lock className="h-4 w-4 text-secura-lime" />
-                  <span className="text-sm text-gray-300">Bank-Level Security</span>
+                  <span className="text-sm text-secura-mint">Bank-Level Security</span>
                 </div>
               </div>
             </div>
@@ -197,19 +197,19 @@ const Index = () => {
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <Mail className="h-4 w-4 text-secura-lime" />
-                  <a href="mailto:support@secura.me" className="text-gray-300 hover:text-white transition-colors">
+                  <a href="mailto:support@secura.me" className="text-secura-mint hover:text-white transition-colors">
                     support@secura.me
                   </a>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Phone className="h-4 w-4 text-secura-lime" />
-                  <a href="tel:+97145551234" className="text-gray-300 hover:text-white transition-colors">
+                  <a href="tel:+97145551234" className="text-secura-mint hover:text-white transition-colors">
                     +971 4 555 1234
                   </a>
                 </div>
                 <div className="flex items-start space-x-3">
                   <MapPin className="h-4 w-4 text-secura-lime mt-1" />
-                  <div className="text-gray-300">
+                  <div className="text-secura-mint">
                     <p>Dubai Internet City</p>
                     <p>Dubai, UAE</p>
                   </div>
@@ -221,16 +221,16 @@ const Index = () => {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-secura-lime">Quick Links</h3>
               <div className="space-y-2">
-                <Link to="/auth/login" className="block text-gray-300 hover:text-white transition-colors">
+                <Link to="/auth/login" className="block text-secura-mint hover:text-white transition-colors">
                   Agency Portal
                 </Link>
-                <a href="mailto:support@secura.me" className="block text-gray-300 hover:text-white transition-colors">
+                <a href="mailto:support@secura.me" className="block text-secura-mint hover:text-white transition-colors">
                   Support
                 </a>
-                <a href="#" className="block text-gray-300 hover:text-white transition-colors">
+                <a href="#" className="block text-secura-mint hover:text-white transition-colors">
                   Privacy Policy
                 </a>
-                <a href="#" className="block text-gray-300 hover:text-white transition-colors">
+                <a href="#" className="block text-secura-mint hover:text-white transition-colors">
                   Terms of Service
                 </a>
               </div>
@@ -238,16 +238,16 @@ const Index = () => {
           </div>
 
           {/* Bottom Section */}
-          <div className="border-t border-gray-700 pt-8">
+          <div className="border-t border-secura-moss pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-              <div className="text-gray-300">
+              <div className="text-secura-mint">
                 <p>&copy; 2025 Quri Technologies FZ-LLC. All rights reserved.</p>
-                <p className="text-sm text-gray-400 mt-1">Licensed in Dubai, United Arab Emirates</p>
+                <p className="text-sm text-secura-mint/80 mt-1">Licensed in Dubai, United Arab Emirates</p>
               </div>
               <div className="flex items-center space-x-6">
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-300">All systems operational</span>
+                  <div className="w-2 h-2 bg-secura-lime rounded-full"></div>
+                  <span className="text-sm text-secura-mint">All systems operational</span>
                 </div>
               </div>
             </div>
