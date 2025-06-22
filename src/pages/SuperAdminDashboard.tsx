@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Plus, Users, Building, Activity, LogOut } from 'lucide-react';
+import { Shield, Plus, Users, Building, Activity, LogOut, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Agency {
@@ -32,6 +32,7 @@ const SuperAdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState<string | null>(null);
   const [form, setForm] = useState<CreateAgencyForm>({
     agencyName: '',
     adminName: '',
@@ -66,6 +67,65 @@ const SuperAdminDashboard = () => {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return password;
+  };
+
+  const resendWelcomeEmail = async (agency: Agency) => {
+    setResendLoading(agency.id);
+
+    try {
+      // Get agency admin user details
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('agency_id', agency.id)
+        .eq('role', 'agency_admin')
+        .single();
+
+      if (userError) throw userError;
+
+      // Generate new secure password
+      const newPassword = generateSecurePassword();
+
+      // Update auth user password
+      const { error: passwordError } = await supabase.auth.admin.updateUserById(
+        userData.auth_user_id,
+        { password: newPassword }
+      );
+
+      if (passwordError) throw passwordError;
+
+      // Send welcome email with new credentials
+      const { data: emailData, error: emailError } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: agency.email,
+          password: newPassword,
+          agencyName: agency.name,
+          adminName: userData.full_name,
+        },
+      });
+
+      if (emailError) throw emailError;
+
+      if (!emailData.success) {
+        throw new Error(emailData.error || 'Failed to send welcome email');
+      }
+
+      toast({
+        title: "Email Sent Successfully",
+        description: `New welcome email with updated credentials sent to ${agency.email}`,
+        duration: 8000,
+      });
+
+    } catch (error: any) {
+      console.error('Error resending welcome email:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to resend welcome email",
+        variant: "destructive",
+      });
+    } finally {
+      setResendLoading(null);
+    }
   };
 
   const createAgency = async (e: React.FormEvent) => {
@@ -339,6 +399,16 @@ const SuperAdminDashboard = () => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
+                      <Button
+                        onClick={() => resendWelcomeEmail(agency)}
+                        disabled={resendLoading === agency.id}
+                        variant="outline"
+                        size="sm"
+                        className="border-secura-teal text-secura-teal hover:bg-secura-teal/10"
+                      >
+                        <Mail className="w-4 h-4 mr-1" />
+                        {resendLoading === agency.id ? 'Sending...' : 'Resend Email'}
+                      </Button>
                       <Badge variant={agency.is_active ? "default" : "secondary"}>
                         {agency.is_active ? 'Active' : 'Inactive'}
                       </Badge>
