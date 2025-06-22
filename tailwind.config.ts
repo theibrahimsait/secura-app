@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,13 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Secura brand colors
+				'secura-black': 'hsl(var(--secura-black))',
+				'secura-teal': 'hsl(var(--secura-teal))',
+				'secura-moss': 'hsl(var(--secura-moss))',
+				'secura-mint': 'hsl(var(--secura-mint))',
+				'secura-lime': 'hsl(var(--secura-lime))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
