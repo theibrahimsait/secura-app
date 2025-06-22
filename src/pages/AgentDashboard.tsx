@@ -1,6 +1,6 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,65 +26,109 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+// Define interfaces for our data
+interface Client {
+  id: string;
+  full_name: string | null;
+  phone: string;
+  email: string | null;
+  created_at: string;
+}
+
+interface Property {
+  id: string;
+  location: string;
+  property_type: string;
+  client_id: string;
+  created_at: string;
+  client_name?: string; // Optional: to join client name
+}
+
 interface GenerateLinkForm {
   clientName: string;
   clientPhone: string;
-  clientType: 'buyer' | 'seller';
+  clientType: 'buy' | 'sell';
 }
 
 const AgentDashboard = () => {
   const { signOut, userProfile } = useAuth();
   const { toast } = useToast();
+  
+  // State for data
+  const [clients, setClients] = useState<Client[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // State for dialogs and forms
   const [generateLinkDialogOpen, setGenerateLinkDialogOpen] = useState(false);
   const [generateLinkLoading, setGenerateLinkLoading] = useState(false);
   const [linkForm, setLinkForm] = useState<GenerateLinkForm>({
     clientName: '',
     clientPhone: '',
-    clientType: 'buyer',
+    clientType: 'buy',
   });
 
-  // Mock data for demonstration
-  const mockClients = [
-    {
-      id: '1',
-      name: 'John Smith',
-      phone: '+1 (555) 123-4567',
-      email: 'john.smith@email.com',
-      type: 'Buyer',
-      status: 'Active',
-      created_at: '2024-01-15',
-      last_activity: '2024-01-20'
-    },
-    {
-      id: '2',
-      name: 'Sarah Johnson',
-      phone: '+1 (555) 987-6543',
-      email: 'sarah.j@email.com',
-      type: 'Seller',
-      status: 'Pending',
-      created_at: '2024-01-18',
-      last_activity: '2024-01-19'
-    }
-  ];
+  const fetchClientsAndProperties = async () => {
+    if (!userProfile?.id) return;
 
-  const mockProperties = [
-    {
-      id: '1',
-      address: '123 Main St, Downtown',
-      type: 'Condo',
-      client: 'John Smith',
-      status: 'Active',
-      created_at: '2024-01-16'
-    },
-    {
-      id: '2',
-      address: '456 Oak Ave, Suburbs',
-      type: 'House',
-      client: 'Sarah Johnson',
-      status: 'Under Review',
-      created_at: '2024-01-18'
+    setLoading(true);
+    try {
+      // Fetch clients associated with this agent
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('*')
+        // Assuming a linking table or direct relationship exists.
+        // This will need adjustment based on your actual schema.
+        // For now, let's assume properties link clients to agents.
+        // We'll fetch properties first then get unique client IDs.
+
+      if (clientError) throw clientError;
+
+      // Fetch properties and their associated clients, filtered by the agent
+      const { data: propertyData, error: propertyError } = await supabase
+        .from('properties')
+        .select(`
+          *,
+          clients (
+            id,
+            full_name,
+            phone,
+            email
+          )
+        `)
+        .eq('agent_id', userProfile.id);
+
+      if (propertyError) throw propertyError;
+
+      // Process data
+      const processedProperties: Property[] = propertyData.map((p: any) => ({
+        ...p,
+        client_name: p.clients.full_name || 'N/A',
+      }));
+
+      const uniqueClients = Array.from(new Map(propertyData.map((p: any) => [p.clients.id, p.clients])).values());
+
+      setProperties(processedProperties);
+      setClients(uniqueClients);
+
+    } catch (error: any) {
+      console.error('Error fetching data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    if (userProfile) {
+      fetchClientsAndProperties();
+    }
+  }, [userProfile]);
+
 
   const handleGenerateLink = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +140,7 @@ const AgentDashboard = () => {
         title: "Secure Link Generated",
         description: `Link generated for ${linkForm.clientName}`,
       });
-      setLinkForm({ clientName: '', clientPhone: '', clientType: 'buyer' });
+      setLinkForm({ clientName: '', clientPhone: '', clientType: 'buy' });
       setGenerateLinkDialogOpen(false);
       setGenerateLinkLoading(false);
     }, 1500);
@@ -157,7 +201,7 @@ const AgentDashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Clients</p>
-                  <p className="text-2xl font-bold text-secura-black">{mockClients.length}</p>
+                  <p className="text-2xl font-bold text-secura-black">{loading ? '...' : clients.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -171,7 +215,7 @@ const AgentDashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Properties</p>
-                  <p className="text-2xl font-bold text-secura-black">{mockProperties.length}</p>
+                  <p className="text-2xl font-bold text-secura-black">{loading ? '...' : properties.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -255,17 +299,15 @@ const AgentDashboard = () => {
                     <div className="space-y-2">
                       <Label htmlFor="clientType">Client Type</Label>
                       <Select
-                        value={linkForm.clientType}
-                        onValueChange={(value: 'buyer' | 'seller') => 
-                          setLinkForm({ ...linkForm, clientType: value })
-                        }
+                        onValueChange={(value: 'buy' | 'sell') => setLinkForm({ ...linkForm, clientType: value })}
+                        defaultValue={linkForm.clientType}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select client type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="buyer">Buyer</SelectItem>
-                          <SelectItem value="seller">Seller</SelectItem>
+                          <SelectItem value="buy">Buyer</SelectItem>
+                          <SelectItem value="sell">Seller</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -293,133 +335,81 @@ const AgentDashboard = () => {
           </CardHeader>
         </Card>
 
-        {/* Clients Management */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-xl text-secura-black">Client Management</CardTitle>
-            <CardDescription>Manage your clients and their information</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last Activity</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mockClients.map((client) => (
-                  <TableRow key={client.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-secura-black">{client.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Added {new Date(client.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center text-sm">
-                          <Phone className="w-4 h-4 mr-1 text-muted-foreground" />
-                          {client.phone}
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <Mail className="w-4 h-4 mr-1 text-muted-foreground" />
-                          {client.email}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={client.type === 'Buyer' ? 'default' : 'secondary'}>
-                        {client.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={client.status === 'Active' ? 'default' : 'secondary'}>
-                        {client.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {new Date(client.last_activity).toLocaleDateString()}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => copyToClipboard(`https://secura.app/client/${client.id}`)}
-                      >
-                        <Copy className="w-4 h-4 mr-1" />
-                        Copy Link
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        {/* Recent Clients */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>My Clients</CardTitle>
+              <CardDescription>A list of your most recent clients</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center p-8">Loading clients...</div>
+              ) : clients.length === 0 ? (
+                <div className="text-center p-8 text-muted-foreground">No clients found.</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Added On</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {clients.map((client) => (
+                      <TableRow key={client.id}>
+                        <TableCell className="font-medium">{client.full_name}</TableCell>
+                        <TableCell>
+                          <div>{client.email || 'N/A'}</div>
+                          <div className="text-muted-foreground">{client.phone}</div>
+                        </TableCell>
+                        <TableCell>{new Date(client.created_at).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Properties Management */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl text-secura-black">Properties</CardTitle>
-            <CardDescription>Track properties and their documentation status</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Property</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mockProperties.map((property) => (
-                  <TableRow key={property.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-secura-black">{property.address}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{property.type}</Badge>
-                    </TableCell>
-                    <TableCell>{property.client}</TableCell>
-                    <TableCell>
-                      <Badge variant={property.status === 'Active' ? 'default' : 'secondary'}>
-                        {property.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        {new Date(property.created_at).toLocaleDateString()}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Button size="sm" variant="outline">
-                        <FileText className="w-4 h-4 mr-1" />
-                        View Docs
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+          {/* Recent Properties */}
+          <Card>
+            <CardHeader>
+              <CardTitle>My Properties</CardTitle>
+              <CardDescription>A list of properties you manage</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center p-8">Loading properties...</div>
+              ) : properties.length === 0 ? (
+                <div className="text-center p-8 text-muted-foreground">No properties found.</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Property</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Added On</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {properties.map((property) => (
+                      <TableRow key={property.id}>
+                        <TableCell>
+                          <div className="font-medium">{property.location}</div>
+                          <div className="text-muted-foreground">{property.property_type}</div>
+                        </TableCell>
+                        <TableCell>{property.client_name}</TableCell>
+                        <TableCell>{new Date(property.created_at).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );

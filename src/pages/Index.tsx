@@ -16,7 +16,7 @@ const Index = () => {
             </div>
             <Link to="/auth/login">
               <Button className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold transition-all duration-300 hover:scale-105">
-                Agency Portal
+                Login
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
@@ -45,7 +45,7 @@ const Index = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <a href="https://login.secura.me/auth/login" target="_blank" rel="noopener noreferrer">
                   <Button size="lg" className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold px-8 py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105">
-                    Access Agency Portal
+                    Access Portal
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </a>
@@ -58,7 +58,7 @@ const Index = () => {
               <div className="flex items-center space-x-6 pt-8">
                 <div className="flex items-center space-x-2">
                   <Shield className="h-5 w-5 text-secura-teal" />
-                  <span className="text-sm text-muted-foreground">UAE Compliant</span>
+                  <span className="text-sm text-muted-foreground">UAE PDPL Compliant</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Lock className="h-5 w-5 text-secura-teal" />
@@ -66,7 +66,7 @@ const Index = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <FileText className="h-5 w-5 text-secura-teal" />
-                  <span className="text-sm text-muted-foreground">Full Audit Trail</span>
+                  <span className="text-sm text-muted-foreground">Complete Audit Trail</span>
                 </div>
               </div>
             </div>
