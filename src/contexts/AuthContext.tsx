@@ -119,28 +119,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth event:', event);
-      setLoading(true);
-
+    // On initial load, get the session and don't stop loading until we have a result
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         const profile = await fetchUserProfile(session.user);
-        
-        setSession(session);
         setUser(session.user);
+        setSession(session);
         setUserProfile(profile);
+      }
+      setLoading(false);
+    };
 
-        if (!profile) {
-          console.log("No profile found, signing out.");
-          await supabase.auth.signOut();
-        }
-      } else {
-        setSession(null);
-        setUser(null);
-        setUserProfile(null);
+    getInitialSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth event:', event, session);
+      
+      // If user signs in, fetch their profile
+      if (event === 'SIGNED_IN' && session?.user) {
+        setLoading(true);
+        const profile = await fetchUserProfile(session.user);
+        setUser(session.user);
+        setSession(session);
+        setUserProfile(profile);
+        setLoading(false);
       }
       
-      setLoading(false);
+      // If user signs out, clear everything
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setSession(null);
+        setUserProfile(null);
+      }
     });
 
     return () => {
