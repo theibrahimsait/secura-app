@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Shield, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-const AgencyLogin = () => {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -71,10 +71,10 @@ const AgencyLogin = () => {
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <CardTitle className="text-2xl font-bold text-secura-black">
-                Agency Portal
+                Professional Login
               </CardTitle>
               <CardDescription className="text-muted-foreground">
-                Sign in to your agency dashboard
+                Sign in to your dashboard
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -144,4 +144,4 @@ const AgencyLogin = () => {
   );
 };
 
-export default AgencyLogin;
+export default Login;

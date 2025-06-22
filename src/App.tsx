@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
-import AgencyLogin from "./pages/AgencyLogin";
+import Login from "./pages/Login";
 import AgencyDashboard from "./pages/AgencyDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
 import NotFound from "./pages/NotFound";
@@ -26,7 +25,7 @@ const App = () => (
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Index />} />
-            <Route path="/auth/login" element={<AgencyLogin />} />
+            <Route path="/login" element={<Login />} />
             
             {/* Superadmin Routes (Isolated) */}
             <Route path="/control-panel" element={<SuperAdminLogin />} />
