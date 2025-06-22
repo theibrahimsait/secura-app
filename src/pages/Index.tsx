@@ -1,24 +1,17 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, ArrowRight, Lock, Users, FileText } from 'lucide-react';
-
 const Index = () => {
-  return (
-    <div className="min-h-screen bg-white">
+  return <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="border-b bg-white">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <img 
-                src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" 
-                alt="Secura" 
-                className="h-8 w-auto"
-              />
-              <span className="text-2xl font-bold text-secura-black">Secura</span>
+              <img src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" alt="Secura" className="h-8 w-auto" />
+              
             </div>
             <Link to="/auth/login">
               <Button className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold transition-all duration-300 hover:scale-105">
@@ -50,19 +43,12 @@ const Index = () => {
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link to="/auth/login">
-                  <Button 
-                    size="lg" 
-                    className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold px-8 py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105"
-                  >
+                  <Button size="lg" className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold px-8 py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105">
                     Access Agency Portal
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  className="border-secura-moss text-secura-black hover:bg-secura-moss/10 px-8 py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105"
-                >
+                <Button variant="outline" size="lg" className="border-secura-moss text-secura-black hover:bg-secura-moss/10 px-8 py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105">
                   Learn More
                 </Button>
               </div>
@@ -182,11 +168,7 @@ const Index = () => {
       <footer className="bg-secura-black text-white py-12 px-6">
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <img 
-              src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" 
-              alt="Secura" 
-              className="h-8 w-auto"
-            />
+            <img src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" alt="Secura" className="h-8 w-auto" />
             <span className="text-2xl font-bold">Secura</span>
           </div>
           <p className="text-white/70 mb-8">
@@ -199,8 +181,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
