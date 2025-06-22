@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,37 +8,32 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
 const AgencyLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const {
-    signIn,
-    isAuthenticated,
-    isAgencyAdmin,
-    isAgent
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const { signIn, isAuthenticated, isAgencyAdmin, isAgent } = useAuth();
+  const { toast } = useToast();
 
   // Redirect if already authenticated
   if (isAuthenticated) {
     if (isAgencyAdmin) return <Navigate to="/agency/dashboard" replace />;
     if (isAgent) return <Navigate to="/agent/dashboard" replace />;
   }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
     try {
-      const {
-        error
-      } = await signIn(email, password);
+      const { error } = await signIn(email, password);
+      
       if (error) {
         toast({
           title: "Login Failed",
           description: error,
-          variant: "destructive"
+          variant: "destructive",
         });
       } else {
         window.location.reload();
@@ -46,24 +42,25 @@ const AgencyLogin = () => {
       toast({
         title: "Login Failed",
         description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
-  return <div className="min-h-screen bg-white">
+
+  return (
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="border-b bg-white">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" alt="Secura" className="h-8 w-auto" />
-              
             </div>
-            <Link to="/" className="text-secura-teal hover:text-secura-moss transition-colors">
+            <a href="https://secura.me" target="_blank" rel="noopener noreferrer" className="text-secura-teal hover:text-secura-moss transition-colors">
               Back to Home
-            </Link>
+            </a>
           </div>
         </div>
       </header>
@@ -89,31 +86,55 @@ const AgencyLogin = () => {
                   <Label htmlFor="email" className="text-secura-black font-medium">
                     Email Address
                   </Label>
-                  <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter your email" required className="h-12 border-2 focus:border-secura-teal" />
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    required
+                    className="h-12 border-2 focus:border-secura-teal"
+                  />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-secura-black font-medium">
                     Password
                   </Label>
-                  <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter your password" required className="h-12 border-2 focus:border-secura-teal" />
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    required
+                    className="h-12 border-2 focus:border-secura-teal"
+                  />
                 </div>
 
-                <Button type="submit" disabled={loading} className="w-full h-12 bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold text-lg rounded-xl transition-all duration-300 hover:scale-105">
-                  {loading ? <div className="flex items-center space-x-2">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-12 bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold text-lg rounded-xl transition-all duration-300 hover:scale-105"
+                >
+                  {loading ? (
+                    <div className="flex items-center space-x-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-secura-teal"></div>
                       <span>Signing in...</span>
-                    </div> : <div className="flex items-center space-x-2">
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
                       <span>Sign In</span>
                       <ArrowRight className="w-4 h-4" />
-                    </div>}
+                    </div>
+                  )}
                 </Button>
               </form>
 
               <div className="mt-6 text-center">
                 <p className="text-sm text-muted-foreground">
                   Need help accessing your account?{' '}
-                  <a href="mailto:support@secura.com" className="text-secura-teal hover:text-secura-moss">
+                  <a href="mailto:support@secura.me" className="text-secura-teal hover:text-secura-moss">
                     Contact Support
                   </a>
                 </p>
@@ -122,6 +143,8 @@ const AgencyLogin = () => {
           </Card>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default AgencyLogin;
