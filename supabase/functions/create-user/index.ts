@@ -47,7 +47,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (resend) {
       try {
         await resend.emails.send({
-          from: "Secura <onboarding@resend.dev>",
+          from: "Secura <noreply@secura.me>",
           to: [email],
           subject: "Welcome to Secura - Your Agency Account",
           html: `
