@@ -39,6 +39,8 @@ const AgencyLogin = () => {
           description: error,
           variant: "destructive"
         });
+      } else {
+        window.location.reload();
       }
     } catch (error) {
       toast({
