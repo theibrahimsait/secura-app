@@ -11,6 +11,7 @@ import SuperAdminLogin from "./pages/SuperAdminLogin";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AgencyLogin from "./pages/AgencyLogin";
 import AgencyDashboard from "./pages/AgencyDashboard";
+import AgentDashboard from "./pages/AgentDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,16 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['agency_admin']}>
                   <AgencyDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Agent Routes */}
+            <Route 
+              path="/agent/dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['agent']}>
+                  <AgentDashboard />
                 </ProtectedRoute>
               } 
             />

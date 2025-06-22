@@ -15,6 +15,11 @@ interface CreateUserRequest {
   adminName?: string;
   isPasswordReset?: boolean;
   userId?: string;
+  role?: string;
+  fullName?: string;
+  phone?: string;
+  agencyId?: string;
+  createdBy?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -23,7 +28,19 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, password, agencyName, adminName, isPasswordReset, userId }: CreateUserRequest = await req.json();
+    const { 
+      email, 
+      password, 
+      agencyName, 
+      adminName, 
+      isPasswordReset, 
+      userId,
+      role = 'agency_admin',
+      fullName,
+      phone,
+      agencyId,
+      createdBy
+    }: CreateUserRequest = await req.json();
 
     // Create Supabase admin client with service role key
     const supabase = createClient(
@@ -60,6 +77,26 @@ const handler = async (req: Request): Promise<Response> => {
       }
       
       authData = createData;
+
+      // Create user record in public.users table
+      if (role === 'agent') {
+        const { error: userError } = await supabase
+          .from('users')
+          .insert({
+            auth_user_id: authData.data.user.id,
+            email,
+            full_name: fullName || adminName,
+            phone,
+            role: 'agent',
+            agency_id: agencyId,
+            created_by: createdBy,
+          });
+
+        if (userError) {
+          console.error('User creation error:', userError);
+          throw userError;
+        }
+      }
     }
 
     // Send welcome email with credentials
@@ -69,6 +106,8 @@ const handler = async (req: Request): Promise<Response> => {
       try {
         const emailSubject = isPasswordReset 
           ? "Secura - Your Account Credentials Have Been Updated"
+          : role === 'agent'
+          ? "Welcome to Secura - Your Agent Account"
           : "Welcome to Secura - Your Agency Account";
           
         const emailContent = isPasswordReset
@@ -85,6 +124,28 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
               
               <p><strong>Important:</strong> Please change your password after logging in for security purposes.</p>
+              
+              <p>You can access your dashboard at: <a href="${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovable.app') || 'your-app-url'}/auth/login">Login Here</a></p>
+              
+              <p>If you have any questions, please don't hesitate to contact our support team.</p>
+              
+              <p>Best regards,<br>The Secura Team</p>
+            </div>
+          `
+          : role === 'agent'
+          ? `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #2563eb;">Welcome to Secura</h1>
+              <p>Hello ${fullName || adminName},</p>
+              <p>Your agent account has been created successfully.</p>
+              
+              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3>Your Login Credentials:</h3>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Temporary Password:</strong> <code style="background-color: #e5e7eb; padding: 4px 8px; border-radius: 4px;">${password}</code></p>
+              </div>
+              
+              <p><strong>Important:</strong> Please change your password after your first login for security purposes.</p>
               
               <p>You can access your dashboard at: <a href="${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovable.app') || 'your-app-url'}/auth/login">Login Here</a></p>
               
@@ -131,6 +192,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     const message = isPasswordReset 
       ? 'Password updated successfully. Welcome email sent.'
+      : role === 'agent'
+      ? 'Agent created successfully. Welcome email sent.'
       : 'User created successfully. Welcome email sent.';
 
     return new Response(

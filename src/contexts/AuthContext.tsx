@@ -133,15 +133,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error) throw error;
         const session = data?.session;
 
-        const profile = await fetchUserProfile(session.user.id);
+        if (session?.user) {
+          const profile = await fetchUserProfile(session.user.id);
+          setSession(session);
+          setUser(session.user);
+          setUserProfile(profile);
 
-        setSession(session);
-        setUser(session?.user ?? null);
-        setUserProfile(profile);
-
-        if (Object.keys(session).length === 0 || Object.keys(profile).length === 0) {
-          console.log("logout");
-          await supabase.auth.signOut();
+          if (!session || !profile) {
+            console.log("logout - no session or profile");
+            await supabase.auth.signOut();
+          }
+        } else {
+          setSession(null);
+          setUser(null);
+          setUserProfile(null);
         }
       } catch (err) {
         console.error('Error in useEffect:', err);
@@ -151,7 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     getSessionAndProfile();
-  }, [])
+  }, []);
 
   const signOut = async () => {
     try {
@@ -179,36 +184,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Sign out error:', error);
     }
   };
-
-  // useEffect(() => {
-  //   // Set up auth state listener
-  //   const { data: { subscription } } = supabase.auth.onAuthStateChange(
-  //     async (event, session) => {
-  //       setSession(session);
-  //       setUser(session?.user ?? null);
-
-  //       if (session?.user) {
-  //         const profile = await fetchUserProfile(session.user.id);
-  //         setUserProfile(profile);
-
-  //         if (!profile) {
-  //           toast({
-  //             title: "Access Denied",
-  //             description: "Your account is not authorized to access this system.",
-  //             variant: "destructive",
-  //           });
-  //           // await supabase.auth.signOut();
-  //         }
-  //       } else {
-  //         setUserProfile(null);
-  //       }
-
-  //       setLoading(false);
-  //     }
-  //   );
-
-  //   return () => subscription.unsubscribe();
-  // }, [toast]);
 
   const value: AuthContextType = {
     user,

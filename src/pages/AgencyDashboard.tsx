@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Shield, Plus, Users, FileText, Activity, LogOut, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -64,15 +63,6 @@ const AgencyDashboard = () => {
     }
   };
 
-  const generateSecurePassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
-    let password = '';
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
-  };
-
   const createAgent = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateLoading(true);
@@ -81,43 +71,26 @@ const AgencyDashboard = () => {
       // Generate secure password
       const tempPassword = generateSecurePassword();
 
-      // Create user record
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .insert({
+      // Call the edge function to create agent
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
           email: form.email,
-          full_name: form.fullName,
-          phone: form.phone,
+          password: tempPassword,
+          agencyName: userProfile?.agency_id, // Will be resolved to agency name in the function
+          adminName: form.fullName,
           role: 'agent',
-          agency_id: userProfile?.agency_id,
-          created_by: userProfile?.id,
-        })
-        .select()
-        .single();
-
-      if (userError) throw userError;
-
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: form.email,
-        password: tempPassword,
-        email_confirm: true,
+          fullName: form.fullName,
+          phone: form.phone,
+          agencyId: userProfile?.agency_id,
+          createdBy: userProfile?.id,
+        }
       });
 
-      if (authError) throw authError;
-
-      // Update user record with auth_user_id
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({ auth_user_id: authData.user.id })
-        .eq('id', userData.id);
-
-      if (updateError) throw updateError;
+      if (error) throw error;
 
       toast({
         title: "Agent Created Successfully",
-        description: `Temporary password: ${tempPassword}`,
-        duration: 10000,
+        description: `Welcome email sent to ${form.email}`,
       });
 
       // Reset form and close dialog
@@ -135,6 +108,15 @@ const AgencyDashboard = () => {
     } finally {
       setCreateLoading(false);
     }
+  };
+
+  const generateSecurePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
   };
 
   useEffect(() => {
