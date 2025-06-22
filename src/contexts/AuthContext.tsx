@@ -41,18 +41,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching user profile for auth_user_id:', userId);
+      
+      // First try to find user by auth_user_id
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('auth_user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching user profile:', error);
         return null;
       }
 
-      return data;
+      if (data) {
+        console.log('Found user profile:', data);
+        return data;
+      }
+
+      // If no user found by auth_user_id, try by email (for superadmin)
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser?.email) {
+        console.log('Trying to find user by email:', authUser.email);
+        
+        const { data: emailData, error: emailError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', authUser.email)
+          .maybeSingle();
+
+        if (emailError) {
+          console.error('Error fetching user profile by email:', emailError);
+          return null;
+        }
+
+        if (emailData) {
+          console.log('Found user by email, updating auth_user_id:', emailData);
+          
+          // Update the user record with the auth_user_id
+          const { error: updateError } = await supabase
+            .from('users')
+            .update({ auth_user_id: userId })
+            .eq('id', emailData.id);
+
+          if (updateError) {
+            console.error('Error updating auth_user_id:', updateError);
+            return emailData; // Return the data even if update fails
+          }
+
+          return emailData;
+        }
+      }
+
+      console.log('No user profile found');
+      return null;
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
       return null;
@@ -61,29 +104,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('Attempting sign in for:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Sign in error:', error);
         return { error: error.message };
       }
 
-      // Log audit event
-      if (data.user) {
-        const profile = await fetchUserProfile(data.user.id);
-        if (profile) {
-          await supabase.rpc('log_audit_event', {
-            p_user_id: profile.id,
-            p_client_id: null,
-            p_action: 'login',
-            p_resource_type: 'auth',
-            p_resource_id: profile.id,
-          });
-        }
-      }
+      console.log('Sign in successful:', data);
 
+      // The auth state change will handle profile fetching
       return {};
     } catch (error) {
       console.error('Sign in error:', error);
@@ -122,13 +157,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Log audit event before signing out
       if (userProfile) {
-        await supabase.rpc('log_audit_event', {
-          p_user_id: userProfile.id,
-          p_client_id: null,
-          p_action: 'logout',
-          p_resource_type: 'auth',
-          p_resource_id: userProfile.id,
-        });
+        try {
+          await supabase.rpc('log_audit_event', {
+            p_user_id: userProfile.id,
+            p_client_id: null,
+            p_action: 'logout',
+            p_resource_type: 'auth',
+            p_resource_id: userProfile.id,
+          });
+        } catch (auditError) {
+          console.error('Error logging audit event:', auditError);
+          // Don't prevent logout if audit logging fails
+        }
       }
 
       await supabase.auth.signOut();
