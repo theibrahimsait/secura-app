@@ -39,6 +39,7 @@ CREATE OR REPLACE FUNCTION public.get_superadmin_auth_user_id()
 RETURNS UUID
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   auth_user_id UUID;
