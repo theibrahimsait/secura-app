@@ -77,25 +77,8 @@ const handler = async (req: Request): Promise<Response> => {
 
       authData = createData;
 
-      // Create user record in public.users table
-      if (role === 'agent') {
-        const { error: userError } = await supabase
-          .from('users')
-          .insert({
-            auth_user_id: authData.data.user.id,
-            email,
-            full_name: fullName || adminName,
-            phone,
-            role: 'agent',
-            agency_id: agencyId,
-            created_by: createdBy,
-          });
-
-        if (userError) {
-          console.error('User creation error:', userError);
-          throw userError;
-        }
-      }
+      // The logic to insert into public.users has been moved to the frontend.
+      // The database trigger 'on_auth_user_created' will handle linking the auth user.
     }
 
     // Send welcome email with credentials

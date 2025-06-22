@@ -76,30 +76,48 @@ const AgencyDashboard = () => {
     setCreateLoading(true);
 
     try {
-      // Generate secure password
+      // 1. Pre-create the user in the public.users table
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .insert({
+          email: form.email,
+          full_name: form.fullName,
+          phone: form.phone,
+          role: 'agent',
+          agency_id: userProfile?.agency_id,
+          created_by: userProfile?.id,
+        })
+        .select()
+        .single();
+
+      if (userError) {
+        // If this fails, it might be due to a duplicate email or RLS issue.
+        throw userError;
+      }
+      
+      // 2. Generate a temporary password
       const tempPassword = generateSecurePassword();
 
-      // Call the edge function to create agent
+      // 3. Invoke the edge function to create the auth user and send the email
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
           email: form.email,
           password: tempPassword,
-          role: 'agent',
-          fullName: form.fullName,
-          phone: form.phone,
-          agencyId: userProfile?.agency_id,
-          createdBy: userProfile?.id,
+          fullName: form.fullName, // For the email template
+          role: 'agent', // For the email template
         },
       });
 
       if (error) {
-        // This catches network errors or function invocation errors
+        // This catches invocation errors (e.g., function not deployed)
         throw error;
       }
 
       if (!data.success) {
-        // This catches errors reported by the function itself
-        throw new Error(data.error || 'Failed to create agent account');
+        // This catches errors from within the function (e.g., email failed)
+        // We should consider how to handle this - maybe delete the pre-created user?
+        // For now, we'll just show the error.
+        throw new Error(data.error || 'Failed to create agent auth account');
       }
 
       toast({
@@ -115,8 +133,8 @@ const AgencyDashboard = () => {
     } catch (error: any) {
       console.error('Error creating agent:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to create agent',
+        title: 'Error creating agent',
+        description: error.message,
         variant: 'destructive',
       });
     } finally {
