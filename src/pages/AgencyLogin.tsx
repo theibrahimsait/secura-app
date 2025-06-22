@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,8 +34,7 @@ const AgencyLogin = () => {
           description: error,
           variant: "destructive",
         });
-      } else {
-        window.location.reload();
+        setLoading(false);
       }
     } catch (error) {
       toast({
@@ -44,7 +42,6 @@ const AgencyLogin = () => {
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
