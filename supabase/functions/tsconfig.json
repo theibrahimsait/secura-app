@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "deno.ns"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["https://esm.sh/@supabase/functions-js@2.4.1/src/edge-runtime.d.ts"]
+  },
+  "include": ["./**/*.ts"]
+} 

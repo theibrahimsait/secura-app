@@ -1,3 +1,5 @@
+/// <reference types="https://esm.sh/@supabase/functions-js@2.4.1/src/edge-runtime.d.ts" />
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { Resend } from "npm:resend@2.0.0";
@@ -77,8 +79,29 @@ const handler = async (req: Request): Promise<Response> => {
 
       authData = createData;
 
-      // The logic to insert into public.users has been moved to the frontend.
-      // The database trigger 'on_auth_user_created' will handle linking the auth user.
+      // Create a record in public.users for the new agent
+      if (role === 'agent' && fullName && agencyId && createdBy) {
+        const { error: dbError } = await supabase.from('users').insert({
+          auth_user_id: authData.user.id,
+          email,
+          full_name: fullName,
+          phone,
+          role: 'agent',
+          agency_id: agencyId,
+          created_by: createdBy,
+        });
+
+        if (dbError) {
+          console.error('Database insert error:', dbError);
+          // If the DB insert fails, we should delete the auth user to avoid orphans
+          await supabase.auth.admin.deleteUser(authData.user.id);
+          throw dbError;
+        }
+      } else if (role !== 'agent') {
+        // This part handles the original agency admin creation logic
+        // The trigger on_auth_user_created will link the auth user to the public user
+        console.log('Skipping user insert for non-agent role, trigger will handle it.');
+      }
     }
 
     // Send welcome email with credentials
