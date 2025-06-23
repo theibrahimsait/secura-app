@@ -128,6 +128,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session.user);
         setSession(session);
         setUserProfile(profile);
+        if (!profile) {
+          console.log('No user profile found after login/session check.');
+          toast({
+            title: "Profile Not Found",
+            description: "No user profile found for this account. Please contact support.",
+            variant: "destructive",
+          });
+        }
       } else {
         setUser(null);
         setSession(null);
@@ -146,6 +154,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session.user);
         setSession(session);
         setUserProfile(profile);
+        if (!profile) {
+          console.log('No user profile found after login/session check.');
+          toast({
+            title: "Profile Not Found",
+            description: "No user profile found for this account. Please contact support.",
+            variant: "destructive",
+          });
+        }
       } else {
         setUser(null);
         setSession(null);
