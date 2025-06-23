@@ -37,8 +37,9 @@ FROM public.users u
 WHERE u.auth_user_id = auth.users.id;
 
 -- Step 4: Drop all old, recursive policies on public.users
-DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.users;
 DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
+DROP POLICY IF EXISTS "Admins can manage users based on JWT role" ON public.users;
 DROP POLICY IF EXISTS "Superadmin can view all users" ON public.users;
 DROP POLICY IF EXISTS "Agency admin can view agency users" ON public.users;
 DROP POLICY IF EXISTS "Agency admin can view users in their agency" ON public.users;
@@ -61,11 +62,11 @@ CREATE POLICY "Users can view their own profile" ON public.users
   
 CREATE POLICY "Admins can manage users based on JWT role" ON public.users
   FOR ALL USING (
-    (auth.jwt() -> 'app_metadata' ->> 'role' = 'superadmin') OR
-    ((auth.jwt() -> 'app_metadata' ->> 'role' = 'agency_admin') AND (auth.jwt() -> 'app_metadata' ->> 'agency_id')::uuid = agency_id)
+    (auth.jwt() ->> 'app_metadata')::jsonb ->> 'role' = 'superadmin' OR
+    (((auth.jwt() ->> 'app_metadata')::jsonb ->> 'role' = 'agency_admin') AND ((auth.jwt() ->> 'app_metadata')::jsonb ->> 'agency_id')::uuid = agency_id)
   ) WITH CHECK (
-    (auth.jwt() -> 'app_metadata' ->> 'role' = 'superadmin') OR
-    ((auth.jwt() -> 'app_metadata' ->> 'role' = 'agency_admin') AND (auth.jwt() -> 'app_metadata' ->> 'agency_id')::uuid = agency_id)
+    (auth.jwt() ->> 'app_metadata')::jsonb ->> 'role' = 'superadmin' OR
+    (((auth.jwt() ->> 'app_metadata')::jsonb ->> 'role' = 'agency_admin') AND ((auth.jwt() ->> 'app_metadata')::jsonb ->> 'agency_id')::uuid = agency_id)
   );
 
 -- Step 6: Drop all old, recursive policies on public.agencies
