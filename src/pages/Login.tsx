@@ -27,22 +27,22 @@ const Login = () => {
 
     try {
       const { error } = await signIn(email, password);
-      
+      setLoading(false);
+
       if (error) {
         toast({
           title: "Login Failed",
           description: error,
           variant: "destructive",
         });
-        setLoading(false);
       }
     } catch (error) {
+      setLoading(false);
       toast({
         title: "Login Failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-      setLoading(false);
     }
   };
 
