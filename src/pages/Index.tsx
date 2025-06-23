@@ -14,7 +14,7 @@ const Index = () => {
             <div className="flex items-center space-x-3">
               <img src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" alt="Secura" className="h-8 w-auto" />
             </div>
-            <Link to="/auth/login">
+            <Link to="/login">
               <Button className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold transition-all duration-300 hover:scale-105">
                 Login
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -43,7 +43,7 @@ const Index = () => {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4">
-                <a href="https://login.secura.me/auth/login" target="_blank" rel="noopener noreferrer">
+                <a href="https://login.secura.me/login" target="_blank" rel="noopener noreferrer">
                   <Button size="lg" className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold px-8 py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105">
                     Access Portal
                     <ArrowRight className="ml-2 h-5 w-5" />

@@ -119,6 +119,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    // On mount, check for existing session
+    const checkSession = async () => {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const profile = await fetchUserProfile(session.user);
+        setUser(session.user);
+        setSession(session);
+        setUserProfile(profile);
+      } else {
+        setUser(null);
+        setSession(null);
+        setUserProfile(null);
+      }
+      setLoading(false);
+    };
+    checkSession();
+  }, []);
+
+  useEffect(() => {
     setLoading(true);
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
