@@ -51,13 +51,12 @@ interface GenerateLinkForm {
 }
 
 const AgentDashboard = () => {
-  const { signOut, userProfile } = useAuth();
+  const { signOut, userProfile, loading, isAuthenticated } = useAuth();
   const { toast } = useToast();
   
   // State for data
   const [clients, setClients] = useState<Client[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // State for dialogs and forms
   const [generateLinkDialogOpen, setGenerateLinkDialogOpen] = useState(false);
@@ -68,10 +67,18 @@ const AgentDashboard = () => {
     clientType: 'buy',
   });
 
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>; // You can replace with a spinner
+  }
+
+  if (!isAuthenticated) {
+    window.location.href = "/login";
+    return null;
+  }
+
   const fetchClientsAndProperties = async () => {
     if (!userProfile?.id) return;
 
-    setLoading(true);
     try {
       // Fetch clients associated with this agent
       const { data: clientData, error: clientError } = await supabase
@@ -118,8 +125,6 @@ const AgentDashboard = () => {
         description: "Failed to load dashboard data.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -201,7 +206,7 @@ const AgentDashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Clients</p>
-                  <p className="text-2xl font-bold text-secura-black">{loading ? '...' : clients.length}</p>
+                  <p className="text-2xl font-bold text-secura-black">{clients.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -215,7 +220,7 @@ const AgentDashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Properties</p>
-                  <p className="text-2xl font-bold text-secura-black">{loading ? '...' : properties.length}</p>
+                  <p className="text-2xl font-bold text-secura-black">{properties.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -343,33 +348,27 @@ const AgentDashboard = () => {
               <CardDescription>A list of your most recent clients</CardDescription>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="text-center p-8">Loading clients...</div>
-              ) : clients.length === 0 ? (
-                <div className="text-center p-8 text-muted-foreground">No clients found.</div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Client</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Added On</TableHead>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Added On</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {clients.map((client) => (
+                    <TableRow key={client.id}>
+                      <TableCell className="font-medium">{client.full_name}</TableCell>
+                      <TableCell>
+                        <div>{client.email || 'N/A'}</div>
+                        <div className="text-muted-foreground">{client.phone}</div>
+                      </TableCell>
+                      <TableCell>{new Date(client.created_at).toLocaleDateString()}</TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {clients.map((client) => (
-                      <TableRow key={client.id}>
-                        <TableCell className="font-medium">{client.full_name}</TableCell>
-                        <TableCell>
-                          <div>{client.email || 'N/A'}</div>
-                          <div className="text-muted-foreground">{client.phone}</div>
-                        </TableCell>
-                        <TableCell>{new Date(client.created_at).toLocaleDateString()}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
 
@@ -380,33 +379,27 @@ const AgentDashboard = () => {
               <CardDescription>A list of properties you manage</CardDescription>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="text-center p-8">Loading properties...</div>
-              ) : properties.length === 0 ? (
-                <div className="text-center p-8 text-muted-foreground">No properties found.</div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Property</TableHead>
-                      <TableHead>Client</TableHead>
-                      <TableHead>Added On</TableHead>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Property</TableHead>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Added On</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {properties.map((property) => (
+                    <TableRow key={property.id}>
+                      <TableCell>
+                        <div className="font-medium">{property.location}</div>
+                        <div className="text-muted-foreground">{property.property_type}</div>
+                      </TableCell>
+                      <TableCell>{property.client_name}</TableCell>
+                      <TableCell>{new Date(property.created_at).toLocaleDateString()}</TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {properties.map((property) => (
-                      <TableRow key={property.id}>
-                        <TableCell>
-                          <div className="font-medium">{property.location}</div>
-                          <div className="text-muted-foreground">{property.property_type}</div>
-                        </TableCell>
-                        <TableCell>{property.client_name}</TableCell>
-                        <TableCell>{new Date(property.created_at).toLocaleDateString()}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </div>
