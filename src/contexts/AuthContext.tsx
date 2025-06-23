@@ -119,10 +119,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // On mount, check for existing session
-    const checkSession = async () => {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
+    let initialLoad = true;
+    setLoading(true);
+
+    const handleSession = async (session: Session | null) => {
       if (session?.user) {
         const profile = await fetchUserProfile(session.user);
         setUser(session.user);
@@ -143,31 +143,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       setLoading(false);
     };
-    checkSession();
-  }, []);
 
-  useEffect(() => {
-    setLoading(true);
+    // On mount, check for existing session and handle it
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleSession(session);
+    });
+
+    // Listen for future auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        const profile = await fetchUserProfile(session.user);
-        setUser(session.user);
-        setSession(session);
-        setUserProfile(profile);
-        if (!profile) {
-          console.log('No user profile found after login/session check.');
-          toast({
-            title: "Profile Not Found",
-            description: "No user profile found for this account. Please contact support.",
-            variant: "destructive",
-          });
-        }
-      } else {
-        setUser(null);
-        setSession(null);
-        setUserProfile(null);
-      }
-      setLoading(false);
+      // Don't set loading to true here, just handle session
+      await handleSession(session);
     });
 
     return () => {
