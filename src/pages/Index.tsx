@@ -3,10 +3,8 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, ArrowRight, Lock, Users, FileText, Mail, MapPin, Phone } from 'lucide-react';
-
 const Index = () => {
-  return (
-    <div className="min-h-screen bg-white">
+  return <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="border-b bg-white">
         <div className="max-w-7xl mx-auto px-6 py-4">
@@ -172,12 +170,9 @@ const Index = () => {
             {/* Brand Section */}
             <div className="lg:col-span-2 space-y-4">
               <div className="flex items-center space-x-3 mb-4">
-                <img 
-                  src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" 
-                  alt="Secura" 
-                  className="h-8 w-auto brightness-0 invert" 
-                  style={{filter: 'brightness(0) saturate(100%) invert(82%) sepia(19%) saturate(1234%) hue-rotate(40deg) brightness(95%) contrast(88%)'}}
-                />
+                <img src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" alt="Secura" className="h-8 w-auto brightness-0 invert" style={{
+                filter: 'brightness(0) saturate(100%) invert(82%) sepia(19%) saturate(1234%) hue-rotate(40deg) brightness(95%) contrast(88%)'
+              }} />
               </div>
               <p className="text-secura-mint max-w-md">
                 Secure document sharing platform designed specifically for the UAE real estate industry. 
@@ -186,7 +181,7 @@ const Index = () => {
               <div className="flex items-center space-x-4 pt-4">
                 <div className="flex items-center space-x-2">
                   <Shield className="h-4 w-4 text-secura-lime" />
-                  <span className="text-sm text-secura-mint">UAE Compliant</span>
+                  <span className="text-sm text-secura-mint">PDPL Compliant</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Lock className="h-4 w-4 text-secura-lime" />
@@ -258,8 +253,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
