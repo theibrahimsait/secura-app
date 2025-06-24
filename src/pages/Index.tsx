@@ -185,7 +185,7 @@ const Index = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Lock className="h-4 w-4 text-secura-lime" />
-                  <span className="text-sm text-secura-mint">Bank-Level Security</span>
+                  <span className="text-sm text-secura-mint">Bank-Grade Security</span>
                 </div>
               </div>
             </div>
