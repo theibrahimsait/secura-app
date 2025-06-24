@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,9 +56,9 @@ const Login = () => {
             <div className="flex items-center space-x-3">
               <img src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" alt="Secura" className="h-8 w-auto" />
             </div>
-            <a href="https://secura.me" target="_blank" rel="noopener noreferrer" className="text-secura-teal hover:text-secura-moss transition-colors">
+            <Link to="/" className="text-secura-teal hover:text-secura-moss transition-colors">
               Back to Home
-            </a>
+            </Link>
           </div>
         </div>
       </header>
