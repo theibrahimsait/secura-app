@@ -363,6 +363,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_superadmin_auth_user_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       log_audit_event: {
         Args: {
           p_user_id: string

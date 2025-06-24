@@ -13,11 +13,20 @@ const SuperAdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, isSuperAdmin, isAuthenticated } = useAuth();
-  console.log({signIn, isSuperAdmin, isAuthenticated});
+  const { signIn, isSuperAdmin, isAuthenticated, loading: authLoading } = useAuth();
+  console.log({signIn, isSuperAdmin, isAuthenticated, authLoading});
   
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Wait for auth to finish loading before making redirect decisions
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-secura-teal via-secura-moss to-secura-black">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-secura-lime"></div>
+      </div>
+    );
+  }
 
   // Redirect if already authenticated as superadmin
   if (isAuthenticated && isSuperAdmin) {
@@ -42,16 +51,15 @@ const SuperAdminLogin = () => {
           description: error,
           variant: "destructive",
         });
-      } else {
-        window.location.reload();
+        setLoading(false);
       }
+      // Don't set loading to false here if successful - let the auth state change handle the redirect
     } catch (error) {
       toast({
         title: "Authentication Failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
