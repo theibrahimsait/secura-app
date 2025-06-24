@@ -241,7 +241,7 @@ const Index = () => {
             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
               <div className="text-secura-mint">
                 <p>&copy; 2025 Quri Technologies FZ-LLC. All rights reserved.</p>
-                <p className="text-sm text-secura-mint/80 mt-1">Licensed in Dubai, United Arab Emirates</p>
+                <p className="text-sm text-secura-mint/80 mt-1">Licensed in Dubai Internet City, United Arab Emirates</p>
               </div>
               <div className="flex items-center space-x-6">
                 <div className="flex items-center space-x-2">
