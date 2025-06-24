@@ -138,10 +138,7 @@ const Index = () => {
                 <CardTitle className="text-xl text-secura-black">Multi-Level Management</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription className="text-base">
-                  Superadmin, agency admin, and agent dashboards with appropriate access levels. 
-                  Perfect for managing multiple agents and maintaining oversight.
-                </CardDescription>
+                <CardDescription className="text-base">Agency admin, and agent dashboards with appropriate access levels. Perfect for managing multiple agents and maintaining oversight.</CardDescription>
               </CardContent>
             </Card>
 
