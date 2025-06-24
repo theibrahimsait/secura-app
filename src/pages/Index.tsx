@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, ArrowRight, Lock, Users, FileText, Mail, MapPin, Phone } from 'lucide-react';
+
 const Index = () => {
   return <div className="min-h-screen bg-white">
       {/* Header */}
@@ -217,18 +218,18 @@ const Index = () => {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-secura-lime">Quick Links</h3>
               <div className="space-y-2">
-                <Link to="/auth/login" className="block text-secura-mint hover:text-white transition-colors">
+                <Link to="/login" className="block text-secura-mint hover:text-white transition-colors">
                   Agency Portal
                 </Link>
-                <a href="mailto:support@secura.me" className="block text-secura-mint hover:text-white transition-colors">
+                <Link to="/support" className="block text-secura-mint hover:text-white transition-colors">
                   Support
-                </a>
-                <a href="#" className="block text-secura-mint hover:text-white transition-colors">
+                </Link>
+                <Link to="/privacy" className="block text-secura-mint hover:text-white transition-colors">
                   Privacy Policy
-                </a>
-                <a href="#" className="block text-secura-mint hover:text-white transition-colors">
+                </Link>
+                <Link to="/terms" className="block text-secura-mint hover:text-white transition-colors">
                   Terms of Service
-                </a>
+                </Link>
               </div>
             </div>
           </div>
@@ -252,4 +253,5 @@ const Index = () => {
       </footer>
     </div>;
 };
+
 export default Index;
