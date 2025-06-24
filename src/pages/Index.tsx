@@ -43,12 +43,12 @@ const Index = () => {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4">
-                <a href="https://login.secura.me/login" target="_blank" rel="noopener noreferrer">
+                <Link to="/login">
                   <Button size="lg" className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold px-8 py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105">
                     Access Portal
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
-                </a>
+                </Link>
                 <Button variant="outline" size="lg" className="border-secura-moss text-secura-black hover:bg-secura-moss/10 px-8 py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105">
                   Learn More
                 </Button>
