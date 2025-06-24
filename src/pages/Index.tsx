@@ -117,7 +117,7 @@ const Index = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 rounded-2xl">
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 rounded-2xl bg-secura-lime/10 flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-2xl bg-secura-lime/10 flex items-center justify-center mb-4 bg-lime-100">
                   <Shield className="w-8 h-8 text-secura-teal" />
                 </div>
                 <CardTitle className="text-xl text-secura-black">Secure by Design</CardTitle>
@@ -132,7 +132,7 @@ const Index = () => {
 
             <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 rounded-2xl">
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 rounded-2xl bg-secura-mint/20 flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-2xl bg-secura-mint/20 flex items-center justify-center mb-4 bg-lime-100">
                   <Users className="w-8 h-8 text-secura-moss" />
                 </div>
                 <CardTitle className="text-xl text-secura-black">Multi-Level Management</CardTitle>
@@ -144,7 +144,7 @@ const Index = () => {
 
             <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 rounded-2xl">
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 rounded-2xl bg-secura-teal/10 flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-2xl bg-secura-teal/10 flex items-center justify-center mb-4 bg-lime-100">
                   <FileText className="w-8 h-8 text-secura-teal" />
                 </div>
                 <CardTitle className="text-xl text-secura-black">Complete Audit Trail</CardTitle>
