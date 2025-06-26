@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,7 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-6">
+      <section className="py-12 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8 animate-fade-in">
@@ -48,9 +49,11 @@ const Index = () => {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
-                <Button variant="outline" size="lg" className="border-secura-moss text-secura-black hover:bg-secura-moss/10 px-8 py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105">
-                  Learn More
-                </Button>
+                <a href="https://secura.me" target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" size="lg" className="border-secura-moss text-secura-black hover:bg-secura-moss/10 px-8 py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105">
+                    Learn More
+                  </Button>
+                </a>
               </div>
 
               {/* Trust Indicators */}
