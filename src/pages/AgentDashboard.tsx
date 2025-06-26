@@ -47,7 +47,6 @@ interface Property {
 interface GenerateLinkForm {
   clientName: string;
   clientPhone: string;
-  clientType: 'buy' | 'sell';
 }
 
 const AgentDashboard = () => {
@@ -64,7 +63,6 @@ const AgentDashboard = () => {
   const [linkForm, setLinkForm] = useState<GenerateLinkForm>({
     clientName: '',
     clientPhone: '',
-    clientType: 'buy',
   });
 
   if (loading) {
@@ -145,7 +143,7 @@ const AgentDashboard = () => {
         title: "Secure Link Generated",
         description: `Link generated for ${linkForm.clientName}`,
       });
-      setLinkForm({ clientName: '', clientPhone: '', clientType: 'buy' });
+      setLinkForm({ clientName: '', clientPhone: '' });
       setGenerateLinkDialogOpen(false);
       setGenerateLinkLoading(false);
     }, 1500);
@@ -300,21 +298,6 @@ const AgentDashboard = () => {
                         placeholder="Enter client's phone number"
                         required
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="clientType">Client Type</Label>
-                      <Select
-                        onValueChange={(value: 'buy' | 'sell') => setLinkForm({ ...linkForm, clientType: value })}
-                        defaultValue={linkForm.clientType}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select client type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="buy">Buyer</SelectItem>
-                          <SelectItem value="sell">Seller</SelectItem>
-                        </SelectContent>
-                      </Select>
                     </div>
                     <div className="flex space-x-2 pt-4">
                       <Button
