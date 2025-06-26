@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,7 +42,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchUserProfile = async (user: User) => {
     try {
       console.log('Fetching user profile for auth_user_id:', user.id);
-      console.log('About to fetch from users table with id:', user.id);
+      console.log('User email:', user.email);
+      
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -49,16 +51,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching user profile:', error);
-        toast({ title: "Error", description: "Could not fetch user profile.", variant: "destructive" });
-        return null;
+        console.error('Error fetching user profile by auth_user_id:', error);
+        throw error;
       }
 
       if (data) {
-        console.log('Found user profile:', data);
+        console.log('Found user profile by auth_user_id:', data);
         return data;
       }
 
+      // If no profile found by auth_user_id, try by email
       if (user.email) {
         console.log('No profile found by auth_user_id, trying by email:', user.email);
         const { data: emailData, error: emailError } = await supabase
@@ -69,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (emailError) {
           console.error('Error fetching user profile by email:', emailError);
-          return null;
+          throw emailError;
         }
 
         if (emailData) {
@@ -109,53 +111,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       console.log('Sign in successful:', data);
-
-      // The auth state change will handle profile fetching
       return {};
     } catch (error) {
-      console.error('Sign in error:', error);
+      console.error('Sign in exception:', error);
       return { error: 'An unexpected error occurred' };
     }
   };
 
-  useEffect(() => {
-    let initialLoad = true;
-    setLoading(true);
-
-    const handleSession = async (session: Session | null) => {
-      if (session?.user) {
+  const handleAuthStateChange = async (session: Session | null) => {
+    console.log('Auth state change:', session ? 'session exists' : 'no session');
+    
+    if (session?.user) {
+      console.log('Processing session for user:', session.user.email);
+      setUser(session.user);
+      setSession(session);
+      
+      try {
         const profile = await fetchUserProfile(session.user);
-        setUser(session.user);
-        setSession(session);
         setUserProfile(profile);
+        
         if (!profile) {
           console.log('No user profile found after login/session check.');
           toast({
-            title: "Profile Not Found",
-            description: "No user profile found for this account. Please contact support.",
+            title: "Access Denied",
+            description: "Your account is not authorized to access this system. Please contact support.",
             variant: "destructive",
           });
+        } else {
+          console.log('User profile loaded successfully:', profile.role);
         }
-      } else {
-        setUser(null);
-        setSession(null);
-        setUserProfile(null);
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load user profile. Please try again.",
+          variant: "destructive",
+        });
       }
-      setLoading(false);
-    };
+    } else {
+      console.log('No session, clearing user state');
+      setUser(null);
+      setSession(null);
+      setUserProfile(null);
+    }
+    
+    setLoading(false);
+  };
 
-    // On mount, check for existing session and handle it
+  useEffect(() => {
+    console.log('Setting up auth listeners...');
+    
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      handleSession(session);
+      console.log('Initial session check:', session ? 'found' : 'not found');
+      handleAuthStateChange(session);
     });
 
-    // Listen for future auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      // Don't set loading to true here, just handle session
-      await handleSession(session);
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth event:', event);
+      await handleAuthStateChange(session);
     });
 
     return () => {
+      console.log('Cleaning up auth listeners');
       subscription.unsubscribe();
     };
   }, []);
@@ -179,9 +198,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      setUserProfile(null);
     } catch (error) {
       console.error('Sign out error:', error);
     }

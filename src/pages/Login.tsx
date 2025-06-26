@@ -13,7 +13,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, isAuthenticated, isAgencyAdmin, isAgent } = useAuth();
+  const { signIn, isAuthenticated, isAgencyAdmin, isAgent, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
   // Redirect if already authenticated
@@ -24,20 +24,50 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both email and password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
+    console.log('Starting login process for:', email);
 
     try {
       const { error } = await signIn(email, password);
-      setLoading(false);
 
       if (error) {
+        console.error('Login failed:', error);
         toast({
           title: "Login Failed",
           description: error,
           variant: "destructive",
         });
+        setLoading(false);
+      } else {
+        console.log('Login request successful, waiting for auth state...');
+        // Don't set loading to false here - let the auth state change handle it
+        // The loading state will be cleared when auth context updates
+        
+        // Set a timeout to prevent infinite loading
+        setTimeout(() => {
+          if (loading) {
+            console.log('Login timeout reached');
+            setLoading(false);
+            toast({
+              title: "Login Timeout",
+              description: "Login is taking longer than expected. Please try again.",
+              variant: "destructive",
+            });
+          }
+        }, 10000); // 10 second timeout
       }
     } catch (error) {
+      console.error('Login exception:', error);
       setLoading(false);
       toast({
         title: "Login Failed",
@@ -46,6 +76,18 @@ const Login = () => {
       });
     }
   };
+
+  // Show loading spinner while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex items-center space-x-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-secura-teal"></div>
+          <span className="text-secura-black">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -91,6 +133,7 @@ const Login = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
                     required
+                    disabled={loading}
                     className="h-12 border-2 focus:border-secura-teal"
                   />
                 </div>
@@ -106,6 +149,7 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
+                    disabled={loading}
                     className="h-12 border-2 focus:border-secura-teal"
                   />
                 </div>
@@ -113,7 +157,7 @@ const Login = () => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold text-lg rounded-xl transition-all duration-300 hover:scale-105"
+                  className="w-full h-12 bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold text-lg rounded-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {loading ? (
                     <div className="flex items-center space-x-2">
@@ -132,9 +176,9 @@ const Login = () => {
               <div className="mt-6 text-center">
                 <p className="text-sm text-muted-foreground">
                   Need help accessing your account?{' '}
-                  <a href="mailto:support@secura.me" className="text-secura-teal hover:text-secura-moss">
+                  <Link to="/support" className="text-secura-teal hover:text-secura-moss">
                     Contact Support
-                  </a>
+                  </Link>
                 </p>
               </div>
             </CardContent>
