@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { Resend } from "npm:resend@2.0.0";
@@ -100,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Create a record in public.users for the new agent
       if (role === 'agent' && fullName && agencyId && createdBy) {
         console.log('Attempting to insert agent into public.users');
-        const { data: dbData, error: dbError } = await userSupabase.from('users').insert({
+        const { data: dbData, error: dbError } = await supabase.from('users').insert({
           auth_user_id: authUser.id,
           email,
           full_name: fullName,
