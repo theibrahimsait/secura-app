@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { Resend } from "npm:resend@2.0.0";
@@ -65,7 +66,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    let authData;
+    let authUser;
 
     if (isPasswordReset && userId) {
       // Update existing user's password
@@ -79,7 +80,7 @@ const handler = async (req: Request): Promise<Response> => {
         throw updateError;
       }
 
-      authData = { data: updateData };
+      authUser = updateData.user;
     } else {
       // Create new auth user
       const { data: createData, error: authError } = await supabase.auth.admin.createUser({
@@ -93,14 +94,14 @@ const handler = async (req: Request): Promise<Response> => {
         throw authError;
       }
 
-      authData = createData;
-      console.log('Auth user created successfully:', authData.user.id);
+      authUser = createData.user;
+      console.log('Auth user created successfully:', authUser.id);
 
       // Create a record in public.users for the new agent
       if (role === 'agent' && fullName && agencyId && createdBy) {
         console.log('Attempting to insert agent into public.users');
         const { data: dbData, error: dbError } = await userSupabase.from('users').insert({
-          auth_user_id: authData.user.id,
+          auth_user_id: authUser.id,
           email,
           full_name: fullName,
           phone,
@@ -112,7 +113,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (dbError) {
           console.error('Database insert error:', dbError);
           // If the DB insert fails, we should delete the auth user to avoid orphans
-          await supabase.auth.admin.deleteUser(authData.user.id);
+          await supabase.auth.admin.deleteUser(authUser.id);
           console.log('Orphaned auth user deleted.');
           throw dbError;
         }
@@ -226,7 +227,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({
         success: true,
         data: {
-          user: authData.data.user,
+          user: authUser,
           message
         }
       }),
