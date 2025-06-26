@@ -126,56 +126,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session.user);
       setSession(session);
       
-      try {
-        const profile = await fetchUserProfile(session.user);
-        setUserProfile(profile);
-        
-        if (!profile) {
-          console.log('No user profile found after login/session check.');
+      // Use setTimeout to prevent blocking the auth state change
+      setTimeout(async () => {
+        try {
+          const profile = await fetchUserProfile(session.user);
+          setUserProfile(profile);
+          
+          if (!profile) {
+            console.log('No user profile found after login/session check.');
+            toast({
+              title: "Access Denied",
+              description: "Your account is not authorized to access this system. Please contact support.",
+              variant: "destructive",
+            });
+          } else {
+            console.log('User profile loaded successfully:', profile.role);
+          }
+        } catch (error) {
+          console.error('Error loading user profile:', error);
           toast({
-            title: "Access Denied",
-            description: "Your account is not authorized to access this system. Please contact support.",
+            title: "Error",
+            description: "Failed to load user profile. Please try again.",
             variant: "destructive",
           });
-        } else {
-          console.log('User profile loaded successfully:', profile.role);
         }
-      } catch (error) {
-        console.error('Error loading user profile:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load user profile. Please try again.",
-          variant: "destructive",
-        });
-      }
+        setLoading(false);
+      }, 0);
     } else {
       console.log('No session, clearing user state');
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   useEffect(() => {
     console.log('Setting up auth listeners...');
     
+    let mounted = true;
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Initial session check:', session ? 'found' : 'not found');
-      handleAuthStateChange(session);
+      if (mounted) {
+        handleAuthStateChange(session);
+      }
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth event:', event);
-      await handleAuthStateChange(session);
+      if (mounted) {
+        await handleAuthStateChange(session);
+      }
     });
 
+    // Set a fallback timeout to ensure loading doesn't get stuck
+    const loadingTimeout = setTimeout(() => {
+      if (mounted && loading) {
+        console.log('Auth loading timeout reached, setting loading to false');
+        setLoading(false);
+      }
+    }, 5000);
+
     return () => {
+      mounted = false;
       console.log('Cleaning up auth listeners');
       subscription.unsubscribe();
+      clearTimeout(loadingTimeout);
     };
   }, []);
 

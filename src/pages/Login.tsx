@@ -47,43 +47,32 @@ const Login = () => {
           description: error,
           variant: "destructive",
         });
-        setLoading(false);
       } else {
         console.log('Login request successful, waiting for auth state...');
-        // Don't set loading to false here - let the auth state change handle it
-        // The loading state will be cleared when auth context updates
-        
-        // Set a timeout to prevent infinite loading
-        setTimeout(() => {
-          if (loading) {
-            console.log('Login timeout reached');
-            setLoading(false);
-            toast({
-              title: "Login Timeout",
-              description: "Login is taking longer than expected. Please try again.",
-              variant: "destructive",
-            });
-          }
-        }, 10000); // 10 second timeout
+        toast({
+          title: "Login Successful",
+          description: "Redirecting to your dashboard...",
+        });
       }
     } catch (error) {
       console.error('Login exception:', error);
-      setLoading(false);
       toast({
         title: "Login Failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Show loading spinner while auth is initializing
+  // Show loading spinner while auth is initializing, but with a timeout
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-secura-teal"></div>
-          <span className="text-secura-black">Loading...</span>
+          <span className="text-secura-black">Initializing...</span>
         </div>
       </div>
     );
