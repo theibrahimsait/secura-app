@@ -106,9 +106,8 @@ const handler = async (req: Request): Promise<Response> => {
           phone,
           role: 'agent',
           agency_id: agencyId,
-          created_by: createdBy,
+          created_by: createdBy
         }).select();
-
         if (dbError) {
           console.error('Database insert error:', dbError);
           // If the DB insert fails, we should delete the auth user to avoid orphans
