@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,12 +43,8 @@ const AgencyDashboard = () => {
 
   const fetchAgents = async () => {
     if (!userProfile?.agency_id) {
-      console.log('No agency_id found in userProfile:', userProfile);
       return;
     }
-    
-    console.log('Fetching agents for agency_id:', userProfile.agency_id);
-    console.log('Current user profile:', userProfile);
     
     try {
       const { data, error } = await supabase
@@ -57,14 +54,11 @@ const AgencyDashboard = () => {
         .eq('role', 'agent')
         .order('created_at', { ascending: false });
 
-      console.log('Agents query result:', { data, error });
-      
       if (error) {
         console.error('Error fetching agents:', error);
         throw error;
       }
       
-      console.log('Found agents:', data);
       setAgents(data || []);
     } catch (error) {
       console.error('Error fetching agents:', error);
@@ -183,12 +177,8 @@ const AgencyDashboard = () => {
   };
 
   useEffect(() => {
-    console.log('AgencyDashboard useEffect triggered');
-    console.log('userProfile:', userProfile);
     if(userProfile) {
       fetchAgents();
-    } else {
-      console.log('No userProfile yet, waiting...');
     }
   }, [userProfile]);
 
@@ -227,15 +217,6 @@ const AgencyDashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Debug Info */}
-        {userProfile && (
-          <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-700">
-              <strong>Debug Info:</strong> Agency ID: {userProfile.agency_id} | Role: {userProfile.role} | Total Agents: {agents.length}
-            </p>
-          </div>
-        )}
-
         {/* Stats Cards and Actions */}
         <div className="flex justify-between items-center mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
