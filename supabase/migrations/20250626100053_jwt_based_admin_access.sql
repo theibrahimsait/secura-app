@@ -1,13 +1,13 @@
-
 -- First, drop ALL existing policies on the users table to start fresh
 DROP POLICY IF EXISTS "Allow authenticated users to insert users" ON public.users;
 DROP POLICY IF EXISTS "Users can view users in their agency" ON public.users;
 DROP POLICY IF EXISTS "Agency admins can update users in their agency" ON public.users;
 DROP POLICY IF EXISTS "Admins can manage users based on JWT role" ON public.users;
-DROP POLICY IF EXISTS "Users can view their own profile" ON public.users;
+DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
 DROP POLICY IF EXISTS "Service role can manage all users" ON public.users;
 
 -- Create fresh, non-recursive policies using JWT metadata
+DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
 CREATE POLICY "Users can view own profile" ON public.users
   FOR SELECT USING (auth_user_id = auth.uid());
 
