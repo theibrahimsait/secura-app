@@ -1,10 +1,8 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, ArrowRight, Lock, Users, FileText, Mail, MapPin, Phone } from 'lucide-react';
-
 const Index = () => {
   return <div className="min-h-screen bg-white">
       {/* Header */}
@@ -64,7 +62,7 @@ const Index = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Lock className="h-5 w-5 text-secura-teal" />
-                  <span className="text-sm text-muted-foreground">End-to-End Encrypted</span>
+                  <span className="text-sm text-muted-foreground">End-to-End Encryption</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <FileText className="h-5 w-5 text-secura-teal" />
@@ -256,5 +254,4 @@ const Index = () => {
       </footer>
     </div>;
 };
-
 export default Index;
