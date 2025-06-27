@@ -193,6 +193,35 @@ const AgencyDashboard = () => {
     }
   };
 
+  const refreshJwtMetadata = async () => {
+    try {
+      const { data, error } = await supabase.rpc('refresh_jwt_metadata' as any);
+      if (error) {
+        console.error('Error refreshing JWT metadata:', error);
+        toast({
+          title: "Error",
+          description: "Failed to refresh JWT metadata",
+          variant: "destructive",
+        });
+      } else {
+        console.log('JWT metadata refreshed:', data);
+        toast({
+          title: "Success",
+          description: "JWT metadata refreshed. Please refresh the page to see updated data.",
+        });
+        // Force a page refresh to get the new JWT
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error refreshing JWT metadata:', error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh JWT metadata",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     if(userProfile) {
       fetchAgents();
@@ -319,6 +348,16 @@ const AgencyDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-semibold">JWT Metadata Status:</h4>
+                  <Button
+                    onClick={refreshJwtMetadata}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Refresh JWT Metadata
+                  </Button>
+                </div>
                 <div>
                   <h4 className="font-semibold mb-2">User Profile:</h4>
                   <pre className="bg-gray-100 p-3 rounded text-sm overflow-auto">
