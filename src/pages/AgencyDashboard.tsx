@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,13 +27,14 @@ interface CreateAgentForm {
 }
 
 const AgencyDashboard = () => {
-  const { signOut, userProfile } = useAuth();
+  const { signOut, userProfile, user } = useAuth();
   const { toast } = useToast();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState<string | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
   const [form, setForm] = useState<CreateAgentForm>({
     fullName: '',
     email: '',
@@ -43,16 +43,33 @@ const AgencyDashboard = () => {
 
   const fetchAgents = async () => {
     if (!userProfile?.agency_id) {
+      console.log('No agency_id in userProfile:', userProfile);
       return;
     }
     
     try {
+      console.log('Fetching agents for agency_id:', userProfile.agency_id);
+      console.log('Current user role:', userProfile.role);
+      
+      // First, let's check what agents exist without RLS filtering
+      const { data: allAgents, error: allAgentsError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('role', 'agent');
+      
+      console.log('All agents in system:', allAgents);
+      console.log('All agents error:', allAgentsError);
+      
+      // Now try the filtered query
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('agency_id', userProfile.agency_id)
         .eq('role', 'agent')
         .order('created_at', { ascending: false });
+
+      console.log('Filtered agents query result:', data);
+      console.log('Filtered agents error:', error);
 
       if (error) {
         console.error('Error fetching agents:', error);
@@ -248,41 +265,82 @@ const AgencyDashboard = () => {
             </Card>
           </div>
           
-          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-secura-teal hover:bg-secura-teal/90 text-white font-semibold">
-                <Plus className="w-4 h-4 mr-2" />
-                Add New Agent
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Agent</DialogTitle>
-                <DialogDescription>Create a new agent account for your agency</DialogDescription>
-              </DialogHeader>
-              <form onSubmit={createAgent} className="space-y-4">
-                <div>
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input id="fullName" value={form.fullName} onChange={(e) => setForm({...form, fullName: e.target.value})} required />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" type="email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} required />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})} required />
-                </div>
-                <div className="flex justify-end space-x-2 pt-2">
-                  <Button type="button" variant="ghost" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={createLoading}>
-                    {createLoading ? 'Adding...' : 'Add Agent'}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <div className="flex items-center space-x-4">
+            <Button
+              onClick={() => setShowDebug(!showDebug)}
+              variant="outline"
+              size="sm"
+            >
+              {showDebug ? 'Hide Debug' : 'Show Debug'}
+            </Button>
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-secura-teal hover:bg-secura-teal/90 text-white font-semibold">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add New Agent
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Agent</DialogTitle>
+                  <DialogDescription>Create a new agent account for your agency</DialogDescription>
+                </DialogHeader>
+                <form onSubmit={createAgent} className="space-y-4">
+                  <div>
+                    <Label htmlFor="fullName">Full Name</Label>
+                    <Input id="fullName" value={form.fullName} onChange={(e) => setForm({...form, fullName: e.target.value})} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input id="email" type="email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input id="phone" value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})} required />
+                  </div>
+                  <div className="flex justify-end space-x-2 pt-2">
+                    <Button type="button" variant="ghost" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+                    <Button type="submit" disabled={createLoading}>
+                      {createLoading ? 'Adding...' : 'Add Agent'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
+
+        {/* Debug Section */}
+        {showDebug && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Debug Information</CardTitle>
+              <CardDescription>Current user profile and JWT metadata</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2">User Profile:</h4>
+                  <pre className="bg-gray-100 p-3 rounded text-sm overflow-auto">
+                    {JSON.stringify(userProfile, null, 2)}
+                  </pre>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">JWT Metadata:</h4>
+                  <pre className="bg-gray-100 p-3 rounded text-sm overflow-auto">
+                    {JSON.stringify(user?.app_metadata, null, 2)}
+                  </pre>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">User Claims:</h4>
+                  <pre className="bg-gray-100 p-3 rounded text-sm overflow-auto">
+                    {JSON.stringify(user?.user_metadata, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Agents Table */}
         <Card>

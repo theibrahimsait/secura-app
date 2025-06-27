@@ -57,9 +57,11 @@ DROP POLICY IF EXISTS "Enable update for own record or superadmin" ON public.use
 
 
 -- Step 5: Create new, non-recursive policies on public.users
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.users;
 CREATE POLICY "Users can view their own profile" ON public.users
   FOR SELECT USING (auth_user_id = auth.uid());
   
+DROP POLICY IF EXISTS "Admins can manage users based on JWT role" ON public.users;
 CREATE POLICY "Admins can manage users based on JWT role" ON public.users
   FOR ALL USING (
     (auth.jwt() ->> 'app_metadata')::jsonb ->> 'role' = 'superadmin' OR
@@ -78,6 +80,7 @@ DROP POLICY IF EXISTS "Superadmin can update agencies" ON public.agencies;
 DROP POLICY IF EXISTS "Superadmin can delete agencies" ON public.agencies;
 
 -- Step 7: Create new, non-recursive policies on public.agencies
+DROP POLICY IF EXISTS "Admins can manage agencies based on JWT role" ON public.agencies;
 CREATE POLICY "Admins can manage agencies based on JWT role" ON public.agencies
   FOR ALL USING (
     (auth.jwt() -> 'app_metadata' ->> 'role' = 'superadmin') OR
