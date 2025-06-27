@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { Resend } from "npm:resend@2.0.0";
@@ -53,17 +54,6 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-    
-    // Create a client that impersonates the user to respect RLS
-    const userSupabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
-    );
 
     let authUser;
 
@@ -99,6 +89,9 @@ const handler = async (req: Request): Promise<Response> => {
       // Create a record in public.users for the new agent
       if (role === 'agent' && fullName && agencyId && createdBy) {
         console.log('Attempting to insert agent into public.users');
+        console.log('Using service role client for insertion');
+        
+        // Use the service role client directly for the insert
         const { data: dbData, error: dbError } = await supabase.from('users').insert({
           auth_user_id: authUser.id,
           email,
@@ -108,8 +101,16 @@ const handler = async (req: Request): Promise<Response> => {
           agency_id: agencyId,
           created_by: createdBy
         }).select();
+
         if (dbError) {
           console.error('Database insert error:', dbError);
+          console.error('Error details:', {
+            code: dbError.code,
+            message: dbError.message,
+            details: dbError.details,
+            hint: dbError.hint
+          });
+          
           // If the DB insert fails, we should delete the auth user to avoid orphans
           await supabase.auth.admin.deleteUser(authUser.id);
           console.log('Orphaned auth user deleted.');
