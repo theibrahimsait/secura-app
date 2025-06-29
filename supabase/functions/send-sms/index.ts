@@ -68,13 +68,13 @@ const checkRateLimit = async (phone: string): Promise<boolean> => {
   // Check for SMS attempts in the last 2 minutes (more reasonable for testing)
   const twoMinutesAgo = new Date(Date.now() - 2 * 60000).toISOString();
   
-  // Check audit logs for recent SMS attempts instead of client updates
+  // Check audit logs for recent SMS attempts using proper JSONB query
   const { data, error } = await supabase
     .from('audit_logs')
     .select('created_at')
     .eq('action', 'sms_sent')
     .gte('created_at', twoMinutesAgo)
-    .like('details->phone', `%${phone.slice(-4)}%`)
+    .contains('details', { phone: phone.slice(-4) })
     .maybeSingle();
 
   if (error && error.code !== 'PGRST116') {
