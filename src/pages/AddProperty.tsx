@@ -10,6 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Home, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
+
+type PropertyType = Database['public']['Enums']['property_type'];
 
 interface ClientInfo {
   id: string;
@@ -22,7 +25,7 @@ const AddProperty = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
-    property_type: '',
+    property_type: '' as PropertyType,
     location: '',
     bedrooms: '',
     bathrooms: '',
@@ -140,7 +143,7 @@ const AddProperty = () => {
                   <Label htmlFor="property_type">Property Type *</Label>
                   <Select 
                     value={formData.property_type} 
-                    onValueChange={(value) => handleInputChange('property_type', value)}
+                    onValueChange={(value: PropertyType) => handleInputChange('property_type', value)}
                     required
                   >
                     <SelectTrigger>
