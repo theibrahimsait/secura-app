@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import AgencyDashboard from "./pages/AgencyDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
 import ClientLogin from "./pages/ClientLogin";
+import ClientOnboarding from "./pages/ClientOnboarding";
 import ClientDashboard from "./pages/ClientDashboard";
 import AddProperty from "./pages/AddProperty";
 import Support from "./pages/Support";
