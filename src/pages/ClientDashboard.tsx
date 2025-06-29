@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,8 +55,8 @@ const ClientDashboard = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if client is logged in
-    const storedClient = localStorage.getItem('secura_client');
+    // Check if client is logged in - use the correct localStorage key
+    const storedClient = localStorage.getItem('client_data');
     if (!storedClient) {
       navigate('/client/login');
       return;
@@ -103,7 +102,7 @@ const ClientDashboard = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('secura_client');
+    localStorage.removeItem('client_data');
     navigate('/client/login');
   };
 
