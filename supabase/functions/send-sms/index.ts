@@ -9,7 +9,8 @@ const corsHeaders = {
 
 interface SMSRequest {
   phone: string;
-  otp: string;
+  action: 'send' | 'verify';
+  code?: string;
   clientId?: string;
 }
 
@@ -18,33 +19,32 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
-const sendSMS = async (phone: string, message: string) => {
+const sendVerificationCode = async (phone: string) => {
   const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
   const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-  const twilioPhone = Deno.env.get('TWILIO_PHONE_NUMBER');
+  const verifyServiceSid = Deno.env.get('TWILIO_VERIFY_SERVICE_SID');
 
-  console.log('Twilio credentials check:', {
+  console.log('Twilio Verify credentials check:', {
     accountSid: accountSid ? 'Present' : 'Missing',
     authToken: authToken ? 'Present' : 'Missing',
-    twilioPhone: twilioPhone ? 'Present' : 'Missing'
+    verifyServiceSid: verifyServiceSid ? 'Present' : 'Missing'
   });
 
-  if (!accountSid || !authToken || !twilioPhone) {
-    throw new Error('Twilio credentials not configured');
+  if (!accountSid || !authToken || !verifyServiceSid) {
+    throw new Error('Twilio Verify credentials not configured');
   }
 
   const auth = btoa(`${accountSid}:${authToken}`);
   
   const body = new URLSearchParams({
     To: phone,
-    From: twilioPhone,
-    Body: message,
+    Channel: 'sms',
   });
 
-  console.log('Sending SMS to:', phone.slice(-4)); // Only log last 4 digits for privacy
+  console.log('Sending verification code to:', phone.slice(-4));
 
   const response = await fetch(
-    `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+    `https://verify.twilio.com/v2/Services/${verifyServiceSid}/Verifications`,
     {
       method: 'POST',
       headers: {
@@ -57,18 +57,56 @@ const sendSMS = async (phone: string, message: string) => {
 
   if (!response.ok) {
     const error = await response.text();
-    console.error('Twilio SMS error:', error);
-    throw new Error(`SMS sending failed: ${response.status}`);
+    console.error('Twilio Verify error:', error);
+    throw new Error(`Verification sending failed: ${response.status}`);
+  }
+
+  return await response.json();
+};
+
+const verifyCode = async (phone: string, code: string) => {
+  const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+  const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+  const verifyServiceSid = Deno.env.get('TWILIO_VERIFY_SERVICE_SID');
+
+  if (!accountSid || !authToken || !verifyServiceSid) {
+    throw new Error('Twilio Verify credentials not configured');
+  }
+
+  const auth = btoa(`${accountSid}:${authToken}`);
+  
+  const body = new URLSearchParams({
+    To: phone,
+    Code: code,
+  });
+
+  console.log('Verifying code for:', phone.slice(-4));
+
+  const response = await fetch(
+    `https://verify.twilio.com/v2/Services/${verifyServiceSid}/VerificationCheck`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: body.toString(),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('Twilio Verify check error:', error);
+    throw new Error(`Verification check failed: ${response.status}`);
   }
 
   return await response.json();
 };
 
 const checkRateLimit = async (phone: string): Promise<boolean> => {
-  // Check for SMS attempts in the last 2 minutes (more reasonable for testing)
+  // Check for SMS attempts in the last 2 minutes
   const twoMinutesAgo = new Date(Date.now() - 2 * 60000).toISOString();
   
-  // Check audit logs for recent SMS attempts using proper JSONB query
   const { data, error } = await supabase
     .from('audit_logs')
     .select('created_at')
@@ -79,13 +117,13 @@ const checkRateLimit = async (phone: string): Promise<boolean> => {
 
   if (error && error.code !== 'PGRST116') {
     console.error('Rate limit check error:', error);
-    return true; // Allow if we can't check (fail open for now)
+    return true; // Allow if we can't check
   }
 
   return !data; // Allow if no recent SMS found
 };
 
-const logSMSEvent = async (phone: string, success: boolean, error?: string) => {
+const logSMSEvent = async (phone: string, action: string, success: boolean, error?: string) => {
   try {
     await supabase.rpc('log_audit_event', {
       p_user_id: null,
@@ -94,7 +132,8 @@ const logSMSEvent = async (phone: string, success: boolean, error?: string) => {
       p_resource_type: 'authentication',
       p_resource_id: null,
       p_details: {
-        phone: phone.slice(-4), // Only log last 4 digits for privacy
+        phone: phone.slice(-4),
+        action,
         success,
         error: error || null,
         timestamp: new Date().toISOString()
@@ -112,14 +151,14 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log('SMS function called');
-    const { phone, otp, clientId }: SMSRequest = await req.json();
+    console.log('SMS Verify function called');
+    const { phone, action, code, clientId }: SMSRequest = await req.json();
 
     // Validate input
-    if (!phone || !otp) {
-      console.error('Missing required fields:', { phone: !!phone, otp: !!otp });
+    if (!phone || !action) {
+      console.error('Missing required fields:', { phone: !!phone, action: !!action });
       return new Response(
-        JSON.stringify({ error: 'Phone number and OTP are required' }),
+        JSON.stringify({ error: 'Phone number and action are required' }),
         {
           status: 400,
           headers: { 'Content-Type': 'application/json', ...corsHeaders },
@@ -127,7 +166,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Updated validation for international phone numbers
+    // Validate phone format
     const phoneRegex = /^\+\d{1,4}\d{7,}$/;
     if (!phoneRegex.test(phone)) {
       console.error('Invalid phone format:', phone);
@@ -140,45 +179,84 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check rate limiting
-    const canSend = await checkRateLimit(phone);
-    if (!canSend) {
-      console.log('Rate limit exceeded for phone:', phone.slice(-4));
-      await logSMSEvent(phone, false, 'Rate limit exceeded');
+    if (action === 'send') {
+      // Check rate limiting for sending
+      const canSend = await checkRateLimit(phone);
+      if (!canSend) {
+        console.log('Rate limit exceeded for phone:', phone.slice(-4));
+        await logSMSEvent(phone, 'send', false, 'Rate limit exceeded');
+        return new Response(
+          JSON.stringify({ error: 'Please wait before requesting another code' }),
+          {
+            status: 429,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          }
+        );
+      }
+
+      // Send verification code
+      const twilioResponse = await sendVerificationCode(phone);
+      console.log('Verification code sent successfully:', twilioResponse.sid);
+
+      // Log successful SMS
+      await logSMSEvent(phone, 'send', true);
+
       return new Response(
-        JSON.stringify({ error: 'Please wait before requesting another code' }),
+        JSON.stringify({ 
+          success: true, 
+          sid: twilioResponse.sid,
+          status: twilioResponse.status,
+          message: 'Verification code sent successfully'
+        }),
         {
-          status: 429,
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        }
+      );
+
+    } else if (action === 'verify') {
+      if (!code) {
+        return new Response(
+          JSON.stringify({ error: 'Verification code is required' }),
+          {
+            status: 400,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          }
+        );
+      }
+
+      // Verify the code
+      const verificationResult = await verifyCode(phone, code);
+      console.log('Verification result:', verificationResult.status);
+
+      const isValid = verificationResult.status === 'approved';
+      await logSMSEvent(phone, 'verify', isValid, isValid ? null : 'Invalid code');
+
+      return new Response(
+        JSON.stringify({ 
+          success: isValid,
+          status: verificationResult.status,
+          message: isValid ? 'Code verified successfully' : 'Invalid verification code'
+        }),
+        {
+          status: isValid ? 200 : 400,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        }
+      );
+
+    } else {
+      return new Response(
+        JSON.stringify({ error: 'Invalid action. Use "send" or "verify"' }),
+        {
+          status: 400,
           headers: { 'Content-Type': 'application/json', ...corsHeaders },
         }
       );
     }
 
-    // Send SMS
-    const message = `Your Secura verification code is: ${otp}. This code expires in 10 minutes. Never share this code with anyone.`;
-    
-    const twilioResponse = await sendSMS(phone, message);
-    console.log('SMS sent successfully:', twilioResponse.sid);
-
-    // Log successful SMS
-    await logSMSEvent(phone, true);
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        messageId: twilioResponse.sid,
-        message: 'Verification code sent successfully'
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      }
-    );
-
   } catch (error: any) {
-    console.error('SMS sending error:', error);
+    console.error('SMS Verify error:', error);
     
-    // Extract phone from request for logging if available
     let phone = 'unknown';
     try {
       const body = await req.clone().json();
@@ -187,11 +265,11 @@ const handler = async (req: Request): Promise<Response> => {
       // Ignore parsing errors
     }
     
-    await logSMSEvent(phone, false, error.message);
+    await logSMSEvent(phone, 'error', false, error.message);
 
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to send verification code. Please try again.',
+        error: 'Failed to process verification request. Please try again.',
         details: error.message
       }),
       {
