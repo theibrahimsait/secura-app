@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -247,14 +248,15 @@ const ClientLogin = () => {
         description: "Welcome to Secura!",
       });
 
-      // Check if onboarding is completed
-      if (!client.onboarding_completed || referralToken) {
+      // Check if onboarding is completed - only send to onboarding if NOT completed
+      if (!client.onboarding_completed) {
         // Redirect to onboarding with referral token if present
         const onboardingUrl = referralToken 
           ? `/client/onboarding?ref=${referralToken}`
           : '/client/onboarding';
         navigate(onboardingUrl);
       } else {
+        // Client has completed onboarding, go directly to dashboard
         navigate('/client/dashboard');
       }
 
