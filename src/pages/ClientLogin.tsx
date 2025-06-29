@@ -6,8 +6,32 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Phone, Shield, MessageSquare } from 'lucide-react';
+
+const countryCodes = [
+  { code: '+971', country: 'UAE', flag: '🇦🇪' },
+  { code: '+1', country: 'US/Canada', flag: '🇺🇸' },
+  { code: '+44', country: 'UK', flag: '🇬🇧' },
+  { code: '+33', country: 'France', flag: '🇫🇷' },
+  { code: '+49', country: 'Germany', flag: '🇩🇪' },
+  { code: '+91', country: 'India', flag: '🇮🇳' },
+  { code: '+86', country: 'China', flag: '🇨🇳' },
+  { code: '+81', country: 'Japan', flag: '🇯🇵' },
+  { code: '+82', country: 'South Korea', flag: '🇰🇷' },
+  { code: '+61', country: 'Australia', flag: '🇦🇺' },
+  { code: '+55', country: 'Brazil', flag: '🇧🇷' },
+  { code: '+52', country: 'Mexico', flag: '🇲🇽' },
+  { code: '+7', country: 'Russia', flag: '🇷🇺' },
+  { code: '+34', country: 'Spain', flag: '🇪🇸' },
+  { code: '+39', country: 'Italy', flag: '🇮🇹' },
+  { code: '+31', country: 'Netherlands', flag: '🇳🇱' },
+  { code: '+46', country: 'Sweden', flag: '🇸🇪' },
+  { code: '+47', country: 'Norway', flag: '🇳🇴' },
+  { code: '+45', country: 'Denmark', flag: '🇩🇰' },
+  { code: '+41', country: 'Switzerland', flag: '🇨🇭' },
+];
 
 const ClientLogin = () => {
   const navigate = useNavigate();
@@ -15,6 +39,7 @@ const ClientLogin = () => {
   const { toast } = useToast();
   
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [countryCode, setCountryCode] = useState('+971');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,31 +52,29 @@ const ClientLogin = () => {
     }
   }, [searchParams]);
 
-  const formatPhoneNumber = (phone: string): string => {
+  const formatPhoneNumber = (phone: string, selectedCountryCode: string): string => {
     // Remove all non-digit characters
     const cleaned = phone.replace(/\D/g, '');
     
-    // If it starts with 971, keep as is, otherwise prepend +971
-    if (cleaned.startsWith('971')) {
-      return `+${cleaned}`;
-    } else if (cleaned.startsWith('0')) {
-      return `+971${cleaned.slice(1)}`;
-    } else if (cleaned.length === 8 || cleaned.length === 9) {
-      return `+971${cleaned}`;
-    }
-    
-    return phone; // Return original if can't format
+    // Return the selected country code with the cleaned number
+    return `${selectedCountryCode}${cleaned}`;
+  };
+
+  const validatePhoneNumber = (formattedPhone: string): boolean => {
+    // Basic validation - must start with + and have at least 8 digits after country code
+    const phoneRegex = /^\+\d{1,4}\d{7,}$/;
+    return phoneRegex.test(formattedPhone);
   };
 
   const sendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const formattedPhone = formatPhoneNumber(phoneNumber);
+    const formattedPhone = formatPhoneNumber(phoneNumber, countryCode);
     
-    if (!formattedPhone.match(/^\+971[0-9]{8,9}$/)) {
+    if (!validatePhoneNumber(formattedPhone)) {
       toast({
         title: "Invalid Phone Number",
-        description: "Please enter a valid UAE mobile number (e.g., +971 50 123 4567)",
+        description: "Please enter a valid mobile number for the selected country",
         variant: "destructive",
       });
       return;
@@ -272,7 +295,7 @@ const ClientLogin = () => {
           </CardTitle>
           <CardDescription>
             {step === 'phone' 
-              ? 'Enter your UAE mobile number to access your secure portal'
+              ? 'Enter your mobile number to access your secure portal'
               : `We've sent a verification code to ${phoneNumber}`
             }
           </CardDescription>
@@ -283,19 +306,36 @@ const ClientLogin = () => {
               <div className="space-y-2">
                 <Label htmlFor="phone" className="flex items-center">
                   <Phone className="w-4 h-4 mr-2" />
-                  UAE Mobile Number
+                  Mobile Number
                 </Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+971 50 123 4567"
-                  className="text-center text-lg"
-                  required
-                />
+                <div className="flex space-x-2">
+                  <Select value={countryCode} onValueChange={setCountryCode}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border shadow-lg z-50">
+                      {countryCodes.map((country) => (
+                        <SelectItem key={country.code} value={country.code}>
+                          <span className="flex items-center">
+                            <span className="mr-2">{country.flag}</span>
+                            <span className="text-sm">{country.code}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="501234567"
+                    className="flex-1 text-lg"
+                    required
+                  />
+                </div>
                 <p className="text-xs text-muted-foreground text-center">
-                  Enter your number with or without +971 country code
+                  Enter your mobile number without the country code
                 </p>
               </div>
               

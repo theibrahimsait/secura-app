@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 
@@ -124,12 +123,12 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Validate phone format (basic UAE format check)
-    const phoneRegex = /^\+971[0-9]{8,9}$/;
+    // Updated validation for international phone numbers
+    const phoneRegex = /^\+\d{1,4}\d{7,}$/;
     if (!phoneRegex.test(phone)) {
       console.error('Invalid phone format:', phone);
       return new Response(
-        JSON.stringify({ error: 'Invalid UAE phone number format' }),
+        JSON.stringify({ error: 'Invalid international phone number format' }),
         {
           status: 400,
           headers: { 'Content-Type': 'application/json', ...corsHeaders },
