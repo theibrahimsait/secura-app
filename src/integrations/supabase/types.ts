@@ -892,6 +892,7 @@ export type Database = {
         | "create"
         | "update"
         | "delete"
+        | "sms_sent"
       client_type: "buy" | "sell" | "rent"
       document_type:
         | "emirates_id"
@@ -1045,6 +1046,7 @@ export const Constants = {
         "create",
         "update",
         "delete",
+        "sms_sent",
       ],
       client_type: ["buy", "sell", "rent"],
       document_type: [

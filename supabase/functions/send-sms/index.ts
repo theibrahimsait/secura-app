@@ -23,6 +23,12 @@ const sendSMS = async (phone: string, message: string) => {
   const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
   const twilioPhone = Deno.env.get('TWILIO_PHONE_NUMBER');
 
+  console.log('Twilio credentials check:', {
+    accountSid: accountSid ? 'Present' : 'Missing',
+    authToken: authToken ? 'Present' : 'Missing',
+    twilioPhone: twilioPhone ? 'Present' : 'Missing'
+  });
+
   if (!accountSid || !authToken || !twilioPhone) {
     throw new Error('Twilio credentials not configured');
   }
@@ -34,6 +40,8 @@ const sendSMS = async (phone: string, message: string) => {
     From: twilioPhone,
     Body: message,
   });
+
+  console.log('Sending SMS to:', phone.slice(-4)); // Only log last 4 digits for privacy
 
   const response = await fetch(
     `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
@@ -101,10 +109,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log('SMS function called');
     const { phone, otp, clientId }: SMSRequest = await req.json();
 
     // Validate input
     if (!phone || !otp) {
+      console.error('Missing required fields:', { phone: !!phone, otp: !!otp });
       return new Response(
         JSON.stringify({ error: 'Phone number and OTP are required' }),
         {
@@ -117,6 +127,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Validate phone format (basic UAE format check)
     const phoneRegex = /^\+971[0-9]{8,9}$/;
     if (!phoneRegex.test(phone)) {
+      console.error('Invalid phone format:', phone);
       return new Response(
         JSON.stringify({ error: 'Invalid UAE phone number format' }),
         {
@@ -129,6 +140,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Check rate limiting
     const canSend = await checkRateLimit(phone);
     if (!canSend) {
+      console.log('Rate limit exceeded for phone:', phone.slice(-4));
       await logSMSEvent(phone, false, 'Rate limit exceeded');
       return new Response(
         JSON.stringify({ error: 'Please wait before requesting another code' }),
