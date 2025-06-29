@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +23,8 @@ import {
   Calendar,
   Clock,
   Phone,
-  Mail
+  Mail,
+  CheckCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -41,12 +43,20 @@ interface Property {
   property_type: string;
   client_id: string;
   created_at: string;
-  client_name?: string; // Optional: to join client name
+  client_name?: string;
 }
 
 interface GenerateLinkForm {
   clientName: string;
   clientPhone: string;
+}
+
+interface ReferralLink {
+  id: string;
+  ref_token: string;
+  is_active: boolean;
+  created_at: string;
+  last_used_at: string | null;
 }
 
 const AgentDashboard = () => {
@@ -56,6 +66,7 @@ const AgentDashboard = () => {
   // State for data
   const [clients, setClients] = useState<Client[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
+  const [referralLinks, setReferralLinks] = useState<ReferralLink[]>([]);
 
   // State for dialogs and forms
   const [generateLinkDialogOpen, setGenerateLinkDialogOpen] = useState(false);
@@ -66,7 +77,7 @@ const AgentDashboard = () => {
   });
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>; // You can replace with a spinner
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   if (!isAuthenticated) {
@@ -78,17 +89,6 @@ const AgentDashboard = () => {
     if (!userProfile?.id) return;
 
     try {
-      // Fetch clients associated with this agent
-      const { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .select('*')
-        // Assuming a linking table or direct relationship exists.
-        // This will need adjustment based on your actual schema.
-        // For now, let's assume properties link clients to agents.
-        // We'll fetch properties first then get unique client IDs.
-
-      if (clientError) throw clientError;
-
       // Fetch properties and their associated clients, filtered by the agent
       const { data: propertyData, error: propertyError } = await supabase
         .from('properties')
@@ -108,10 +108,10 @@ const AgentDashboard = () => {
       // Process data
       const processedProperties: Property[] = propertyData.map((p: any) => ({
         ...p,
-        client_name: p.clients.full_name || 'N/A',
+        client_name: p.clients?.full_name || 'N/A',
       }));
 
-      const uniqueClients = Array.from(new Map(propertyData.map((p: any) => [p.clients.id, p.clients])).values());
+      const uniqueClients = Array.from(new Map(propertyData.map((p: any) => [p.clients?.id, p.clients])).values()).filter(Boolean);
 
       setProperties(processedProperties);
       setClients(uniqueClients);
@@ -126,35 +126,118 @@ const AgentDashboard = () => {
     }
   };
 
+  const fetchReferralLinks = async () => {
+    if (!userProfile?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('agent_referral_links')
+        .select('*')
+        .eq('agent_id', userProfile.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setReferralLinks(data || []);
+    } catch (error: any) {
+      console.error('Error fetching referral links:', error);
+    }
+  };
+
   useEffect(() => {
     if (userProfile) {
       fetchClientsAndProperties();
+      fetchReferralLinks();
     }
   }, [userProfile]);
 
-
   const handleGenerateLink = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!userProfile?.id || !userProfile?.agency_id) return;
+    
     setGenerateLinkLoading(true);
 
-    // TODO: Implement actual link generation
-    setTimeout(() => {
+    try {
+      const { data, error } = await supabase
+        .from('agent_referral_links')
+        .insert({
+          agent_id: userProfile.id,
+          agency_id: userProfile.agency_id,
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Generate the full URL
+      const referralUrl = `${window.location.origin}/client/login?ref=${data.ref_token}`;
+      
+      // Copy to clipboard
+      await navigator.clipboard.writeText(referralUrl);
+      
       toast({
-        title: "Secure Link Generated",
-        description: `Link generated for ${linkForm.clientName}`,
+        title: "Link Generated & Copied!",
+        description: `Referral link for ${linkForm.clientName} has been copied to your clipboard.`,
       });
+
+      // Refresh the links list
+      fetchReferralLinks();
+      
+      // Reset form and close dialog
       setLinkForm({ clientName: '', clientPhone: '' });
       setGenerateLinkDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error generating link:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate referral link. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setGenerateLinkLoading(false);
-    }, 1500);
+    }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied to Clipboard",
-      description: "Link copied successfully",
-    });
+  const copyToClipboard = async (token: string) => {
+    const referralUrl = `${window.location.origin}/client/login?ref=${token}`;
+    try {
+      await navigator.clipboard.writeText(referralUrl);
+      toast({
+        title: "Link Copied!",
+        description: "Referral link copied to clipboard",
+      });
+    } catch (error) {
+      toast({
+        title: "Copy Failed",
+        description: "Failed to copy link to clipboard",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleLinkStatus = async (linkId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('agent_referral_links')
+        .update({ is_active: !currentStatus })
+        .eq('id', linkId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Link Updated",
+        description: `Link ${!currentStatus ? 'activated' : 'deactivated'} successfully`,
+      });
+
+      fetchReferralLinks();
+    } catch (error: any) {
+      console.error('Error updating link:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update link status",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -228,11 +311,11 @@ const AgentDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 rounded-xl bg-secura-teal/10 flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-secura-teal" />
+                  <LinkIcon className="w-6 h-6 text-secura-teal" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Documents</p>
-                  <p className="text-2xl font-bold text-secura-black">0</p>
+                  <p className="text-sm text-muted-foreground">Referral Links</p>
+                  <p className="text-2xl font-bold text-secura-black">{referralLinks.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -260,43 +343,41 @@ const AgentDashboard = () => {
               <div>
                 <CardTitle className="text-xl text-secura-black flex items-center">
                   <LinkIcon className="w-5 h-5 mr-2" />
-                  Generate Secure Link
+                  Client Referral Links
                 </CardTitle>
-                <CardDescription>Create secure links for clients to access their documents and information</CardDescription>
+                <CardDescription>Generate and manage secure links for clients to access their portal</CardDescription>
               </div>
               <Dialog open={generateLinkDialogOpen} onOpenChange={setGenerateLinkDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal">
                     <Plus className="w-4 h-4 mr-2" />
-                    Generate Link
+                    Generate New Link
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Generate Secure Client Link</DialogTitle>
+                    <DialogTitle>Generate Client Referral Link</DialogTitle>
                     <DialogDescription>
-                      Create a secure link for your client to access their documents and information
+                      Create a secure referral link. You can share this with potential clients.
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleGenerateLink} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="clientName">Client Name</Label>
+                      <Label htmlFor="clientName">Client Name (Optional)</Label>
                       <Input
                         id="clientName"
                         value={linkForm.clientName}
                         onChange={(e) => setLinkForm({ ...linkForm, clientName: e.target.value })}
-                        placeholder="Enter client's full name"
-                        required
+                        placeholder="Enter client's name for reference"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="clientPhone">Client Phone</Label>
+                      <Label htmlFor="clientPhone">Client Phone (Optional)</Label>
                       <Input
                         id="clientPhone"
                         value={linkForm.clientPhone}
                         onChange={(e) => setLinkForm({ ...linkForm, clientPhone: e.target.value })}
-                        placeholder="Enter client's phone number"
-                        required
+                        placeholder="Enter client's phone for reference"
                       />
                     </div>
                     <div className="flex space-x-2 pt-4">
@@ -313,7 +394,7 @@ const AgentDashboard = () => {
                         disabled={generateLinkLoading}
                         className="flex-1 bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
                       >
-                        {generateLinkLoading ? 'Generating...' : 'Generate Link'}
+                        {generateLinkLoading ? 'Generating...' : 'Generate & Copy Link'}
                       </Button>
                     </div>
                   </form>
@@ -321,6 +402,63 @@ const AgentDashboard = () => {
               </Dialog>
             </div>
           </CardHeader>
+          <CardContent>
+            {referralLinks.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Link Token</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Last Used</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {referralLinks.map((link) => (
+                    <TableRow key={link.id}>
+                      <TableCell className="font-mono text-sm">
+                        {link.ref_token.substring(0, 8)}...
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={link.is_active ? "default" : "secondary"}>
+                          {link.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{new Date(link.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {link.last_used_at ? new Date(link.last_used_at).toLocaleDateString() : 'Never'}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => copyToClipboard(link.ref_token)}
+                          >
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => toggleLinkStatus(link.id, link.is_active)}
+                          >
+                            {link.is_active ? 'Deactivate' : 'Activate'}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <LinkIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>No referral links generated yet</p>
+                <p className="text-sm">Click "Generate New Link" to create your first referral link</p>
+              </div>
+            )}
+          </CardContent>
         </Card>
 
         {/* Recent Clients */}
@@ -331,27 +469,35 @@ const AgentDashboard = () => {
               <CardDescription>A list of your most recent clients</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Added On</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {clients.map((client) => (
-                    <TableRow key={client.id}>
-                      <TableCell className="font-medium">{client.full_name}</TableCell>
-                      <TableCell>
-                        <div>{client.email || 'N/A'}</div>
-                        <div className="text-muted-foreground">{client.phone}</div>
-                      </TableCell>
-                      <TableCell>{new Date(client.created_at).toLocaleDateString()}</TableCell>
+              {clients.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Added On</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {clients.map((client) => (
+                      <TableRow key={client.id}>
+                        <TableCell className="font-medium">{client.full_name || 'N/A'}</TableCell>
+                        <TableCell>
+                          <div>{client.email || 'N/A'}</div>
+                          <div className="text-muted-foreground">{client.phone}</div>
+                        </TableCell>
+                        <TableCell>{new Date(client.created_at).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No clients yet</p>
+                  <p className="text-sm">Share your referral links to get started</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -362,27 +508,35 @@ const AgentDashboard = () => {
               <CardDescription>A list of properties you manage</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Property</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Added On</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {properties.map((property) => (
-                    <TableRow key={property.id}>
-                      <TableCell>
-                        <div className="font-medium">{property.location}</div>
-                        <div className="text-muted-foreground">{property.property_type}</div>
-                      </TableCell>
-                      <TableCell>{property.client_name}</TableCell>
-                      <TableCell>{new Date(property.created_at).toLocaleDateString()}</TableCell>
+              {properties.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Property</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Added On</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {properties.map((property) => (
+                      <TableRow key={property.id}>
+                        <TableCell>
+                          <div className="font-medium">{property.location}</div>
+                          <div className="text-muted-foreground">{property.property_type}</div>
+                        </TableCell>
+                        <TableCell>{property.client_name}</TableCell>
+                        <TableCell>{new Date(property.created_at).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Home className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No properties yet</p>
+                  <p className="text-sm">Properties will appear here when clients submit them</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
