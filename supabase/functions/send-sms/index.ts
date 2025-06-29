@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 
@@ -64,21 +65,24 @@ const sendSMS = async (phone: string, message: string) => {
 };
 
 const checkRateLimit = async (phone: string): Promise<boolean> => {
-  const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
+  // Check for SMS attempts in the last 2 minutes (more reasonable for testing)
+  const twoMinutesAgo = new Date(Date.now() - 2 * 60000).toISOString();
   
+  // Check audit logs for recent SMS attempts instead of client updates
   const { data, error } = await supabase
-    .from('clients')
-    .select('updated_at')
-    .eq('phone', phone)
-    .gte('updated_at', oneMinuteAgo)
-    .single();
+    .from('audit_logs')
+    .select('created_at')
+    .eq('action', 'sms_sent')
+    .gte('created_at', twoMinutesAgo)
+    .like('details->phone', `%${phone.slice(-4)}%`)
+    .maybeSingle();
 
   if (error && error.code !== 'PGRST116') {
     console.error('Rate limit check error:', error);
-    return false;
+    return true; // Allow if we can't check (fail open for now)
   }
 
-  return !data; // Allow if no recent update found
+  return !data; // Allow if no recent SMS found
 };
 
 const logSMSEvent = async (phone: string, success: boolean, error?: string) => {
