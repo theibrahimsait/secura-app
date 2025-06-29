@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User } from 'lucide-react';
 import ClientDashboardMobile from '@/components/ClientDashboardMobile';
+import ClientPropertySubmission from '@/components/ClientPropertySubmission';
 
 interface ClientData {
   id: string;
@@ -115,6 +117,10 @@ const ClientDashboard = () => {
     navigate('/client/add-property');
   };
 
+  const handleSubmissionComplete = () => {
+    loadClientData(); // Reload data after successful submission
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -202,13 +208,13 @@ const ClientDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Quick Actions */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
                 <CardDescription>Manage your properties</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <Button 
                   onClick={handleAddProperty}
                   className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
@@ -218,6 +224,13 @@ const ClientDashboard = () => {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Property Submission */}
+            <ClientPropertySubmission
+              clientData={clientData}
+              properties={properties}
+              onSubmissionComplete={handleSubmissionComplete}
+            />
           </div>
 
           {/* Properties */}
@@ -249,7 +262,8 @@ const ClientDashboard = () => {
                             <p className="text-gray-500 truncate">{property.location}</p>
                           </div>
                           <Badge className={`text-xs ${
-                              property.status === 'submitted' ? 'bg-blue-100 text-blue-800'
+                              property.status === 'draft' ? 'bg-gray-100 text-gray-800'
+                            : property.status === 'submitted' ? 'bg-blue-100 text-blue-800'
                             : property.status === 'under_review' ? 'bg-yellow-100 text-yellow-800'
                             : property.status === 'approved' ? 'bg-green-100 text-green-800'
                             : property.status === 'rejected' ? 'bg-red-100 text-red-800'
