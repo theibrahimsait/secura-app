@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useToast } from '@/hooks/use-toast';
-import { Phone, Shield } from 'lucide-react';
+import { Phone, Shield, MessageSquare } from 'lucide-react';
 
 const ClientLogin = () => {
   const navigate = useNavigate();
@@ -28,12 +27,31 @@ const ClientLogin = () => {
     }
   }, [searchParams]);
 
+  const formatPhoneNumber = (phone: string): string => {
+    // Remove all non-digit characters
+    const cleaned = phone.replace(/\D/g, '');
+    
+    // If it starts with 971, keep as is, otherwise prepend +971
+    if (cleaned.startsWith('971')) {
+      return `+${cleaned}`;
+    } else if (cleaned.startsWith('0')) {
+      return `+971${cleaned.slice(1)}`;
+    } else if (cleaned.length === 8 || cleaned.length === 9) {
+      return `+971${cleaned}`;
+    }
+    
+    return phone; // Return original if can't format
+  };
+
   const sendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phoneNumber || phoneNumber.length < 10) {
+    
+    const formattedPhone = formatPhoneNumber(phoneNumber);
+    
+    if (!formattedPhone.match(/^\+971[0-9]{8,9}$/)) {
       toast({
         title: "Invalid Phone Number",
-        description: "Please enter a valid phone number.",
+        description: "Please enter a valid UAE mobile number (e.g., +971 50 123 4567)",
         variant: "destructive",
       });
       return;
@@ -45,11 +63,11 @@ const ClientLogin = () => {
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-      // Check if client exists
+      // Check if client exists and update/create
       const { data: existingClient } = await supabase
         .from('clients')
         .select('*')
-        .eq('phone', phoneNumber)
+        .eq('phone', formattedPhone)
         .single();
 
       if (existingClient) {
@@ -59,7 +77,8 @@ const ClientLogin = () => {
           .update({
             otp_code: otp,
             otp_expires_at: otpExpiry.toISOString(),
-            mobile_number: phoneNumber,
+            mobile_number: formattedPhone,
+            updated_at: new Date().toISOString(),
           })
           .eq('id', existingClient.id);
 
@@ -69,22 +88,42 @@ const ClientLogin = () => {
         const { error } = await supabase
           .from('clients')
           .insert({
-            phone: phoneNumber,
-            mobile_number: phoneNumber,
+            phone: formattedPhone,
+            mobile_number: formattedPhone,
             otp_code: otp,
             otp_expires_at: otpExpiry.toISOString(),
             referral_token: referralToken,
+            updated_at: new Date().toISOString(),
           });
 
         if (error) throw error;
       }
 
-      // For demo purposes, show the OTP in a toast
-      toast({
-        title: "Verification Code Sent",
-        description: `Your verification code is: ${otp}`,
+      // Send SMS via Twilio
+      const { data, error: smsError } = await supabase.functions.invoke('send-sms', {
+        body: {
+          phone: formattedPhone,
+          otp: otp,
+          clientId: existingClient?.id || null
+        }
       });
 
+      if (smsError) {
+        console.error('SMS sending error:', smsError);
+        toast({
+          title: "SMS Error",
+          description: "Failed to send verification code. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Code Sent",
+        description: `Verification code sent to ${formattedPhone}`,
+      });
+
+      setPhoneNumber(formattedPhone);
       setStep('otp');
     } catch (error: any) {
       console.error('Error sending OTP:', error);
@@ -170,6 +209,53 @@ const ClientLogin = () => {
     }
   };
 
+  const resendOTP = async () => {
+    if (loading) return;
+    
+    setLoading(true);
+    try {
+      // Generate new OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+      // Update client with new OTP
+      const { error } = await supabase
+        .from('clients')
+        .update({
+          otp_code: otp,
+          otp_expires_at: otpExpiry.toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('phone', phoneNumber);
+
+      if (error) throw error;
+
+      // Send new SMS
+      const { error: smsError } = await supabase.functions.invoke('send-sms', {
+        body: {
+          phone: phoneNumber,
+          otp: otp
+        }
+      });
+
+      if (smsError) throw smsError;
+
+      toast({
+        title: "Code Resent",
+        description: "A new verification code has been sent to your phone.",
+      });
+    } catch (error: any) {
+      console.error('Error resending OTP:', error);
+      toast({
+        title: "Error",
+        description: "Failed to resend code. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -186,7 +272,7 @@ const ClientLogin = () => {
           </CardTitle>
           <CardDescription>
             {step === 'phone' 
-              ? 'Enter your mobile number to access your secure portal'
+              ? 'Enter your UAE mobile number to access your secure portal'
               : `We've sent a verification code to ${phoneNumber}`
             }
           </CardDescription>
@@ -197,7 +283,7 @@ const ClientLogin = () => {
               <div className="space-y-2">
                 <Label htmlFor="phone" className="flex items-center">
                   <Phone className="w-4 h-4 mr-2" />
-                  Mobile Number
+                  UAE Mobile Number
                 </Label>
                 <Input
                   id="phone"
@@ -208,6 +294,9 @@ const ClientLogin = () => {
                   className="text-center text-lg"
                   required
                 />
+                <p className="text-xs text-muted-foreground text-center">
+                  Enter your number with or without +971 country code
+                </p>
               </div>
               
               <Button
@@ -216,7 +305,14 @@ const ClientLogin = () => {
                 className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
                 size="lg"
               >
-                {loading ? 'Sending...' : 'Send Verification Code'}
+                {loading ? (
+                  <>
+                    <MessageSquare className="w-4 h-4 mr-2 animate-pulse" />
+                    Sending SMS...
+                  </>
+                ) : (
+                  'Send Verification Code'
+                )}
               </Button>
 
               <div className="flex items-center justify-center text-sm text-muted-foreground mt-4">
@@ -246,6 +342,9 @@ const ClientLogin = () => {
                     </InputOTPGroup>
                   </InputOTP>
                 </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  Code expires in 10 minutes
+                </p>
               </div>
 
               <Button
@@ -257,12 +356,24 @@ const ClientLogin = () => {
                 {loading ? 'Verifying...' : 'Verify & Continue'}
               </Button>
 
-              <div className="text-center">
+              <div className="text-center space-y-2">
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => setStep('phone')}
+                  onClick={resendOTP}
+                  disabled={loading}
                   className="text-sm text-muted-foreground"
+                >
+                  Didn't receive the code? Resend
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setStep('phone');
+                    setOtpCode('');
+                  }}
+                  className="text-sm text-muted-foreground block mx-auto"
                 >
                   Change phone number
                 </Button>
