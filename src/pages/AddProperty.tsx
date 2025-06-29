@@ -16,6 +16,8 @@ interface ClientData {
   agency_id: string | null;
 }
 
+type PropertyType = 'apartment' | 'villa' | 'townhouse' | 'penthouse' | 'studio' | 'office' | 'retail' | 'warehouse' | 'land';
+
 const AddProperty = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -25,7 +27,7 @@ const AddProperty = () => {
   // Property form data
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
-  const [propertyType, setPropertyType] = useState('');
+  const [propertyType, setPropertyType] = useState<PropertyType | ''>('');
   const [bedrooms, setBedrooms] = useState('');
   const [bathrooms, setBathrooms] = useState('');
   const [areaSqft, setAreaSqft] = useState('');
@@ -124,7 +126,7 @@ const AddProperty = () => {
         agency_id: clientData.agency_id,
         title: title.trim(),
         location: location.trim(),
-        property_type: propertyType,
+        property_type: propertyType as PropertyType,
         bedrooms: bedrooms ? parseInt(bedrooms) : null,
         bathrooms: bathrooms ? parseInt(bathrooms) : null,
         area_sqft: areaSqft ? parseInt(areaSqft) : null,
@@ -382,7 +384,7 @@ const AddProperty = () => {
                 </div>
                 <div>
                   <Label htmlFor="propertyType">Property Type <span className="text-red-500">*</span></Label>
-                  <Select value={propertyType} onValueChange={setPropertyType} required>
+                  <Select value={propertyType} onValueChange={(value: PropertyType) => setPropertyType(value)} required>
                     <SelectTrigger>
                       <SelectValue placeholder="Select property type" />
                     </SelectTrigger>
