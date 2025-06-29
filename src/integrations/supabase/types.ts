@@ -12,34 +12,118 @@ export type Database = {
       agencies: {
         Row: {
           created_at: string
+          description: string | null
           email: string
           id: string
           is_active: boolean
+          logo_url: string | null
           name: string
+          primary_color: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          description?: string | null
           email: string
           id?: string
           is_active?: boolean
+          logo_url?: string | null
           name: string
+          primary_color?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          description?: string | null
           email?: string
           id?: string
           is_active?: boolean
+          logo_url?: string | null
           name?: string
+          primary_color?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      agency_notifications: {
+        Row: {
+          agency_id: string
+          agent_id: string | null
+          client_id: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          metadata: Json | null
+          property_id: string | null
+          read_at: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          agency_id: string
+          agent_id?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          metadata?: Json | null
+          property_id?: string | null
+          read_at?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          agency_id?: string
+          agent_id?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          metadata?: Json | null
+          property_id?: string | null
+          read_at?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_notifications_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_notifications_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_notifications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_notifications_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "client_properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       agent_referral_links: {
         Row: {
           agency_id: string
           agent_id: string
+          client_id: string | null
           created_at: string | null
           id: string
           is_active: boolean | null
@@ -49,6 +133,7 @@ export type Database = {
         Insert: {
           agency_id: string
           agent_id: string
+          client_id?: string | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -58,6 +143,7 @@ export type Database = {
         Update: {
           agency_id?: string
           agent_id?: string
+          client_id?: string | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -77,6 +163,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_referral_links_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
@@ -496,6 +589,7 @@ export type Database = {
           otp_expires_at: string | null
           phone: string
           profile_completed: boolean | null
+          referral_link_id: string | null
           referral_token: string | null
           terms_accepted_at: string | null
           updated_at: string
@@ -515,6 +609,7 @@ export type Database = {
           otp_expires_at?: string | null
           phone: string
           profile_completed?: boolean | null
+          referral_link_id?: string | null
           referral_token?: string | null
           terms_accepted_at?: string | null
           updated_at?: string
@@ -534,6 +629,7 @@ export type Database = {
           otp_expires_at?: string | null
           phone?: string
           profile_completed?: boolean | null
+          referral_link_id?: string | null
           referral_token?: string | null
           terms_accepted_at?: string | null
           updated_at?: string
@@ -551,6 +647,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_referral_link_id_fkey"
+            columns: ["referral_link_id"]
+            isOneToOne: false
+            referencedRelation: "agent_referral_links"
             referencedColumns: ["id"]
           },
         ]

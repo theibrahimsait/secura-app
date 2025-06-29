@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,13 +44,44 @@ const ClientLogin = () => {
   const [otpCode, setOtpCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [referralToken, setReferralToken] = useState<string | null>(null);
+  const [agencyInfo, setAgencyInfo] = useState<{
+    name: string;
+    logo_url?: string;
+    description?: string;
+    primary_color?: string;
+  } | null>(null);
 
   useEffect(() => {
     const ref = searchParams.get('ref');
     if (ref) {
       setReferralToken(ref);
+      loadAgencyInfo(ref);
     }
   }, [searchParams]);
+
+  const loadAgencyInfo = async (refToken: string) => {
+    try {
+      const { data: linkData } = await supabase
+        .from('agent_referral_links')
+        .select(`
+          agency_id,
+          agencies!inner(
+            name,
+            logo_url,
+            description,
+            primary_color
+          )
+        `)
+        .eq('ref_token', refToken)
+        .single();
+
+      if (linkData?.agencies) {
+        setAgencyInfo(linkData.agencies);
+      }
+    } catch (error) {
+      console.error('Error loading agency info:', error);
+    }
+  };
 
   const formatPhoneNumber = (phone: string, selectedCountryCode: string): string => {
     // Remove all non-digit characters
@@ -276,18 +306,40 @@ const ClientLogin = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img 
-              src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" 
-              alt="Secura" 
-              className="h-8 w-auto"
-            />
+            {agencyInfo?.logo_url ? (
+              <img 
+                src={agencyInfo.logo_url} 
+                alt={agencyInfo.name} 
+                className="h-8 w-auto"
+              />
+            ) : (
+              <img 
+                src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" 
+                alt="Secura" 
+                className="h-8 w-auto"
+              />
+            )}
           </div>
+          
+          {agencyInfo && (
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800">
+                <span className="font-medium">Sent by:</span> {agencyInfo.name}
+              </p>
+              {agencyInfo.description && (
+                <p className="text-xs text-blue-600 mt-1">{agencyInfo.description}</p>
+              )}
+            </div>
+          )}
+          
           <CardTitle className="text-2xl text-secura-black">
             {step === 'phone' ? 'Client Portal Access' : 'Verify Your Number'}
           </CardTitle>
           <CardDescription>
             {step === 'phone' 
-              ? 'Enter your mobile number to access your secure portal'
+              ? (agencyInfo ? 
+                  `Enter your mobile number to access your secure portal via ${agencyInfo.name}` :
+                  'Enter your mobile number to access your secure portal')
               : `We've sent a verification code to ${phoneNumber}`
             }
           </CardDescription>
