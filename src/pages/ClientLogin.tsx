@@ -1,38 +1,55 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Phone, MessageSquare } from 'lucide-react';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useToast } from '@/hooks/use-toast';
+import { Phone, Shield } from 'lucide-react';
 
 const ClientLogin = () => {
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   
-  const agentRef = searchParams.get('ref');
+  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [referralToken, setReferralToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      setReferralToken(ref);
+    }
+  }, [searchParams]);
 
   const sendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (!phoneNumber || phoneNumber.length < 10) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please enter a valid phone number.",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    setLoading(true);
     try {
-      // Generate a 6-digit OTP
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-      
-      // Check if client exists, if not create them
+      // Generate OTP code
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      // Check if client exists
       const { data: existingClient } = await supabase
         .from('clients')
-        .select('id')
-        .eq('phone', phone)
+        .select('*')
+        .eq('phone', phoneNumber)
         .single();
 
       if (existingClient) {
@@ -40,32 +57,32 @@ const ClientLogin = () => {
         const { error } = await supabase
           .from('clients')
           .update({
-            otp_code: otpCode,
-            otp_expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
+            otp_code: otp,
+            otp_expires_at: otpExpiry.toISOString(),
+            mobile_number: phoneNumber,
           })
-          .eq('phone', phone);
-        
+          .eq('id', existingClient.id);
+
         if (error) throw error;
       } else {
         // Create new client
         const { error } = await supabase
           .from('clients')
           .insert({
-            phone,
-            mobile_number: phone,
-            otp_code: otpCode,
-            otp_expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+            phone: phoneNumber,
+            mobile_number: phoneNumber,
+            otp_code: otp,
+            otp_expires_at: otpExpiry.toISOString(),
+            referral_token: referralToken,
           });
-        
+
         if (error) throw error;
       }
 
-      // In production, send SMS here
-      console.log('OTP sent:', otpCode); // For development
-      
+      // For demo purposes, show the OTP in a toast
       toast({
-        title: "OTP Sent",
-        description: `Verification code sent to ${phone}. For demo: ${otpCode}`,
+        title: "Verification Code Sent",
+        description: `Your verification code is: ${otp}`,
       });
 
       setStep('otp');
@@ -73,7 +90,7 @@ const ClientLogin = () => {
       console.error('Error sending OTP:', error);
       toast({
         title: "Error",
-        description: "Failed to send OTP. Please try again.",
+        description: error.message || "Failed to send verification code. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -83,22 +100,35 @@ const ClientLogin = () => {
 
   const verifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (!otpCode || otpCode.length !== 6) {
+      toast({
+        title: "Invalid Code",
+        description: "Please enter the 6-digit verification code.",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    setLoading(true);
     try {
       const { data: client, error } = await supabase
         .from('clients')
         .select('*')
-        .eq('phone', phone)
-        .eq('otp_code', otp)
+        .eq('phone', phoneNumber)
+        .eq('otp_code', otpCode)
         .gt('otp_expires_at', new Date().toISOString())
         .single();
 
       if (error || !client) {
-        throw new Error('Invalid or expired OTP');
+        toast({
+          title: "Invalid Code",
+          description: "The verification code is incorrect or has expired.",
+          variant: "destructive",
+        });
+        return;
       }
 
-      // Mark as verified and clear OTP
+      // Update client as verified and clear OTP
       await supabase
         .from('clients')
         .update({
@@ -109,26 +139,30 @@ const ClientLogin = () => {
         })
         .eq('id', client.id);
 
-      // Store client info in localStorage for session management
-      localStorage.setItem('secura_client', JSON.stringify({
-        id: client.id,
-        phone: client.phone,
-        full_name: client.full_name,
-        agent_ref: agentRef,
-      }));
+      // Store client session
+      localStorage.setItem('client_data', JSON.stringify(client));
 
       toast({
         title: "Login Successful",
         description: "Welcome to Secura!",
       });
 
-      // Redirect based on whether they have properties or not
-      navigate('/client/dashboard');
+      // Check if onboarding is completed
+      if (!client.onboarding_completed || referralToken) {
+        // Redirect to onboarding with referral token if present
+        const onboardingUrl = referralToken 
+          ? `/client/onboarding?ref=${referralToken}`
+          : '/client/onboarding';
+        navigate(onboardingUrl);
+      } else {
+        navigate('/client/dashboard');
+      }
+
     } catch (error: any) {
-      console.error('Error verifying OTP:', error);
+      console.error('Verification error:', error);
       toast({
         title: "Verification Failed",
-        description: "Invalid or expired OTP. Please try again.",
+        description: error.message || "Failed to verify code. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -138,120 +172,105 @@ const ClientLogin = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <div className="flex justify-center mb-6">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
             <img 
               src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" 
               alt="Secura" 
-              className="h-12 w-auto"
+              className="h-8 w-auto"
             />
           </div>
-          <h1 className="text-2xl font-bold text-secura-black">Client Portal</h1>
-          <p className="text-muted-foreground">Secure access to your property portfolio</p>
-          {agentRef && (
-            <div className="mt-4 p-3 bg-secura-lime/10 rounded-lg">
-              <p className="text-sm text-secura-teal font-medium">
-                You've been invited by one of our trusted agents
-              </p>
-            </div>
-          )}
-        </div>
+          <CardTitle className="text-2xl text-secura-black">
+            {step === 'phone' ? 'Client Portal Access' : 'Verify Your Number'}
+          </CardTitle>
+          <CardDescription>
+            {step === 'phone' 
+              ? 'Enter your mobile number to access your secure portal'
+              : `We've sent a verification code to ${phoneNumber}`
+            }
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {step === 'phone' ? (
+            <form onSubmit={sendOTP} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="flex items-center">
+                  <Phone className="w-4 h-4 mr-2" />
+                  Mobile Number
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="+971 50 123 4567"
+                  className="text-center text-lg"
+                  required
+                />
+              </div>
+              
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
+                size="lg"
+              >
+                {loading ? 'Sending...' : 'Send Verification Code'}
+              </Button>
 
-        {/* Login Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              {step === 'phone' ? <Phone className="w-5 h-5 mr-2" /> : <MessageSquare className="w-5 h-5 mr-2" />}
-              {step === 'phone' ? 'Enter Your Mobile Number' : 'Enter Verification Code'}
-            </CardTitle>
-            <CardDescription>
-              {step === 'phone' 
-                ? 'We\'ll send you a verification code via SMS'
-                : `We've sent a 6-digit code to ${phone}`
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {step === 'phone' ? (
-              <form onSubmit={sendOTP} className="space-y-4">
-                <div>
-                  <Label htmlFor="phone">Mobile Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+971 50 123 4567"
-                    required
-                    className="mt-1"
-                  />
-                </div>
-                <Button 
-                  type="submit" 
-                  disabled={loading}
-                  className="w-full bg-secura-teal hover:bg-secura-teal/90"
-                >
-                  {loading ? 'Sending...' : 'Send Verification Code'}
-                </Button>
-              </form>
-            ) : (
-              <form onSubmit={verifyOTP} className="space-y-4">
-                <div>
-                  <Label htmlFor="otp">Verification Code</Label>
-                  <Input
-                    id="otp"
-                    type="text"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    placeholder="123456"
+              <div className="flex items-center justify-center text-sm text-muted-foreground mt-4">
+                <Shield className="w-4 h-4 mr-1" />
+                Your information is secure and encrypted
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={verifyOTP} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="otp" className="text-center block">
+                  Enter 6-digit verification code
+                </Label>
+                <div className="flex justify-center">
+                  <InputOTP
+                    value={otpCode}
+                    onChange={setOtpCode}
                     maxLength={6}
-                    required
-                    className="mt-1 text-center text-lg tracking-wider"
-                  />
-                </div>
-                <div className="flex space-x-3">
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    onClick={() => setStep('phone')}
-                    className="flex-1"
                   >
-                    Back
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={loading}
-                    className="flex-1 bg-secura-teal hover:bg-secura-teal/90"
-                  >
-                    {loading ? 'Verifying...' : 'Verify & Login'}
-                  </Button>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
                 </div>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading || otpCode.length !== 6}
+                className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
+                size="lg"
+              >
+                {loading ? 'Verifying...' : 'Verify & Continue'}
+              </Button>
+
+              <div className="text-center">
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => {
-                    setStep('phone');
-                    setOtp('');
-                  }}
-                  className="w-full text-sm"
+                  onClick={() => setStep('phone')}
+                  className="text-sm text-muted-foreground"
                 >
-                  Didn't receive code? Send again
+                  Change phone number
                 </Button>
-              </form>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Security Note */}
-        <div className="text-center">
-          <div className="flex items-center justify-center text-sm text-muted-foreground">
-            <Shield className="w-4 h-4 mr-2" />
-            Your information is protected with bank-grade security
-          </div>
-        </div>
-      </div>
+              </div>
+            </form>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
