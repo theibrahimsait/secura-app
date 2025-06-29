@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,10 +83,6 @@ const ClientLogin = () => {
 
     setLoading(true);
     try {
-      // Generate OTP code
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
       // Check if client exists and update/create
       const { data: existingClient } = await supabase
         .from('clients')
@@ -94,12 +91,10 @@ const ClientLogin = () => {
         .single();
 
       if (existingClient) {
-        // Update existing client with new OTP
+        // Update existing client
         const { error } = await supabase
           .from('clients')
           .update({
-            otp_code: otp,
-            otp_expires_at: otpExpiry.toISOString(),
             mobile_number: formattedPhone,
             updated_at: new Date().toISOString(),
           })
@@ -113,8 +108,6 @@ const ClientLogin = () => {
           .insert({
             phone: formattedPhone,
             mobile_number: formattedPhone,
-            otp_code: otp,
-            otp_expires_at: otpExpiry.toISOString(),
             referral_token: referralToken,
             updated_at: new Date().toISOString(),
           });
@@ -122,11 +115,11 @@ const ClientLogin = () => {
         if (error) throw error;
       }
 
-      // Send SMS via Twilio
+      // Send SMS via Twilio Verify
       const { data, error: smsError } = await supabase.functions.invoke('send-sms', {
         body: {
           phone: formattedPhone,
-          otp: otp,
+          action: 'send',
           clientId: existingClient?.id || null
         }
       });
@@ -173,15 +166,16 @@ const ClientLogin = () => {
 
     setLoading(true);
     try {
-      const { data: client, error } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('phone', phoneNumber)
-        .eq('otp_code', otpCode)
-        .gt('otp_expires_at', new Date().toISOString())
-        .single();
+      // Verify code via Twilio Verify
+      const { data, error: verifyError } = await supabase.functions.invoke('send-sms', {
+        body: {
+          phone: phoneNumber,
+          action: 'verify',
+          code: otpCode
+        }
+      });
 
-      if (error || !client) {
+      if (verifyError || !data?.success) {
         toast({
           title: "Invalid Code",
           description: "The verification code is incorrect or has expired.",
@@ -190,14 +184,28 @@ const ClientLogin = () => {
         return;
       }
 
-      // Update client as verified and clear OTP
+      // Get client data
+      const { data: client, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('phone', phoneNumber)
+        .single();
+
+      if (error || !client) {
+        toast({
+          title: "Error",
+          description: "Failed to find client record. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update client as verified
       await supabase
         .from('clients')
         .update({
           is_verified: true,
           last_login: new Date().toISOString(),
-          otp_code: null,
-          otp_expires_at: null,
         })
         .eq('id', client.id);
 
@@ -237,27 +245,11 @@ const ClientLogin = () => {
     
     setLoading(true);
     try {
-      // Generate new OTP
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-
-      // Update client with new OTP
-      const { error } = await supabase
-        .from('clients')
-        .update({
-          otp_code: otp,
-          otp_expires_at: otpExpiry.toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('phone', phoneNumber);
-
-      if (error) throw error;
-
-      // Send new SMS
+      // Send new SMS via Twilio Verify
       const { error: smsError } = await supabase.functions.invoke('send-sms', {
         body: {
           phone: phoneNumber,
-          otp: otp
+          action: 'send'
         }
       });
 
