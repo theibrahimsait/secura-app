@@ -12,6 +12,9 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Login from "./pages/Login";
 import AgencyDashboard from "./pages/AgencyDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
+import ClientLogin from "./pages/ClientLogin";
+import ClientDashboard from "./pages/ClientDashboard";
+import AddProperty from "./pages/AddProperty";
 import Support from "./pages/Support";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -33,6 +36,11 @@ const App = () => (
             <Route path="/support" element={<Support />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            
+            {/* Client Routes */}
+            <Route path="/client/login" element={<ClientLogin />} />
+            <Route path="/client/dashboard" element={<ClientDashboard />} />
+            <Route path="/client/add-property" element={<AddProperty />} />
             
             {/* Superadmin Routes (Isolated) */}
             <Route path="/control-panel" element={<SuperAdminLogin />} />

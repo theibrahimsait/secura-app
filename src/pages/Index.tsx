@@ -12,12 +12,19 @@ const Index = () => {
             <div className="flex items-center space-x-3">
               <img src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" alt="Secura" className="h-8 w-auto" />
             </div>
-            <Link to="/login">
-              <Button className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold transition-all duration-300 hover:scale-105">
-                Login
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+            <div className="flex items-center space-x-4">
+              <Link to="/client/login">
+                <Button variant="outline" className="border-secura-moss text-secura-black hover:bg-secura-moss/10">
+                  Client Portal
+                </Button>
+              </Link>
+              <Link to="/login">
+                <Button className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold transition-all duration-300 hover:scale-105">
+                  Agency Login
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -41,17 +48,17 @@ const Index = () => {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/login">
+                <Link to="/client/login">
                   <Button size="lg" className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-semibold px-8 py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105">
-                    Access Portal
+                    Client Portal
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
-                <a href="https://secura.me" target="_blank" rel="noopener noreferrer">
+                <Link to="/login">
                   <Button variant="outline" size="lg" className="border-secura-moss text-secura-black hover:bg-secura-moss/10 px-8 py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105">
-                    Learn More
+                    Agency Access
                   </Button>
-                </a>
+                </Link>
               </div>
 
               {/* Trust Indicators */}
@@ -219,8 +226,11 @@ const Index = () => {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-secura-lime">Quick Links</h3>
               <div className="space-y-2">
+                <Link to="/client/login" className="block text-secura-mint hover:text-white transition-colors">
+                  Client Portal
+                </Link>
                 <Link to="/login" className="block text-secura-mint hover:text-white transition-colors">
-                  Agency Portal
+                  Agency Login
                 </Link>
                 <Link to="/support" className="block text-secura-mint hover:text-white transition-colors">
                   Support

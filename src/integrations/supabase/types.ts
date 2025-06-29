@@ -36,6 +36,51 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_referral_links: {
+        Row: {
+          agency_id: string
+          agent_id: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_used_at: string | null
+          ref_token: string
+        }
+        Insert: {
+          agency_id: string
+          agent_id: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          ref_token?: string
+        }
+        Update: {
+          agency_id?: string
+          agent_id?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          ref_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_referral_links_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_referral_links_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: Database["public"]["Enums"]["audit_action"]
@@ -147,12 +192,222 @@ export type Database = {
           },
         ]
       }
+      client_notifications: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          property_id: string | null
+          task_id: string | null
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          property_id?: string | null
+          task_id?: string | null
+          title: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          property_id?: string | null
+          task_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_notifications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_notifications_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "client_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "client_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_properties: {
+        Row: {
+          area_sqft: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          client_id: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          location: string
+          property_type: Database["public"]["Enums"]["property_type"]
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          area_sqft?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          client_id: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          location: string
+          property_type: Database["public"]["Enums"]["property_type"]
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          area_sqft?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          client_id?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          location?: string
+          property_type?: Database["public"]["Enums"]["property_type"]
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_properties_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_tasks: {
+        Row: {
+          action_required: string | null
+          agency_id: string
+          agent_id: string | null
+          client_id: string
+          completed_at: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          property_id: string | null
+          status: Database["public"]["Enums"]["task_status"] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          action_required?: string | null
+          agency_id: string
+          agent_id?: string | null
+          client_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          property_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          action_required?: string | null
+          agency_id?: string
+          agent_id?: string | null
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          property_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_tasks_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_tasks_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_tasks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_tasks_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "client_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          is_verified: boolean | null
+          last_login: string | null
+          mobile_number: string
+          otp_code: string | null
+          otp_expires_at: string | null
           phone: string
           updated_at: string
         }
@@ -161,6 +416,11 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_verified?: boolean | null
+          last_login?: string | null
+          mobile_number: string
+          otp_code?: string | null
+          otp_expires_at?: string | null
           phone: string
           updated_at?: string
         }
@@ -169,6 +429,11 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_verified?: boolean | null
+          last_login?: string | null
+          mobile_number?: string
+          otp_code?: string | null
+          otp_expires_at?: string | null
           phone?: string
           updated_at?: string
         }
@@ -283,6 +548,122 @@ export type Database = {
           },
         ]
       }
+      property_documents: {
+        Row: {
+          client_id: string
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          mime_type: string
+          property_id: string
+          uploaded_at: string | null
+        }
+        Insert: {
+          client_id: string
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          mime_type: string
+          property_id: string
+          uploaded_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          document_type?: Database["public"]["Enums"]["document_type"]
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          property_id?: string
+          uploaded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_documents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "client_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_submissions: {
+        Row: {
+          agency_id: string
+          agent_id: string | null
+          client_id: string
+          id: string
+          notes: string | null
+          property_id: string
+          reviewed_at: string | null
+          status: Database["public"]["Enums"]["submission_status"] | null
+          submitted_at: string | null
+        }
+        Insert: {
+          agency_id: string
+          agent_id?: string | null
+          client_id: string
+          id?: string
+          notes?: string | null
+          property_id: string
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["submission_status"] | null
+          submitted_at?: string | null
+        }
+        Update: {
+          agency_id?: string
+          agent_id?: string | null
+          client_id?: string
+          id?: string
+          notes?: string | null
+          property_id?: string
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["submission_status"] | null
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_submissions_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_submissions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_submissions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_submissions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "client_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       test: {
         Row: {
           created_at: string
@@ -380,6 +761,10 @@ export type Database = {
         }
         Returns: string
       }
+      refresh_jwt_metadata: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
     }
     Enums: {
       audit_action:
@@ -392,6 +777,33 @@ export type Database = {
         | "update"
         | "delete"
       client_type: "buy" | "sell" | "rent"
+      document_type:
+        | "emirates_id"
+        | "passport"
+        | "visa"
+        | "title_deed"
+        | "power_of_attorney"
+        | "noc"
+        | "ejari"
+        | "dewa_bill"
+        | "other"
+      property_type:
+        | "apartment"
+        | "villa"
+        | "townhouse"
+        | "penthouse"
+        | "studio"
+        | "office"
+        | "retail"
+        | "warehouse"
+        | "land"
+      submission_status:
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "additional_info_required"
+      task_status: "pending" | "action_required" | "in_progress" | "completed"
       user_role: "superadmin" | "agency_admin" | "agent" | "client"
     }
     CompositeTypes: {
@@ -519,6 +931,36 @@ export const Constants = {
         "delete",
       ],
       client_type: ["buy", "sell", "rent"],
+      document_type: [
+        "emirates_id",
+        "passport",
+        "visa",
+        "title_deed",
+        "power_of_attorney",
+        "noc",
+        "ejari",
+        "dewa_bill",
+        "other",
+      ],
+      property_type: [
+        "apartment",
+        "villa",
+        "townhouse",
+        "penthouse",
+        "studio",
+        "office",
+        "retail",
+        "warehouse",
+        "land",
+      ],
+      submission_status: [
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected",
+        "additional_info_required",
+      ],
+      task_status: ["pending", "action_required", "in_progress", "completed"],
       user_role: ["superadmin", "agency_admin", "agent", "client"],
     },
   },
