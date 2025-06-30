@@ -149,7 +149,7 @@ const AddProperty = () => {
 
     setLoading(true);
     try {
-      // Create property record - ensure propertyType is properly typed
+      // Create property record - using 'draft' status instead of 'active'
       if (!propertyType) {
         throw new Error('Property type must be selected');
       }
@@ -163,8 +163,10 @@ const AddProperty = () => {
         bathrooms: bathrooms ? parseInt(bathrooms) : null,
         area_sqft: areaSqft ? parseInt(areaSqft) : null,
         details: description ? { description } : null,
-        status: 'active' // Property is active in portfolio, not yet submitted to agency
+        status: 'draft' // Using 'draft' status which should be allowed by the constraint
       };
+
+      console.log('Attempting to create property with data:', propertyData);
 
       const { data: property, error: propertyError } = await supabase
         .from('client_properties')
@@ -172,7 +174,12 @@ const AddProperty = () => {
         .select()
         .single();
 
-      if (propertyError) throw propertyError;
+      if (propertyError) {
+        console.error('Property creation error:', propertyError);
+        throw propertyError;
+      }
+
+      console.log('Property created successfully:', property);
 
       // Upload documents
       const documentUploads: Promise<boolean>[] = [];
@@ -221,7 +228,7 @@ const AddProperty = () => {
       console.error('Error adding property:', error);
       toast({
         title: "Error Adding Property",
-        description: "Please try again later",
+        description: error instanceof Error ? error.message : "Please try again later",
         variant: "destructive",
       });
     } finally {
