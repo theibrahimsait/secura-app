@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -150,7 +151,7 @@ const AddProperty = () => {
     setLoading(true);
     try {
       // Create property record - ensure propertyType is properly typed
-      if (propertyType === '') {
+      if (!propertyType) {
         throw new Error('Property type must be selected');
       }
 
@@ -158,7 +159,7 @@ const AddProperty = () => {
         client_id: clientData.id,
         title,
         location,
-        property_type: propertyType,
+        property_type: propertyType as PropertyType,
         bedrooms: bedrooms ? parseInt(bedrooms) : null,
         bathrooms: bathrooms ? parseInt(bathrooms) : null,
         area_sqft: areaSqft ? parseInt(areaSqft) : null,
