@@ -20,6 +20,8 @@ interface ClientData {
   agency_id: string | null;
 }
 
+type PropertyType = 'apartment' | 'villa' | 'townhouse' | 'penthouse' | 'studio' | 'office' | 'retail' | 'warehouse' | 'land';
+
 const AddProperty = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -29,7 +31,7 @@ const AddProperty = () => {
   // Form state
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
-  const [propertyType, setPropertyType] = useState('');
+  const [propertyType, setPropertyType] = useState<PropertyType | ''>('');
   const [bedrooms, setBedrooms] = useState('');
   const [bathrooms, setBathrooms] = useState('');
   const [areaSqft, setAreaSqft] = useState('');
@@ -79,12 +81,12 @@ const AddProperty = () => {
         client_id: clientData.id,
         title,
         location,
-        property_type: propertyType,
+        property_type: propertyType as PropertyType,
         bedrooms: bedrooms ? parseInt(bedrooms) : null,
         bathrooms: bathrooms ? parseInt(bathrooms) : null,
         area_sqft: areaSqft ? parseInt(areaSqft) : null,
         details: description ? { description } : null,
-        status: 'active' // Normal status, not draft
+        status: 'active' // Property is active in portfolio, not yet submitted to agency
       };
 
       const { data: property, error: propertyError } = await supabase
@@ -116,7 +118,7 @@ const AddProperty = () => {
             .insert({
               property_id: property.id,
               client_id: clientData.id,
-              document_type: 'supporting_document',
+              document_type: 'other',
               file_name: file.name,
               file_path: fileName,
               mime_type: file.type,
@@ -210,7 +212,7 @@ const AddProperty = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="property-type">Property Type *</Label>
-                  <Select value={propertyType} onValueChange={setPropertyType} required>
+                  <Select value={propertyType} onValueChange={(value: PropertyType) => setPropertyType(value)} required>
                     <SelectTrigger>
                       <SelectValue placeholder="Select property type" />
                     </SelectTrigger>
@@ -224,7 +226,6 @@ const AddProperty = () => {
                       <SelectItem value="retail">Retail</SelectItem>
                       <SelectItem value="warehouse">Warehouse</SelectItem>
                       <SelectItem value="land">Land</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
