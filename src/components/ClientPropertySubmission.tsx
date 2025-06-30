@@ -46,7 +46,6 @@ const ClientPropertySubmission = ({ clientData, properties, onSubmissionComplete
   const { toast } = useToast();
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [agentInfo, setAgentInfo] = useState<AgentInfo | null>(null);
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -99,16 +98,42 @@ const ClientPropertySubmission = ({ clientData, properties, onSubmissionComplete
 
     setSubmitting(true);
     try {
-      // Update selected properties to submitted status
+      // Update selected properties to submitted status and set agent/agency info
       const { error } = await supabase
         .from('client_properties')
         .update({ 
           status: 'submitted',
-          submitted_at: new Date().toISOString()
+          submitted_at: new Date().toISOString(),
+          agent_id: clientData.agent_id,
+          agency_id: clientData.agency_id
         })
         .in('id', selectedProperties);
 
       if (error) throw error;
+
+      // Create agency notification for each submitted property
+      for (const propertyId of selectedProperties) {
+        const property = properties.find(p => p.id === propertyId);
+        if (property) {
+          await supabase
+            .from('agency_notifications')
+            .insert({
+              agency_id: clientData.agency_id,
+              agent_id: clientData.agent_id,
+              client_id: clientData.id,
+              property_id: propertyId,
+              type: 'property_submitted',
+              title: 'New Property Submitted',
+              message: `${clientData.full_name || 'A client'} has submitted a new property: ${property.title}`,
+              metadata: {
+                property_title: property.title,
+                property_location: property.location,
+                client_name: clientData.full_name,
+                agent_name: agentInfo?.full_name
+              }
+            });
+        }
+      }
 
       toast({
         title: "Properties Submitted Successfully",
@@ -128,8 +153,8 @@ const ClientPropertySubmission = ({ clientData, properties, onSubmissionComplete
     }
   };
 
-  // Only show properties that are in draft status
-  const draftProperties = properties.filter(p => p.status === 'draft');
+  // Show all properties that are not already submitted
+  const availableProperties = properties.filter(p => p.status !== 'submitted' && p.status !== 'under_review' && p.status !== 'approved' && p.status !== 'rejected');
 
   if (!clientData.agent_id || !agentInfo) {
     return (
@@ -145,7 +170,7 @@ const ClientPropertySubmission = ({ clientData, properties, onSubmissionComplete
     );
   }
 
-  if (draftProperties.length === 0) {
+  if (availableProperties.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -153,7 +178,7 @@ const ClientPropertySubmission = ({ clientData, properties, onSubmissionComplete
           <CardDescription>No properties available for submission</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600">Add some properties to your portfolio first before submitting to the agency.</p>
+          <p className="text-gray-600">Add some properties to your portfolio first or all your properties have already been submitted.</p>
         </CardContent>
       </Card>
     );
@@ -189,7 +214,7 @@ const ClientPropertySubmission = ({ clientData, properties, onSubmissionComplete
         <div>
           <h3 className="font-medium mb-3">Select Properties to Submit:</h3>
           <div className="space-y-3 max-h-96 overflow-y-auto">
-            {draftProperties.map((property) => (
+            {availableProperties.map((property) => (
               <div key={property.id} className="flex items-start space-x-3 p-3 border rounded-lg">
                 <Checkbox
                   id={property.id}
@@ -202,7 +227,7 @@ const ClientPropertySubmission = ({ clientData, properties, onSubmissionComplete
                     <p className="text-sm text-gray-600">{property.location}</p>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-sm text-gray-500 capitalize">{property.property_type}</span>
-                      <Badge variant="secondary">Draft</Badge>
+                      <Badge variant="secondary">{property.status}</Badge>
                     </div>
                     {(property.bedrooms || property.bathrooms || property.area_sqft) && (
                       <div className="flex gap-4 mt-1 text-sm text-gray-600">
