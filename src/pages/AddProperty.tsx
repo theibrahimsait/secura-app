@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Upload } from 'lucide-react';
+import { ArrowLeft, Plus, Upload, FileText, Shield, Home, FileCheck, Zap } from 'lucide-react';
 
 interface ClientData {
   id: string;
@@ -372,120 +371,175 @@ const AddProperty = () => {
               </div>
 
               {/* Document Upload */}
-              <div className="space-y-4">
-                <div className="border-t pt-4">
-                  <h3 className="text-lg font-medium mb-4">Property Documents</h3>
+              <div className="space-y-6">
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-6 flex items-center">
+                    <FileText className="w-5 h-5 mr-2" />
+                    Property Documents
+                  </h3>
                   
                   {/* Title Deed - Mandatory */}
-                  <div className="mb-4">
-                    <Label htmlFor="title-deed" className="text-red-600">Title Deed * (Required)</Label>
+                  <div className="mb-6 p-4 border-2 border-red-200 rounded-lg bg-red-50">
+                    <div className="flex items-center mb-3">
+                      <FileCheck className="w-5 h-5 text-red-600 mr-2" />
+                      <Label htmlFor="title-deed" className="text-red-700 font-medium">
+                        Title Deed * (Required)
+                      </Label>
+                    </div>
                     <Input
                       id="title-deed"
                       type="file"
                       onChange={(e) => handleFileChange(e, 'title_deed')}
                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                       required
+                      className="mb-2"
                     />
                     {titleDeedFile && (
-                      <p className="text-sm text-green-600 mt-1 flex items-center">
-                        <Upload className="w-3 h-3 mr-1" />
-                        {titleDeedFile.name} ({(titleDeedFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </p>
+                      <div className="flex items-center text-sm text-green-700 bg-green-50 p-2 rounded">
+                        <Upload className="w-4 h-4 mr-2" />
+                        <span className="font-medium">{titleDeedFile.name}</span>
+                        <span className="ml-2 text-green-600">
+                          ({(titleDeedFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
                     )}
                   </div>
 
                   {/* Power of Attorney - Optional */}
-                  <div className="mb-4">
-                    <Label htmlFor="poa">Power of Attorney</Label>
+                  <div className="mb-6 p-4 border border-blue-200 rounded-lg bg-blue-50">
+                    <div className="flex items-center mb-3">
+                      <Shield className="w-5 h-5 text-blue-600 mr-2" />
+                      <Label htmlFor="poa" className="text-blue-700 font-medium">
+                        Power of Attorney
+                      </Label>
+                    </div>
                     <Input
                       id="poa"
                       type="file"
                       onChange={(e) => handleFileChange(e, 'power_of_attorney')}
                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      className="mb-2"
                     />
                     {poaFile && (
-                      <p className="text-sm text-green-600 mt-1 flex items-center">
-                        <Upload className="w-3 h-3 mr-1" />
-                        {poaFile.name} ({(poaFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </p>
+                      <div className="flex items-center text-sm text-green-700 bg-green-50 p-2 rounded">
+                        <Upload className="w-4 h-4 mr-2" />
+                        <span className="font-medium">{poaFile.name}</span>
+                        <span className="ml-2 text-green-600">
+                          ({(poaFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
                     )}
                   </div>
 
                   {/* NOC - Optional */}
-                  <div className="mb-4">
-                    <Label htmlFor="noc">No Objection Certificate (NOC)</Label>
+                  <div className="mb-6 p-4 border border-purple-200 rounded-lg bg-purple-50">
+                    <div className="flex items-center mb-3">
+                      <FileText className="w-5 h-5 text-purple-600 mr-2" />
+                      <Label htmlFor="noc" className="text-purple-700 font-medium">
+                        No Objection Certificate (NOC)
+                      </Label>
+                    </div>
                     <Input
                       id="noc"
                       type="file"
                       onChange={(e) => handleFileChange(e, 'noc')}
                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      className="mb-2"
                     />
                     {nocFile && (
-                      <p className="text-sm text-green-600 mt-1 flex items-center">
-                        <Upload className="w-3 h-3 mr-1" />
-                        {nocFile.name} ({(nocFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </p>
+                      <div className="flex items-center text-sm text-green-700 bg-green-50 p-2 rounded">
+                        <Upload className="w-4 h-4 mr-2" />
+                        <span className="font-medium">{nocFile.name}</span>
+                        <span className="ml-2 text-green-600">
+                          ({(nocFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
                     )}
                   </div>
 
                   {/* Ejari - Optional */}
-                  <div className="mb-4">
-                    <Label htmlFor="ejari">Ejari/Rental Agreement</Label>
+                  <div className="mb-6 p-4 border border-orange-200 rounded-lg bg-orange-50">
+                    <div className="flex items-center mb-3">
+                      <Home className="w-5 h-5 text-orange-600 mr-2" />
+                      <Label htmlFor="ejari" className="text-orange-700 font-medium">
+                        Ejari/Rental Agreement
+                      </Label>
+                    </div>
                     <Input
                       id="ejari"
                       type="file"
                       onChange={(e) => handleFileChange(e, 'ejari')}
                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      className="mb-2"
                     />
                     {ejariFile && (
-                      <p className="text-sm text-green-600 mt-1 flex items-center">
-                        <Upload className="w-3 h-3 mr-1" />
-                        {ejariFile.name} ({(ejariFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </p>
+                      <div className="flex items-center text-sm text-green-700 bg-green-50 p-2 rounded">
+                        <Upload className="w-4 h-4 mr-2" />
+                        <span className="font-medium">{ejariFile.name}</span>
+                        <span className="ml-2 text-green-600">
+                          ({(ejariFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
                     )}
                   </div>
 
                   {/* DEWA Bill - Optional */}
-                  <div className="mb-4">
-                    <Label htmlFor="dewa">DEWA Bill</Label>
+                  <div className="mb-6 p-4 border border-yellow-200 rounded-lg bg-yellow-50">
+                    <div className="flex items-center mb-3">
+                      <Zap className="w-5 h-5 text-yellow-600 mr-2" />
+                      <Label htmlFor="dewa" className="text-yellow-700 font-medium">
+                        DEWA Bill
+                      </Label>
+                    </div>
                     <Input
                       id="dewa"
                       type="file"
                       onChange={(e) => handleFileChange(e, 'dewa_bill')}
                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      className="mb-2"
                     />
                     {dewaFile && (
-                      <p className="text-sm text-green-600 mt-1 flex items-center">
-                        <Upload className="w-3 h-3 mr-1" />
-                        {dewaFile.name} ({(dewaFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </p>
+                      <div className="flex items-center text-sm text-green-700 bg-green-50 p-2 rounded">
+                        <Upload className="w-4 h-4 mr-2" />
+                        <span className="font-medium">{dewaFile.name}</span>
+                        <span className="ml-2 text-green-600">
+                          ({(dewaFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
                     )}
                   </div>
 
                   {/* Other Documents - Optional */}
-                  <div className="mb-4">
-                    <Label htmlFor="other-docs">Other Supporting Documents</Label>
+                  <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <div className="flex items-center mb-3">
+                      <Plus className="w-5 h-5 text-gray-600 mr-2" />
+                      <Label htmlFor="other-docs" className="text-gray-700 font-medium">
+                        Other Supporting Documents
+                      </Label>
+                    </div>
                     <Input
                       id="other-docs"
                       type="file"
                       multiple
                       onChange={(e) => handleFileChange(e, 'other')}
                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      className="mb-2"
                     />
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-gray-600 mb-2">
                       Upload any additional documents (floor plans, photos, etc.)
                     </p>
                     {otherFiles.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-sm font-medium">Selected files:</p>
-                        <ul className="text-sm text-green-600">
-                          {otherFiles.map((file, index) => (
-                            <li key={index} className="flex items-center">
-                              <Upload className="w-3 h-3 mr-1" />
-                              {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                            </li>
-                          ))}
-                        </ul>
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-gray-700">Selected files:</p>
+                        {otherFiles.map((file, index) => (
+                          <div key={index} className="flex items-center text-sm text-green-700 bg-green-50 p-2 rounded">
+                            <Upload className="w-4 h-4 mr-2" />
+                            <span className="font-medium">{file.name}</span>
+                            <span className="ml-2 text-green-600">
+                              ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -493,11 +547,11 @@ const AddProperty = () => {
               </div>
 
               {/* Submit Button */}
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-6 border-t">
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
+                  className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal px-8 py-2"
                 >
                   {loading ? 'Adding Property...' : 'Add Property'}
                 </Button>
