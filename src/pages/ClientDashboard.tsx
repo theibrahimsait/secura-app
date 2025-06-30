@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User } from 'lucide-react';
+import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send } from 'lucide-react';
 import ClientDashboardMobile from '@/components/ClientDashboardMobile';
-import ClientPropertySubmission from '@/components/ClientPropertySubmission';
+import AgencySubmissionModal from '@/components/AgencySubmissionModal';
 
 interface ClientData {
   id: string;
@@ -41,6 +41,17 @@ interface Task {
   action_required?: string;
 }
 
+interface PropertySubmission {
+  id: string;
+  property_id: string;
+  agency_id: string;
+  status: string;
+  submitted_at: string;
+  agencies: {
+    name: string;
+  };
+}
+
 const ClientDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -48,7 +59,10 @@ const ClientDashboard = () => {
   const [clientData, setClientData] = useState<ClientData | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [submissions, setSubmissions] = useState<PropertySubmission[]>([]);
+  const [agencyInfo, setAgencyInfo] = useState<{ name: string } | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -75,6 +89,19 @@ const ClientDashboard = () => {
       const client = JSON.parse(storedData);
       setClientData(client);
 
+      // Load agency info if available
+      if (client.agency_id) {
+        const { data: agencyData } = await supabase
+          .from('agencies')
+          .select('name')
+          .eq('id', client.agency_id)
+          .single();
+        
+        if (agencyData) {
+          setAgencyInfo({ name: agencyData.name });
+        }
+      }
+
       // Load properties
       const { data: propertiesData } = await supabase
         .from('client_properties')
@@ -84,6 +111,24 @@ const ClientDashboard = () => {
 
       if (propertiesData) {
         setProperties(propertiesData);
+      }
+
+      // Load property submissions
+      const { data: submissionsData } = await supabase
+        .from('property_agency_submissions')
+        .select(`
+          id,
+          property_id,
+          agency_id,
+          status,
+          submitted_at,
+          agencies (name)
+        `)
+        .eq('client_id', client.id)
+        .order('submitted_at', { ascending: false });
+
+      if (submissionsData) {
+        setSubmissions(submissionsData);
       }
 
       // Load tasks
@@ -118,7 +163,37 @@ const ClientDashboard = () => {
   };
 
   const handleSubmissionComplete = () => {
-    loadClientData(); // Reload data after successful submission
+    loadClientData();
+  };
+
+  const getPropertySubmissions = (propertyId: string) => {
+    return submissions.filter(sub => sub.property_id === propertyId);
+  };
+
+  const getPropertyStatusBadge = (property: Property) => {
+    const propertySubmissions = getPropertySubmissions(property.id);
+    
+    if (propertySubmissions.length === 0) {
+      return <Badge className="bg-blue-100 text-blue-800">In Portfolio</Badge>;
+    }
+
+    return (
+      <div className="flex flex-wrap gap-1">
+        {propertySubmissions.map((submission) => (
+          <Badge 
+            key={submission.id}
+            className={`text-xs ${
+              submission.status === 'submitted' ? 'bg-yellow-100 text-yellow-800'
+              : submission.status === 'under_review' ? 'bg-orange-100 text-orange-800'
+              : submission.status === 'approved' ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800'
+            }`}
+          >
+            {submission.agencies.name} - {submission.status.replace('_', ' ')}
+          </Badge>
+        ))}
+      </div>
+    );
   };
 
   if (loading) {
@@ -222,15 +297,20 @@ const ClientDashboard = () => {
                   <Plus className="w-4 h-4 mr-2" />
                   Add New Property
                 </Button>
+                
+                {/* Show agency submission button if client has an assigned agency */}
+                {clientData.agency_id && agencyInfo && (
+                  <Button
+                    onClick={() => setShowSubmissionModal(true)}
+                    variant="outline"
+                    className="w-full border-secura-lime text-secura-teal hover:bg-secura-lime/10"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Submit to {agencyInfo.name}
+                  </Button>
+                )}
               </CardContent>
             </Card>
-
-            {/* Property Submission */}
-            <ClientPropertySubmission
-              clientData={clientData}
-              properties={properties}
-              onSubmissionComplete={handleSubmissionComplete}
-            />
           </div>
 
           {/* Properties */}
@@ -261,16 +341,9 @@ const ClientDashboard = () => {
                             <h3 className="font-medium text-gray-900 truncate">{property.title}</h3>
                             <p className="text-gray-500 truncate">{property.location}</p>
                           </div>
-                          <Badge className={`text-xs ${
-                              property.status === 'draft' ? 'bg-gray-100 text-gray-800'
-                            : property.status === 'submitted' ? 'bg-blue-100 text-blue-800'
-                            : property.status === 'under_review' ? 'bg-yellow-100 text-yellow-800'
-                            : property.status === 'approved' ? 'bg-green-100 text-green-800'
-                            : property.status === 'rejected' ? 'bg-red-100 text-red-800'
-                            : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {property.status.replace('_', ' ')}
-                          </Badge>
+                          <div className="ml-4 flex-shrink-0">
+                            {getPropertyStatusBadge(property)}
+                          </div>
                         </div>
                         <div className="flex justify-between items-center text-gray-500">
                           <span className="capitalize">{property.property_type}</span>
@@ -347,6 +420,14 @@ const ClientDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Agency Submission Modal */}
+      <AgencySubmissionModal
+        isOpen={showSubmissionModal}
+        onClose={() => setShowSubmissionModal(false)}
+        clientData={clientData}
+        onSubmissionComplete={handleSubmissionComplete}
+      />
     </div>
   );
 };

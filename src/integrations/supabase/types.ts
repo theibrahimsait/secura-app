@@ -767,6 +767,77 @@ export type Database = {
           },
         ]
       }
+      property_agency_submissions: {
+        Row: {
+          agency_id: string
+          agent_id: string | null
+          client_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          property_id: string
+          reviewed_at: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          agent_id?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          property_id: string
+          reviewed_at?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          agent_id?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          property_id?: string
+          reviewed_at?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_agency_submissions_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_agency_submissions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_agency_submissions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_agency_submissions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "client_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_documents: {
         Row: {
           client_id: string

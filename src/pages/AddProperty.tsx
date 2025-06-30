@@ -149,7 +149,7 @@ const AddProperty = () => {
 
     setLoading(true);
     try {
-      // Create property record - using 'draft' status instead of 'active'
+      // Create property record with 'in_portfolio' status
       if (!propertyType) {
         throw new Error('Property type must be selected');
       }
@@ -163,7 +163,7 @@ const AddProperty = () => {
         bathrooms: bathrooms ? parseInt(bathrooms) : null,
         area_sqft: areaSqft ? parseInt(areaSqft) : null,
         details: description ? { description } : null,
-        status: 'draft' // Using 'draft' status which should be allowed by the constraint
+        status: 'in_portfolio' // Property is now in user's portfolio
       };
 
       console.log('Attempting to create property with data:', propertyData);
@@ -560,7 +560,7 @@ const AddProperty = () => {
                   disabled={loading}
                   className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal px-8 py-2"
                 >
-                  {loading ? 'Adding Property...' : 'Add Property'}
+                  {loading ? 'Adding Property...' : 'Add to Portfolio'}
                 </Button>
               </div>
             </form>
