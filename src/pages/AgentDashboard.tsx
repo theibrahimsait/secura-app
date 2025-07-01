@@ -135,25 +135,57 @@ const AgentDashboard = () => {
     }
   };
 
-  const fetchReferralLink = async () => {
-    if (!userProfile?.id) return;
+  const fetchOrCreateReferralLink = async () => {
+    if (!userProfile?.id || !userProfile?.agency_id) return;
+    
     try {
-      const { data, error } = await supabase
-        .from('referral_links')
-        .select('url')
+      // First try to get existing referral link
+      const { data: existingLink, error: fetchError } = await supabase
+        .from('agent_referral_links')
+        .select('ref_token')
         .eq('agent_id', userProfile.id)
-        .single();
-      if (error) throw error;
-      setReferralLink(data?.url || '');
+        .eq('agency_id', userProfile.agency_id)
+        .maybeSingle();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
+      }
+
+      if (existingLink) {
+        // Link exists, use it
+        const linkUrl = `/client/onboarding?ref=${existingLink.ref_token}`;
+        setReferralLink(linkUrl);
+      } else {
+        // Create new referral link
+        const { data: newLink, error: createError } = await supabase
+          .from('agent_referral_links')
+          .insert({
+            agent_id: userProfile.id,
+            agency_id: userProfile.agency_id,
+            is_active: true
+          })
+          .select('ref_token')
+          .single();
+
+        if (createError) throw createError;
+
+        const linkUrl = `/client/onboarding?ref=${newLink.ref_token}`;
+        setReferralLink(linkUrl);
+      }
     } catch (error: any) {
-      console.error('Error fetching referral link:', error);
+      console.error('Error with referral link:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load referral link.",
+        variant: "destructive",
+      });
     }
   };
 
   useEffect(() => {
     if (userProfile) {
       fetchClientsAndProperties();
-      fetchReferralLink();
+      fetchOrCreateReferralLink();
       fetchAgencyName();
     }
   }, [userProfile]);
