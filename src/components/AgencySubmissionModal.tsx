@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Building, CheckCircle } from 'lucide-react';
+import { Send, Building, CheckCircle, User } from 'lucide-react';
 
 interface Property {
   id: string;
@@ -26,6 +26,12 @@ interface Agency {
   logo_url?: string;
 }
 
+interface Agent {
+  id: string;
+  full_name: string;
+  email: string;
+}
+
 interface AgencySubmissionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -41,6 +47,7 @@ const AgencySubmissionModal = ({ isOpen, onClose, clientData, onSubmissionComple
   const { toast } = useToast();
   const [properties, setProperties] = useState<Property[]>([]);
   const [agency, setAgency] = useState<Agency | null>(null);
+  const [agent, setAgent] = useState<Agent | null>(null);
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -49,7 +56,7 @@ const AgencySubmissionModal = ({ isOpen, onClose, clientData, onSubmissionComple
     if (isOpen && clientData.agency_id) {
       loadData();
     }
-  }, [isOpen, clientData.agency_id]);
+  }, [isOpen, clientData.agency_id, clientData.agent_id]);
 
   const loadData = async () => {
     setLoading(true);
@@ -64,7 +71,22 @@ const AgencySubmissionModal = ({ isOpen, onClose, clientData, onSubmissionComple
       if (agencyError) throw agencyError;
       setAgency(agencyData);
 
-      // Load properties in portfolio that haven't been submitted to this agency
+      // Load agent info if agent_id is provided
+      if (clientData.agent_id) {
+        const { data: agentData, error: agentError } = await supabase
+          .from('users')
+          .select('id, full_name, email')
+          .eq('id', clientData.agent_id)
+          .single();
+
+        if (agentError) {
+          console.error('Error loading agent:', agentError);
+        } else {
+          setAgent(agentData);
+        }
+      }
+
+      // Load properties in portfolio that haven't been submitted to this specific agent/agency combination
       const { data: propertiesData, error: propertiesError } = await supabase
         .from('client_properties')
         .select('*')
@@ -74,12 +96,13 @@ const AgencySubmissionModal = ({ isOpen, onClose, clientData, onSubmissionComple
 
       if (propertiesError) throw propertiesError;
 
-      // Filter out properties already submitted to this agency
+      // Filter out properties already submitted to this agency/agent combination
       const { data: existingSubmissions } = await supabase
         .from('property_agency_submissions')
         .select('property_id')
         .eq('client_id', clientData.id)
-        .eq('agency_id', clientData.agency_id);
+        .eq('agency_id', clientData.agency_id)
+        .eq('agent_id', clientData.agent_id || '');
 
       const submittedPropertyIds = existingSubmissions?.map(sub => sub.property_id) || [];
       const availableProperties = propertiesData?.filter(
@@ -117,6 +140,15 @@ const AgencySubmissionModal = ({ isOpen, onClose, clientData, onSubmissionComple
       return;
     }
 
+    if (!clientData.agency_id) {
+      toast({
+        title: "Missing Agency Information",
+        description: "Agency information is required for submission",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
       // Create submissions for each selected property
@@ -138,6 +170,10 @@ const AgencySubmissionModal = ({ isOpen, onClose, clientData, onSubmissionComple
       for (const propertyId of selectedProperties) {
         const property = properties.find(p => p.id === propertyId);
         if (property) {
+          const notificationMessage = agent 
+            ? `A client has submitted a new property: ${property.title} (via agent: ${agent.full_name})`
+            : `A client has submitted a new property: ${property.title}`;
+
           await supabase
             .from('agency_notifications')
             .insert({
@@ -147,19 +183,24 @@ const AgencySubmissionModal = ({ isOpen, onClose, clientData, onSubmissionComple
               property_id: propertyId,
               type: 'property_submitted',
               title: 'New Property Submitted',
-              message: `A client has submitted a new property: ${property.title}`,
+              message: notificationMessage,
               metadata: {
                 property_title: property.title,
                 property_location: property.location,
-                property_type: property.property_type
+                property_type: property.property_type,
+                agent_name: agent?.full_name || null
               }
             });
         }
       }
 
+      const submissionText = agent 
+        ? `${selectedProperties.length} properties have been submitted to ${agency?.name} (${agent.full_name})`
+        : `${selectedProperties.length} properties have been submitted to ${agency?.name}`;
+
       toast({
         title: "Properties Submitted Successfully",
-        description: `${selectedProperties.length} properties have been submitted to ${agency?.name}`,
+        description: submissionText,
       });
 
       onSubmissionComplete();
@@ -188,6 +229,7 @@ const AgencySubmissionModal = ({ isOpen, onClose, clientData, onSubmissionComple
           </DialogTitle>
           <DialogDescription>
             Select properties from your portfolio to submit to the agency
+            {agent && ` via ${agent.full_name}`}
           </DialogDescription>
         </DialogHeader>
 
@@ -197,15 +239,25 @@ const AgencySubmissionModal = ({ isOpen, onClose, clientData, onSubmissionComple
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Agency Info */}
-            {agency && (
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Building className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <p className="font-medium text-blue-900">Submitting to: {agency.name}</p>
+            {/* Agency & Agent Info */}
+            {(agency || agent) && (
+              <div className="bg-blue-50 p-4 rounded-lg space-y-2">
+                {agency && (
+                  <div className="flex items-center space-x-3">
+                    <Building className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <p className="font-medium text-blue-900">Submitting to: {agency.name}</p>
+                    </div>
                   </div>
-                </div>
+                )}
+                {agent && (
+                  <div className="flex items-center space-x-3 ml-8">
+                    <User className="w-4 h-4 text-blue-500" />
+                    <div>
+                      <p className="text-blue-700">Agent: {agent.full_name}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -215,7 +267,10 @@ const AgencySubmissionModal = ({ isOpen, onClose, clientData, onSubmissionComple
                 <CheckCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No Properties Available</h3>
                 <p className="text-gray-600">
-                  You don't have any properties in your portfolio available for submission.
+                  {agent 
+                    ? `You don't have any properties available for submission to ${agent.full_name} at ${agency?.name}.`
+                    : `You don't have any properties in your portfolio available for submission to ${agency?.name}.`
+                  }
                 </p>
               </div>
             ) : (
@@ -264,7 +319,11 @@ const AgencySubmissionModal = ({ isOpen, onClose, clientData, onSubmissionComple
                   className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
                 >
                   <Send className="w-4 h-4 mr-2" />
-                  {submitting ? 'Submitting...' : `Submit ${selectedProperties.length} Properties`}
+                  {submitting ? 'Submitting...' : 
+                    agent 
+                    ? `Submit to ${agent.full_name} @ ${agency?.name}`
+                    : `Submit ${selectedProperties.length} Properties`
+                  }
                 </Button>
               </div>
             )}

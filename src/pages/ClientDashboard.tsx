@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send } from 'lucide-react';
+import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send, Link } from 'lucide-react';
 import ClientDashboardMobile from '@/components/ClientDashboardMobile';
 import AgencySubmissionModal from '@/components/AgencySubmissionModal';
 
@@ -45,24 +45,36 @@ interface PropertySubmission {
   id: string;
   property_id: string;
   agency_id: string;
+  agent_id: string | null;
   status: string;
   submitted_at: string;
   agencies: {
     name: string;
   };
+  users?: {
+    full_name: string;
+  } | null;
+}
+
+interface AgentAgencyInfo {
+  agencyId: string;
+  agencyName: string;
+  agentId: string | null;
+  agentName: string | null;
 }
 
 const ClientDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [clientData, setClientData] = useState<ClientData | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [submissions, setSubmissions] = useState<PropertySubmission[]>([]);
-  const [agencyInfo, setAgencyInfo] = useState<{ name: string } | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+  const [currentAgentAgency, setCurrentAgentAgency] = useState<AgentAgencyInfo | null>(null);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -76,7 +88,55 @@ const ClientDashboard = () => {
 
   useEffect(() => {
     loadClientData();
+    checkForAgentAgencyContext();
   }, []);
+
+  const checkForAgentAgencyContext = async () => {
+    const agencyParam = searchParams.get('agency');
+    const agentParam = searchParams.get('agent');
+    
+    if (agencyParam) {
+      try {
+        // First try to find agency by a slug/identifier
+        let agencyQuery = supabase
+          .from('agencies')
+          .select('id, name')
+          .eq('name', agencyParam);
+
+        const { data: agencyData } = await agencyQuery.single();
+        
+        if (agencyData) {
+          let agentData = null;
+          let agentId = null;
+          
+          if (agentParam) {
+            // Try to find agent by email/identifier within the agency
+            const { data: agentResult } = await supabase
+              .from('users')
+              .select('id, full_name, email')
+              .eq('agency_id', agencyData.id)
+              .eq('role', 'agent')
+              .or(`email.eq.${agentParam},full_name.ilike.%${agentParam}%`)
+              .single();
+            
+            if (agentResult) {
+              agentData = agentResult;
+              agentId = agentResult.id;
+            }
+          }
+          
+          setCurrentAgentAgency({
+            agencyId: agencyData.id,
+            agencyName: agencyData.name,
+            agentId: agentId,
+            agentName: agentData?.full_name || null
+          });
+        }
+      } catch (error) {
+        console.error('Error loading agent/agency context:', error);
+      }
+    }
+  };
 
   const loadClientData = async () => {
     try {
@@ -89,19 +149,6 @@ const ClientDashboard = () => {
       const client = JSON.parse(storedData);
       setClientData(client);
 
-      // Load agency info if available
-      if (client.agency_id) {
-        const { data: agencyData } = await supabase
-          .from('agencies')
-          .select('name')
-          .eq('id', client.agency_id)
-          .single();
-        
-        if (agencyData) {
-          setAgencyInfo({ name: agencyData.name });
-        }
-      }
-
       // Load properties
       const { data: propertiesData } = await supabase
         .from('client_properties')
@@ -113,16 +160,18 @@ const ClientDashboard = () => {
         setProperties(propertiesData);
       }
 
-      // Load property submissions
+      // Load property submissions with agent info
       const { data: submissionsData } = await supabase
         .from('property_agency_submissions')
         .select(`
           id,
           property_id,
           agency_id,
+          agent_id,
           status,
           submitted_at,
-          agencies (name)
+          agencies (name),
+          users (full_name)
         `)
         .eq('client_id', client.id)
         .order('submitted_at', { ascending: false });
@@ -189,7 +238,8 @@ const ClientDashboard = () => {
               : 'bg-red-100 text-red-800'
             }`}
           >
-            {submission.agencies.name} - {submission.status.replace('_', ' ')}
+            submitted to {submission.agencies.name}
+            {submission.users?.full_name && ` (${submission.users.full_name})`}
           </Badge>
         ))}
       </div>
@@ -279,6 +329,23 @@ const ClientDashboard = () => {
         </div>
       </div>
 
+      {/* Agency Connection Banner */}
+      {currentAgentAgency && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center">
+              <Link className="w-5 h-5 text-blue-600 mr-2" />
+              <span className="text-blue-800 font-medium">
+                You're connected to: {currentAgentAgency.agencyName}
+                {currentAgentAgency.agentName && (
+                  <span className="text-blue-600"> • {currentAgentAgency.agentName}</span>
+                )}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -298,15 +365,15 @@ const ClientDashboard = () => {
                   Add New Property
                 </Button>
                 
-                {/* Show agency submission button if client has an assigned agency */}
-                {clientData.agency_id && agencyInfo && (
+                {/* Show agency submission button if agent and agency are available */}
+                {currentAgentAgency && (
                   <Button
                     onClick={() => setShowSubmissionModal(true)}
                     variant="outline"
                     className="w-full border-secura-lime text-secura-teal hover:bg-secura-lime/10"
                   >
                     <Send className="w-4 h-4 mr-2" />
-                    Submit to {agencyInfo.name}
+                    Submit to {currentAgentAgency.agencyName}
                   </Button>
                 )}
               </CardContent>
@@ -425,7 +492,11 @@ const ClientDashboard = () => {
       <AgencySubmissionModal
         isOpen={showSubmissionModal}
         onClose={() => setShowSubmissionModal(false)}
-        clientData={clientData}
+        clientData={{
+          id: clientData.id,
+          agency_id: currentAgentAgency?.agencyId || null,
+          agent_id: currentAgentAgency?.agentId || null
+        }}
         onSubmissionComplete={handleSubmissionComplete}
       />
     </div>
