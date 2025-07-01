@@ -62,11 +62,29 @@ const AgencyDashboard = () => {
   const [resendLoading, setResendLoading] = useState<string | null>(null);
   const [showDebug, setShowDebug] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [agencyName, setAgencyName] = useState<string>('');
   const [form, setForm] = useState<CreateAgentForm>({
     fullName: '',
     email: '',
     phone: '',
   });
+
+  const fetchAgencyName = async () => {
+    if (!userProfile?.agency_id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('agencies')
+        .select('name')
+        .eq('id', userProfile.agency_id)
+        .single();
+
+      if (error) throw error;
+      setAgencyName(data.name || '');
+    } catch (error: any) {
+      console.error('Error fetching agency name:', error);
+    }
+  };
 
   const fetchAgents = async () => {
     if (!userProfile?.agency_id) {
@@ -292,6 +310,7 @@ const AgencyDashboard = () => {
     if(userProfile) {
       fetchAgents();
       fetchSubmissions();
+      fetchAgencyName();
     }
   }, [userProfile]);
 
@@ -317,7 +336,7 @@ const AgencyDashboard = () => {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm font-medium text-secura-black">{userProfile?.full_name}</p>
-                <p className="text-xs text-muted-foreground">Agency Admin</p>
+                <p className="text-xs text-muted-foreground">{agencyName || 'Agency Admin'}</p>
               </div>
               <Button
                 onClick={signOut}

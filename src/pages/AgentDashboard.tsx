@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,6 +66,7 @@ const AgentDashboard = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [referralLinks, setReferralLinks] = useState<ReferralLink[]>([]);
+  const [agencyName, setAgencyName] = useState<string>('');
 
   // State for dialogs and forms
   const [generateLinkDialogOpen, setGenerateLinkDialogOpen] = useState(false);
@@ -84,6 +84,23 @@ const AgentDashboard = () => {
     window.location.href = "/login";
     return null;
   }
+
+  const fetchAgencyName = async () => {
+    if (!userProfile?.agency_id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('agencies')
+        .select('name')
+        .eq('id', userProfile.agency_id)
+        .single();
+
+      if (error) throw error;
+      setAgencyName(data.name || '');
+    } catch (error: any) {
+      console.error('Error fetching agency name:', error);
+    }
+  };
 
   const fetchClientsAndProperties = async () => {
     if (!userProfile?.id) return;
@@ -147,6 +164,7 @@ const AgentDashboard = () => {
     if (userProfile) {
       fetchClientsAndProperties();
       fetchReferralLinks();
+      fetchAgencyName();
     }
   }, [userProfile]);
 
@@ -260,7 +278,7 @@ const AgentDashboard = () => {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm font-medium text-secura-black">{userProfile?.full_name}</p>
-                <p className="text-xs text-muted-foreground">Real Estate Agent</p>
+                <p className="text-xs text-muted-foreground">{agencyName || 'Real Estate Agent'}</p>
               </div>
               <Button
                 onClick={signOut}
