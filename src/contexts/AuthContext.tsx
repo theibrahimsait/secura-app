@@ -14,7 +14,7 @@ interface UserProfile {
   agency_id: string | null;
   phone: string | null;
   is_active: boolean;
-  onboarding_status: string | null;
+  onboarding_status: any;
 }
 
 interface AuthContextType {
@@ -68,7 +68,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return { ...data, onboarding_status: clientData.onboarding_status };
           }
         }
-        return data;
+        // For non-client users, add null onboarding_status
+        return { ...data, onboarding_status: null };
       }
 
       // If no profile found by auth_user_id, try by email
@@ -95,7 +96,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (updateError) {
             console.error('Error updating auth_user_id:', updateError);
           }
-          return emailData;
+          // Add onboarding_status field for non-client users found by email
+          return { ...emailData, onboarding_status: null };
         }
       }
 
