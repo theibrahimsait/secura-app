@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -136,8 +135,12 @@ const ClientOnboarding = () => {
           full_name: profileData.fullName,
           email: profileData.email,
           terms_accepted_at: new Date().toISOString(),
-          profile_completed: true,
-          onboarding_completed: true,
+          onboarding_status: {
+            intro_complete: true,
+            tos_accepted: true,
+            profile_set: true,
+            docs_uploaded: documents.length > 0,
+          },
           referral_token: referralToken,
           agent_id: agent?.id || null,
           agency_id: agency?.id || null,
@@ -172,7 +175,12 @@ const ClientOnboarding = () => {
         ...clientData,
         full_name: profileData.fullName,
         email: profileData.email,
-        onboarding_completed: true,
+        onboarding_status: {
+          intro_complete: true,
+          tos_accepted: true,
+          profile_set: true,
+          docs_uploaded: documents.length > 0,
+        },
       }));
 
       toast({

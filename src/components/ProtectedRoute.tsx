@@ -11,6 +11,17 @@ interface ProtectedRouteProps {
   requireAuth?: boolean;
 }
 
+// Add helper to check onboarding completion
+function isOnboardingComplete(onboarding_status: any): boolean {
+  if (!onboarding_status) return false;
+  try {
+    const status = typeof onboarding_status === 'string' ? JSON.parse(onboarding_status) : onboarding_status;
+    return status.intro_complete && status.tos_accepted && status.profile_set && status.docs_uploaded;
+  } catch {
+    return false;
+  }
+}
+
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
   allowedRoles = [], 
@@ -33,6 +44,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (allowedRoles.length > 0 && userProfile && !allowedRoles.includes(userProfile.role)) {
     return <Navigate to="/unauthorized" replace />;
+  }
+
+  // Onboarding gating for clients
+  if (userProfile && userProfile.role === 'client' && !isOnboardingComplete(userProfile.onboarding_status)) {
+    if (location.pathname !== '/client/onboarding') {
+      return <Navigate to="/client/onboarding" replace />;
+    }
   }
 
   return <>{children}</>;

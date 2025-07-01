@@ -1,4 +1,3 @@
-
 -- Fix the property notification function to handle null agency_id
 CREATE OR REPLACE FUNCTION public.create_property_notification()
 RETURNS trigger
@@ -47,3 +46,7 @@ BEGIN
   RETURN NEW;
 END;
 $function$;
+
+ALTER TABLE public.agencies ADD COLUMN IF NOT EXISTS logo_url text;
+ALTER TABLE public.agencies ADD COLUMN IF NOT EXISTS primary_color text DEFAULT '#0ea5e9';
+ALTER TABLE public.agencies ADD COLUMN IF NOT EXISTS description text;

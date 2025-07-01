@@ -585,6 +585,7 @@ export type Database = {
           last_login: string | null
           mobile_number: string
           onboarding_completed: boolean | null
+          onboarding_status: Json | null
           otp_code: string | null
           otp_expires_at: string | null
           phone: string
@@ -605,6 +606,7 @@ export type Database = {
           last_login?: string | null
           mobile_number: string
           onboarding_completed?: boolean | null
+          onboarding_status?: Json | null
           otp_code?: string | null
           otp_expires_at?: string | null
           phone: string
@@ -625,6 +627,7 @@ export type Database = {
           last_login?: string | null
           mobile_number?: string
           onboarding_completed?: boolean | null
+          onboarding_status?: Json | null
           otp_code?: string | null
           otp_expires_at?: string | null
           phone?: string
@@ -954,6 +957,48 @@ export type Database = {
           },
         ]
       }
+      referral_links: {
+        Row: {
+          agency_id: string
+          agent_id: string
+          created_at: string | null
+          id: string
+          slug: string
+          url: string
+        }
+        Insert: {
+          agency_id: string
+          agent_id: string
+          created_at?: string | null
+          id?: string
+          slug: string
+          url: string
+        }
+        Update: {
+          agency_id?: string
+          agent_id?: string
+          created_at?: string | null
+          id?: string
+          slug?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_links_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_links_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       test: {
         Row: {
           created_at: string
@@ -1067,6 +1112,18 @@ export type Database = {
         | "update"
         | "delete"
         | "sms_sent"
+      client_referral_link_id:
+        | "0"
+        | "1"
+        | "2"
+        | "3"
+        | "4"
+        | "5"
+        | "6"
+        | "7"
+        | "8"
+        | "9"
+        | "10"
       client_type: "buy" | "sell" | "rent"
       document_type:
         | "emirates_id"
@@ -1221,6 +1278,19 @@ export const Constants = {
         "update",
         "delete",
         "sms_sent",
+      ],
+      client_referral_link_id: [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
       ],
       client_type: ["buy", "sell", "rent"],
       document_type: [

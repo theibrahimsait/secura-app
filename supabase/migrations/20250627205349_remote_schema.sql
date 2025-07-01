@@ -1,10 +1,10 @@
 drop trigger if exists "update_jwt_metadata_trigger" on "public"."users";
 
-drop policy "Users can view their own agency" on "public"."agencies";
+-- drop policy "Users can view their own agency" on "public"."agencies";
 
-drop policy "Admins can manage users based on JWT role" on "public"."users";
+-- drop policy "Admins can manage users based on JWT role" on "public"."users";
 
-drop policy "Users can view their own profile" on "public"."users";
+-- drop policy "Users can view their own profile" on "public"."users";
 
 drop policy "Admins can manage agencies based on JWT role" on "public"."agencies";
 

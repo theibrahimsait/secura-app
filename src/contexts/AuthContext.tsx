@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +14,7 @@ interface UserProfile {
   agency_id: string | null;
   phone: string | null;
   is_active: boolean;
+  onboarding_status: string | null;
 }
 
 interface AuthContextType {
@@ -57,6 +57,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data) {
         console.log('Found user profile by auth_user_id:', data);
+        // If the user is a client, fetch onboarding_status
+        if (data.role === 'client') {
+          const { data: clientData, error: clientError } = await supabase
+            .from('clients')
+            .select('onboarding_status')
+            .eq('id', data.id)
+            .maybeSingle();
+          if (!clientError && clientData) {
+            return { ...data, onboarding_status: clientData.onboarding_status };
+          }
+        }
         return data;
       }
 

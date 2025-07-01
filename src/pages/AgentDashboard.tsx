@@ -65,16 +65,8 @@ const AgentDashboard = () => {
   // State for data
   const [clients, setClients] = useState<Client[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
-  const [referralLinks, setReferralLinks] = useState<ReferralLink[]>([]);
+  const [referralLink, setReferralLink] = useState<string>('');
   const [agencyName, setAgencyName] = useState<string>('');
-
-  // State for dialogs and forms
-  const [generateLinkDialogOpen, setGenerateLinkDialogOpen] = useState(false);
-  const [generateLinkLoading, setGenerateLinkLoading] = useState(false);
-  const [linkForm, setLinkForm] = useState<GenerateLinkForm>({
-    clientName: '',
-    clientPhone: '',
-  });
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -143,120 +135,28 @@ const AgentDashboard = () => {
     }
   };
 
-  const fetchReferralLinks = async () => {
+  const fetchReferralLink = async () => {
     if (!userProfile?.id) return;
-
     try {
       const { data, error } = await supabase
-        .from('agent_referral_links')
-        .select('*')
+        .from('referral_links')
+        .select('url')
         .eq('agent_id', userProfile.id)
-        .order('created_at', { ascending: false });
-
+        .single();
       if (error) throw error;
-      setReferralLinks(data || []);
+      setReferralLink(data?.url || '');
     } catch (error: any) {
-      console.error('Error fetching referral links:', error);
+      console.error('Error fetching referral link:', error);
     }
   };
 
   useEffect(() => {
     if (userProfile) {
       fetchClientsAndProperties();
-      fetchReferralLinks();
+      fetchReferralLink();
       fetchAgencyName();
     }
   }, [userProfile]);
-
-  const handleGenerateLink = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userProfile?.id || !userProfile?.agency_id) return;
-    
-    setGenerateLinkLoading(true);
-
-    try {
-      const { data, error } = await supabase
-        .from('agent_referral_links')
-        .insert({
-          agent_id: userProfile.id,
-          agency_id: userProfile.agency_id,
-          is_active: true
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Generate the full URL
-      const referralUrl = `${window.location.origin}/client/login?ref=${data.ref_token}`;
-      
-      // Copy to clipboard
-      await navigator.clipboard.writeText(referralUrl);
-      
-      toast({
-        title: "Link Generated & Copied!",
-        description: `Referral link for ${linkForm.clientName} has been copied to your clipboard.`,
-      });
-
-      // Refresh the links list
-      fetchReferralLinks();
-      
-      // Reset form and close dialog
-      setLinkForm({ clientName: '', clientPhone: '' });
-      setGenerateLinkDialogOpen(false);
-    } catch (error: any) {
-      console.error('Error generating link:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate referral link. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setGenerateLinkLoading(false);
-    }
-  };
-
-  const copyToClipboard = async (token: string) => {
-    const referralUrl = `${window.location.origin}/client/login?ref=${token}`;
-    try {
-      await navigator.clipboard.writeText(referralUrl);
-      toast({
-        title: "Link Copied!",
-        description: "Referral link copied to clipboard",
-      });
-    } catch (error) {
-      toast({
-        title: "Copy Failed",
-        description: "Failed to copy link to clipboard",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const toggleLinkStatus = async (linkId: string, currentStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('agent_referral_links')
-        .update({ is_active: !currentStatus })
-        .eq('id', linkId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Link Updated",
-        description: `Link ${!currentStatus ? 'activated' : 'deactivated'} successfully`,
-      });
-
-      fetchReferralLinks();
-    } catch (error: any) {
-      console.error('Error updating link:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update link status",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -333,7 +233,7 @@ const AgentDashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Referral Links</p>
-                  <p className="text-2xl font-bold text-secura-black">{referralLinks.length}</p>
+                  <p className="text-2xl font-bold text-secura-black">{referralLink ? '1' : '0'}</p>
                 </div>
               </div>
             </CardContent>
@@ -354,128 +254,32 @@ const AgentDashboard = () => {
           </Card>
         </div>
 
-        {/* Generate Secure Link Section */}
-        <Card className="mb-8">
+        {/* Permanent Referral Link */}
+        <Card className="mb-6">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-xl text-secura-black flex items-center">
-                  <LinkIcon className="w-5 h-5 mr-2" />
-                  Client Referral Links
-                </CardTitle>
-                <CardDescription>Generate and manage secure links for clients to access their portal</CardDescription>
-              </div>
-              <Dialog open={generateLinkDialogOpen} onOpenChange={setGenerateLinkDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Generate New Link
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Generate Client Referral Link</DialogTitle>
-                    <DialogDescription>
-                      Create a secure referral link. You can share this with potential clients.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleGenerateLink} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="clientName">Client Name (Optional)</Label>
-                      <Input
-                        id="clientName"
-                        value={linkForm.clientName}
-                        onChange={(e) => setLinkForm({ ...linkForm, clientName: e.target.value })}
-                        placeholder="Enter client's name for reference"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="clientPhone">Client Phone (Optional)</Label>
-                      <Input
-                        id="clientPhone"
-                        value={linkForm.clientPhone}
-                        onChange={(e) => setLinkForm({ ...linkForm, clientPhone: e.target.value })}
-                        placeholder="Enter client's phone for reference"
-                      />
-                    </div>
-                    <div className="flex space-x-2 pt-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setGenerateLinkDialogOpen(false)}
-                        className="flex-1"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        disabled={generateLinkLoading}
-                        className="flex-1 bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
-                      >
-                        {generateLinkLoading ? 'Generating...' : 'Generate & Copy Link'}
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
+            <CardTitle>Permanent Referral Link</CardTitle>
+            <CardDescription>
+              This is your permanent referral link. Share it with clients to onboard them. The link will always be the same.
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            {referralLinks.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Link Token</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Last Used</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {referralLinks.map((link) => (
-                    <TableRow key={link.id}>
-                      <TableCell className="font-mono text-sm">
-                        {link.ref_token.substring(0, 8)}...
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={link.is_active ? "default" : "secondary"}>
-                          {link.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{new Date(link.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        {link.last_used_at ? new Date(link.last_used_at).toLocaleDateString() : 'Never'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => copyToClipboard(link.ref_token)}
-                          >
-                            <Copy className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => toggleLinkStatus(link.id, link.is_active)}
-                          >
-                            {link.is_active ? 'Deactivate' : 'Activate'}
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <LinkIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No referral links generated yet</p>
-                <p className="text-sm">Click "Generate New Link" to create your first referral link</p>
-              </div>
-            )}
+          <CardContent className="flex items-center gap-2">
+            <Input
+              value={referralLink ? `${window.location.origin}${referralLink}` : ''}
+              readOnly
+              className="w-full"
+              onClick={e => (e.target as HTMLInputElement).select()}
+            />
+            <Button
+              variant="outline"
+              onClick={async () => {
+                if (referralLink) {
+                  await navigator.clipboard.writeText(`${window.location.origin}${referralLink}`);
+                  toast({ title: 'Copied!', description: 'Referral link copied to clipboard.' });
+                }
+              }}
+            >
+              <Copy className="w-4 h-4 mr-1" /> Copy
+            </Button>
           </CardContent>
         </Card>
 

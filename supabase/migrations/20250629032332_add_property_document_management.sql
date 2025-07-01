@@ -1,9 +1,9 @@
-
 -- Fix RLS policies for client_documents to work with non-authenticated clients
 DROP POLICY IF EXISTS "Clients can manage own documents" ON public.client_documents;
 
 -- Create a more permissive policy for client document uploads
 -- Since clients are not authenticated users, we need to allow inserts based on client_id
+DROP POLICY IF EXISTS "Allow client document uploads" ON public.client_documents;
 CREATE POLICY "Allow client document uploads" 
   ON public.client_documents 
   FOR INSERT 
@@ -11,6 +11,7 @@ CREATE POLICY "Allow client document uploads"
   WITH CHECK (true);
 
 -- Allow clients to view their own documents by client_id
+DROP POLICY IF EXISTS "Clients can view own documents" ON public.client_documents;
 CREATE POLICY "Clients can view own documents" 
   ON public.client_documents 
   FOR SELECT 

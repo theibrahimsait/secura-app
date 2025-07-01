@@ -1,19 +1,18 @@
-
--- Allow anyone to insert new clients (for registration/OTP)
+DROP POLICY IF EXISTS "Allow public client registration" ON public.clients;
 CREATE POLICY "Allow public client registration" 
   ON public.clients 
   FOR INSERT 
   TO public 
   WITH CHECK (true);
 
--- Allow clients to view their own records (for OTP verification)
+DROP POLICY IF EXISTS "Clients can view own records" ON public.clients;
 CREATE POLICY "Clients can view own records" 
   ON public.clients 
   FOR SELECT 
   TO public 
   USING (true);
 
--- Allow clients to update their own records (for OTP verification and profile updates)
+DROP POLICY IF EXISTS "Clients can update own records" ON public.clients;
 CREATE POLICY "Clients can update own records" 
   ON public.clients 
   FOR UPDATE 

@@ -1,6 +1,14 @@
-
 -- First, let's add a column to track which referral link was used by a client
-ALTER TABLE public.clients ADD COLUMN referral_link_id uuid REFERENCES public.agent_referral_links(id);
+DO
+$$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'client_referral_link_id') THEN
+    CREATE TYPE public.client_referral_link_id AS ENUM ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10');
+  END IF;
+END
+$$;
+
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS referral_link_id uuid REFERENCES public.agent_referral_links(id);
 
 -- Add a trigger to automatically set agent_id and agency_id when a client uses a referral link
 CREATE OR REPLACE FUNCTION public.set_client_agent_from_referral()
@@ -37,7 +45,7 @@ CREATE TRIGGER on_client_referral_set
   EXECUTE FUNCTION public.set_client_agent_from_referral();
 
 -- Add a column to track client registration on referral links
-ALTER TABLE public.agent_referral_links ADD COLUMN client_id uuid REFERENCES public.clients(id);
+ALTER TABLE public.agent_referral_links ADD COLUMN IF NOT EXISTS client_id uuid REFERENCES public.clients(id);
 
 -- Create a function to update the referral link with client info after registration
 CREATE OR REPLACE FUNCTION public.update_referral_link_client()
@@ -66,13 +74,8 @@ CREATE TRIGGER on_client_registered
   WHEN (OLD.is_verified = false AND NEW.is_verified = true)
   EXECUTE FUNCTION public.update_referral_link_client();
 
--- Add agency branding info to make links more professional
-ALTER TABLE public.agencies ADD COLUMN logo_url text;
-ALTER TABLE public.agencies ADD COLUMN primary_color text DEFAULT '#0ea5e9';
-ALTER TABLE public.agencies ADD COLUMN description text;
-
 -- Add a notification system for agencies
-CREATE TABLE public.agency_notifications (
+CREATE TABLE IF NOT EXISTS public.agency_notifications (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   agency_id uuid NOT NULL REFERENCES public.agencies(id) ON DELETE CASCADE,
   agent_id uuid REFERENCES public.users(id) ON DELETE CASCADE,
@@ -91,14 +94,15 @@ CREATE TABLE public.agency_notifications (
 ALTER TABLE public.agency_notifications ENABLE ROW LEVEL SECURITY;
 
 -- Policy for agency admins to see their notifications
+DROP POLICY IF EXISTS "Agency admins can view their notifications" ON public.agency_notifications;
 CREATE POLICY "Agency admins can view their notifications"
 ON public.agency_notifications
 FOR SELECT
 USING (
   EXISTS (
-    SELECT 1 FROM public.users 
-    WHERE auth.uid() = auth_user_id 
-    AND role = 'agency_admin' 
+    SELECT 1 FROM public.users
+    WHERE auth.uid() = auth_user_id
+    AND role = 'agency_admin'
     AND agency_id = agency_notifications.agency_id
   )
 );
