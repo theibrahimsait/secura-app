@@ -73,7 +73,7 @@ const Index = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <FileText className="h-5 w-5 text-secura-teal" />
-                  <span className="text-sm text-muted-foreground">Audit Trail</span>
+                  <span className="text-sm text-muted-foreground">Compliance Audit Trail</span>
                 </div>
               </div>
             </div>
