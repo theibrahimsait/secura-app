@@ -159,10 +159,7 @@ const Index = () => {
                 <CardTitle className="text-xl text-secura-black">Complete Audit Trail</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription className="text-base">
-                  Track every document access, download, and modification. 
-                  Full compliance reporting for regulatory requirements.
-                </CardDescription>
+                <CardDescription className="text-base">Track every document access, download, and modification. Full compliance reporting for regulatory requirements to avoid hefty fines.</CardDescription>
               </CardContent>
             </Card>
           </div>
@@ -215,7 +212,8 @@ const Index = () => {
                 <div className="flex items-start space-x-3">
                   <MapPin className="h-4 w-4 text-secura-lime mt-1" />
                   <div className="text-secura-mint">
-                    <p>Dubai Internet City</p>
+                    <p>First Floor, In5 Tech
+King Salman bin Abdulaziz Al Saud St. Dubai Internet City</p>
                     <p>Dubai, UAE</p>
                   </div>
                 </div>
