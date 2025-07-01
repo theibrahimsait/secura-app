@@ -44,7 +44,16 @@ const ClientOnboarding = () => {
       setReferralToken(ref);
       fetchReferralInfo(ref);
     }
-  }, [searchParams]);
+
+    // Check if user is authenticated (has client data from login)
+    const clientDataStr = localStorage.getItem('client_data');
+    if (!clientDataStr) {
+      // User not authenticated, redirect to login with referral token
+      const loginUrl = ref ? `/client/login?ref=${ref}` : '/client/login';
+      navigate(loginUrl);
+      return;
+    }
+  }, [searchParams, navigate]);
 
   const fetchReferralInfo = async (token: string) => {
     try {
