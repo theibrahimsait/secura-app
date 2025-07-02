@@ -256,8 +256,11 @@ const ClientLogin = () => {
           : '/client/onboarding';
         navigate(onboardingUrl);
       } else {
-        // Client has completed onboarding, go directly to dashboard
-        navigate('/client/dashboard');
+        // Client has completed onboarding, go directly to dashboard with referral token
+        const dashboardUrl = referralToken 
+          ? `/client/dashboard?ref=${referralToken}`
+          : '/client/dashboard';
+        navigate(dashboardUrl);
       }
 
     } catch (error: any) {
