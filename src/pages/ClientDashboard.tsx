@@ -97,9 +97,19 @@ const ClientDashboard = () => {
 
   useEffect(() => {
     console.log('🔄 Current agent/agency state:', currentAgentAgency);
+    if (currentAgentAgency) {
+      console.log('✅ Context is now set:', currentAgentAgency);
+    } else {
+      console.log('❌ Context is still null');
+    }
   }, [currentAgentAgency]);
 
   const checkForAgentAgencyContext = async () => {
+    console.log('🎯 checkForAgentAgencyContext function called!');
+    console.log('🔍 URL at function call:', window.location.href);
+    console.log('🔍 searchParams object:', searchParams);
+    console.log('🔍 searchParams.toString():', searchParams.toString());
+    
     const refParam = searchParams.get('ref');
     const agentParam = searchParams.get('agent');
     const agencyParam = searchParams.get('agency');
