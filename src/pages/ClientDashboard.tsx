@@ -138,9 +138,6 @@ const ClientDashboard = () => {
 
   useEffect(() => {
     loadClientData();
-  }, []);
-
-  useEffect(() => {
     checkForAgentAgencyContext();
   }, []);
 
