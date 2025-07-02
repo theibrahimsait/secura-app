@@ -153,7 +153,7 @@ const AgentDashboard = () => {
 
       if (existingLink) {
         // Link exists, use it
-        const linkUrl = `/client/onboarding?ref=${existingLink.ref_token}`;
+        const linkUrl = `/client/login?ref=${existingLink.ref_token}`;
         setReferralLink(linkUrl);
       } else {
         // Create new referral link
@@ -169,7 +169,7 @@ const AgentDashboard = () => {
 
         if (createError) throw createError;
 
-        const linkUrl = `/client/onboarding?ref=${newLink.ref_token}`;
+        const linkUrl = `/client/login?ref=${newLink.ref_token}`;
         setReferralLink(linkUrl);
       }
     } catch (error: any) {
