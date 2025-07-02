@@ -92,7 +92,16 @@ const ClientDashboard = () => {
 
   useEffect(() => {
     console.log('🚀 Running referral context check...');
+    console.log('🔍 searchParams on mount:', searchParams.toString());
     checkForAgentAgencyContext();
+  }, []); // Run on mount
+
+  useEffect(() => {
+    console.log('🚀 URL params changed, re-running referral check...');
+    console.log('🔍 searchParams changed:', searchParams.toString());
+    if (searchParams.toString()) {
+      checkForAgentAgencyContext();
+    }
   }, [searchParams]); // Re-run when URL params change
 
   useEffect(() => {
