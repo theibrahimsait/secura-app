@@ -101,30 +101,67 @@ const ClientDashboard = () => {
     const agencyParam = searchParams.get('agency');
     
     console.log('🔍 Dashboard referral detection:', { refParam, agentParam, agencyParam });
+    console.log('🔍 Current URL:', window.location.href);
+    console.log('🔍 Search params:', Object.fromEntries(searchParams.entries()));
     
     // Check if we have the new format first (agent + agency)
     if (agentParam && agencyParam) {
       console.log('🎯 Found agent/agency params:', { agentParam, agencyParam });
       try {
-        // Find agency by slug/name
-        const { data: agencyData } = await supabase
+        // Debug: First let's see what agencies exist
+        const { data: allAgencies } = await supabase
+          .from('agencies')
+          .select('id, name');
+        console.log('📋 All agencies in database:', allAgencies);
+        
+        // Find agency by slug/name - try multiple approaches
+        const agencyNameToMatch = agencyParam.replace(/-/g, ' ');
+        console.log('🔍 Looking for agency with name like:', agencyNameToMatch);
+        
+        const { data: agencyData, error: agencyError } = await supabase
           .from('agencies')
           .select('id, name')
-          .ilike('name', agencyParam.replace(/-/g, ' '))
-          .single();
+          .ilike('name', agencyNameToMatch)
+          .maybeSingle();
+
+        console.log('🔍 Agency query result:', { agencyData, agencyError });
 
         if (agencyData) {
           console.log('✅ Found agency:', agencyData);
           
-          // Find agent by email prefix within the agency
-          const agentEmail = `${agentParam.replace(/\./g, '')}@%`;
-          const { data: agentData } = await supabase
+          // Debug: Let's see what users exist in this agency
+          const { data: allAgents } = await supabase
+            .from('users')
+            .select('id, full_name, email, role')
+            .eq('agency_id', agencyData.id);
+          console.log('📋 All users in agency:', allAgents);
+          
+          // Find agent - try multiple approaches
+          console.log('🔍 Looking for agent with param:', agentParam);
+          
+          // Try exact email match first
+          const { data: agentByEmail } = await supabase
             .from('users')
             .select('id, full_name, email')
             .eq('agency_id', agencyData.id)
             .eq('role', 'agent')
-            .ilike('email', agentEmail)
-            .single();
+            .ilike('email', `%${agentParam}%`)
+            .maybeSingle();
+          
+          console.log('🔍 Agent by email search result:', agentByEmail);
+          
+          // Try name match
+          const { data: agentByName } = await supabase
+            .from('users')
+            .select('id, full_name, email')
+            .eq('agency_id', agencyData.id)
+            .eq('role', 'agent')
+            .ilike('full_name', `%${agentParam.replace(/\./g, ' ')}%`)
+            .maybeSingle();
+          
+          console.log('🔍 Agent by name search result:', agentByName);
+          
+          const agentData = agentByEmail || agentByName;
 
           if (agentData) {
             console.log('✅ Found agent:', agentData);
@@ -142,10 +179,10 @@ const ClientDashboard = () => {
             });
             return;
           } else {
-            console.log('❌ No agent found for email pattern:', agentEmail);
+            console.log('❌ No agent found for param:', agentParam);
           }
         } else {
-          console.log('❌ No agency found for name:', agencyParam);
+          console.log('❌ No agency found for name pattern:', agencyNameToMatch);
         }
       } catch (error) {
         console.error('Error loading agent/agency info:', error);
