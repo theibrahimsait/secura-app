@@ -88,8 +88,12 @@ const ClientDashboard = () => {
 
   useEffect(() => {
     loadClientData();
-    checkForAgentAgencyContext();
   }, []);
+
+  useEffect(() => {
+    console.log('🚀 Running referral context check...');
+    checkForAgentAgencyContext();
+  }, [searchParams]); // Re-run when URL params change
 
   useEffect(() => {
     console.log('🔄 Current agent/agency state:', currentAgentAgency);
@@ -148,39 +152,48 @@ const ClientDashboard = () => {
         if (agencyData) {
           console.log('✅ Found agency:', agencyData);
           
-          // Debug: Let's see what users exist in this agency
-          const { data: allAgents } = await supabase
-            .from('users')
-            .select('id, full_name, email, role')
-            .eq('agency_id', agencyData.id);
-          console.log('📋 All users in agency:', allAgents);
-          
-          // Find agent - try multiple approaches
+          // Find agent - improved matching logic
           console.log('🔍 Looking for agent with param:', agentParam);
           
-          // Try exact email match first
-          const { data: agentByEmail } = await supabase
+          // Create normalize function for consistent matching
+          const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+          
+          // Get all agents in this agency
+          const { data: agentsInAgency } = await supabase
             .from('users')
             .select('id, full_name, email')
             .eq('agency_id', agencyData.id)
-            .eq('role', 'agent')
-            .ilike('email', `%${agentParam}%`)
-            .maybeSingle();
+            .eq('role', 'agent');
           
-          console.log('🔍 Agent by email search result:', agentByEmail);
+          console.log('📋 All agents in agency:', agentsInAgency);
           
-          // Try name match
-          const { data: agentByName } = await supabase
-            .from('users')
-            .select('id, full_name, email')
-            .eq('agency_id', agencyData.id)
-            .eq('role', 'agent')
-            .ilike('full_name', `%${agentParam.replace(/\./g, ' ')}%`)
-            .maybeSingle();
+          // Try multiple matching strategies
+          const agentParamNormalized = normalize(agentParam);
+          let agentData = null;
           
-          console.log('🔍 Agent by name search result:', agentByName);
+          if (agentsInAgency && agentsInAgency.length > 0) {
+            // Strategy 1: Match by email prefix (before @)
+            agentData = agentsInAgency.find(agent => {
+              const emailPrefix = agent.email.split('@')[0];
+              return normalize(emailPrefix) === agentParamNormalized;
+            });
+            
+            // Strategy 2: If no match, try partial email match
+            if (!agentData) {
+              agentData = agentsInAgency.find(agent => 
+                normalize(agent.email).includes(agentParamNormalized)
+              );
+            }
+            
+            // Strategy 3: Try full name match
+            if (!agentData) {
+              agentData = agentsInAgency.find(agent => 
+                normalize(agent.full_name) === agentParamNormalized
+              );
+            }
+          }
           
-          const agentData = agentByEmail || agentByName;
+          console.log('🔍 Final agent match result:', agentData);
 
           if (agentData) {
             console.log('✅ Found agent:', agentData);
