@@ -416,6 +416,17 @@ const ClientDashboard = () => {
   // Desktop view
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Debug UI - Remove after testing */}
+      {currentAgentAgency?.agencyName ? (
+        <div style={{ padding: '10px', backgroundColor: '#e0ffe0' }}>
+          ✅ Detected referral from {currentAgentAgency.agentName} at {currentAgentAgency.agencyName}
+        </div>
+      ) : (
+        <div style={{ padding: '10px', backgroundColor: '#ffe0e0' }}>
+          ❌ No referral detected
+        </div>
+      )}
+      
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -481,8 +492,8 @@ const ClientDashboard = () => {
                   Add New Property
                 </Button>
                 
-                {/* Show agency submission button if agent and agency are available */}
-                {currentAgentAgency ? (
+                 {/* Show agency submission button if agent and agency are available */}
+                {currentAgentAgency?.agencyName && (
                   <Button
                     onClick={() => setShowSubmissionModal(true)}
                     variant="outline"
@@ -491,11 +502,16 @@ const ClientDashboard = () => {
                     <Send className="w-4 h-4 mr-2" />
                     Submit to {currentAgentAgency.agencyName}
                   </Button>
-                ) : (
-                  <div className="text-xs text-gray-500 p-2">
-                    🔍 Debug: No agent/agency context found
-                  </div>
                 )}
+                
+                {/* Force-test button for debugging */}
+                <Button 
+                  onClick={() => console.log("🎯 Current Agent/Agency Context:", currentAgentAgency)} 
+                  variant="outline"
+                  className="w-full text-xs"
+                >
+                  🧪 Debug: Log Context
+                </Button>
               </CardContent>
             </Card>
           </div>
