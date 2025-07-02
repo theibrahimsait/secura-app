@@ -86,60 +86,65 @@ const ClientDashboard = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const checkForAgentAgencyContext = async () => {
-    console.log('🎯 FUNCTION IS BEING CALLED!');
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const agentParam = urlParams.get('agent');
-    const agencyParam = urlParams.get('agency');
-    
-    console.log('Agent param:', agentParam, 'Agency param:', agencyParam);
-    
-    if (agentParam && agencyParam) {
-      try {
-        // Find agency
-        const { data: agencies } = await supabase
-          .from('agencies')
-          .select('id, name');
-        
-        const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const agencyMatch = agencies?.find(agency => 
-          normalize(agency.name) === normalize(agencyParam.replace(/-/g, ' '))
-        );
-        
-        if (agencyMatch) {
-          // Find agent  
-          const { data: agents } = await supabase
-            .from('users')
-            .select('id, full_name, email')
-            .eq('agency_id', agencyMatch.id)
-            .eq('role', 'agent');
-          
-          const agentMatch = agents?.find(agent => {
-            const emailPrefix = agent.email.split('@')[0];
-            return normalize(emailPrefix) === normalize(agentParam);
-          });
-          
-          if (agentMatch) {
-            console.log('✅ SETTING CONTEXT NOW!');
-            setCurrentAgentAgency({
-              agencyId: agencyMatch.id,
-              agencyName: agencyMatch.name,
-              agentId: agentMatch.id,
-              agentName: agentMatch.full_name
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    }
-  };
-
   useEffect(() => {
+    const checkReferral = async () => {
+      console.log("🎯 Checking referral context...");
+
+      const params = new URLSearchParams(window.location.search);
+      const agentParam = params.get("agent");
+      const agencyParam = params.get("agency");
+
+      if (!agentParam || !agencyParam) {
+        console.warn("❌ No agent/agency in URL.");
+        return;
+      }
+
+      // Normalize
+      const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+      const { data: agencies } = await supabase.from("agencies").select("id, name");
+      const agency = agencies?.find(
+        (a) => normalize(a.name) === normalize(agencyParam.replace(/-/g, ' '))
+      );
+
+      if (!agency) {
+        console.warn("❌ No matching agency found.");
+        return;
+      }
+
+      const { data: agentsInAgency } = await supabase
+        .from("users")
+        .select("id, email, full_name")
+        .eq("agency_id", agency.id)
+        .eq("role", "agent");
+
+      const agent = agentsInAgency?.find((a) =>
+        normalize(a.email.split("@")[0]) === normalize(agentParam)
+      );
+
+      if (!agent) {
+        console.warn("❌ No matching agent found.");
+        return;
+      }
+
+      const context = {
+        agencyId: agency.id,
+        agencyName: agency.name,
+        agentId: agent.id,
+        agentName: agent.full_name
+      };
+
+      setCurrentAgentAgency(context);
+      console.log("✅ Context set:", context);
+    };
+
     loadClientData();
-    checkForAgentAgencyContext();
-  }, []);
+    
+    // Delay to ensure hydration is complete
+    setTimeout(() => {
+      checkReferral();
+    }, 50);
+  }, []); // Empty dependency ensures it runs once post-mount
 
 
   const loadClientData = async () => {
