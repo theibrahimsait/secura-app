@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Plus, FileText, CheckCircle, Clock, AlertCircle, Send, Link } from 'lucide-react';
 
 interface Property {
   id: string;
@@ -30,9 +30,16 @@ interface ClientDashboardMobileProps {
   properties: Property[];
   tasks: Task[];
   onAddProperty: () => void;
+  currentAgentAgency?: {
+    agencyId: string;
+    agencyName: string;
+    agentId: string | null;
+    agentName: string | null;
+  } | null;
+  onSubmitToAgency?: () => void;
 }
 
-const ClientDashboardMobile = ({ properties, tasks, onAddProperty }: ClientDashboardMobileProps) => {
+const ClientDashboardMobile = ({ properties, tasks, onAddProperty, currentAgentAgency, onSubmitToAgency }: ClientDashboardMobileProps) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -62,25 +69,73 @@ const ClientDashboardMobile = ({ properties, tasks, onAddProperty }: ClientDashb
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 space-y-4">
-      {/* Header */}
-      <div className="bg-white rounded-lg p-4 shadow-sm">
-        <h1 className="text-xl font-bold text-secura-black mb-2">My Dashboard</h1>
-        <p className="text-sm text-gray-600">Manage your properties and track progress</p>
-      </div>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Debug UI - Remove after testing */}
+      {currentAgentAgency?.agencyName ? (
+        <div style={{ padding: '10px', backgroundColor: '#e0ffe0', fontSize: '12px' }}>
+          ✅ Detected referral from {currentAgentAgency.agentName} at {currentAgentAgency.agencyName}
+        </div>
+      ) : (
+        <div style={{ padding: '10px', backgroundColor: '#ffe0e0', fontSize: '12px' }}>
+          ❌ No referral detected
+        </div>
+      )}
+
+      {/* Agency Connection Banner */}
+      {currentAgentAgency && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-3">
+          <div className="flex items-center">
+            <Link className="w-4 h-4 text-blue-600 mr-2" />
+            <span className="text-blue-800 font-medium text-sm">
+              Connected to: {currentAgentAgency.agencyName}
+              {currentAgentAgency.agentName && (
+                <span className="text-blue-600"> • {currentAgentAgency.agentName}</span>
+              )}
+            </span>
+          </div>
+        </div>
+      )}
+
+      <div className="p-4 space-y-4">
+        {/* Header */}
+        <div className="bg-white rounded-lg p-4 shadow-sm">
+          <h1 className="text-xl font-bold text-secura-black mb-2">My Dashboard</h1>
+          <p className="text-sm text-gray-600">Manage your properties and track progress</p>
+        </div>
 
       {/* Quick Actions */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">Quick Actions</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <Button 
             onClick={onAddProperty}
             className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add New Property
+          </Button>
+          
+          {/* Agency submission button if referral context exists */}
+          {currentAgentAgency?.agencyName && onSubmitToAgency && (
+            <Button
+              onClick={onSubmitToAgency}
+              variant="outline"
+              className="w-full border-secura-lime text-secura-teal hover:bg-secura-lime/10"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Submit to {currentAgentAgency.agencyName}
+            </Button>
+          )}
+          
+          {/* Debug button */}
+          <Button 
+            onClick={() => console.log("🎯 Mobile Context:", currentAgentAgency)} 
+            variant="outline"
+            className="w-full text-xs"
+          >
+            🧪 Debug: Log Context
           </Button>
         </CardContent>
       </Card>
@@ -174,6 +229,7 @@ const ClientDashboardMobile = ({ properties, tasks, onAddProperty }: ClientDashb
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

@@ -385,7 +385,21 @@ const ClientDashboard = () => {
           properties={properties}
           tasks={tasks}
           onAddProperty={handleAddProperty}
+          currentAgentAgency={currentAgentAgency}
+          onSubmitToAgency={() => setShowSubmissionModal(true)}
         />
+        
+        {/* Property Submission Modal for Mobile */}
+        {currentAgentAgency && clientData && (
+          <PropertySubmissionModal
+            isOpen={showSubmissionModal}
+            onClose={() => setShowSubmissionModal(false)}
+            properties={properties}
+            clientData={clientData}
+            agentAgencyInfo={currentAgentAgency}
+            onSubmissionComplete={handleSubmissionComplete}
+          />
+        )}
         
         {/* Mobile Header with logout */}
         <div className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b z-10 p-4">
