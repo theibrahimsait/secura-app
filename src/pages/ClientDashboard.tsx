@@ -118,13 +118,32 @@ const ClientDashboard = () => {
         const agencyNameToMatch = agencyParam.replace(/-/g, ' ');
         console.log('🔍 Looking for agency with name like:', agencyNameToMatch);
         
-        const { data: agencyData, error: agencyError } = await supabase
+        // Try exact case-insensitive match first
+        let agencyData = null;
+        const { data: exactMatch } = await supabase
           .from('agencies')
           .select('id, name')
           .ilike('name', agencyNameToMatch)
           .maybeSingle();
+        
+        if (exactMatch) {
+          agencyData = exactMatch;
+        } else {
+          // Try fuzzy matching by converting both to lowercase and removing special chars
+          const { data: allAgencies } = await supabase
+            .from('agencies')
+            .select('id, name');
+          
+          const normalizeString = (str: string) => 
+            str.toLowerCase().replace(/[^a-z0-9]/g, '');
+          
+          const targetNormalized = normalizeString(agencyParam);
+          agencyData = allAgencies?.find(agency => 
+            normalizeString(agency.name) === targetNormalized
+          ) || null;
+        }
 
-        console.log('🔍 Agency query result:', { agencyData, agencyError });
+        console.log('🔍 Agency query result:', { agencyData });
 
         if (agencyData) {
           console.log('✅ Found agency:', agencyData);
