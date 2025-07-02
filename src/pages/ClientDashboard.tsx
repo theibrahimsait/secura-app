@@ -97,12 +97,62 @@ const ClientDashboard = () => {
 
   const checkForAgentAgencyContext = async () => {
     const refParam = searchParams.get('ref');
-    const agencyParam = searchParams.get('agency');
     const agentParam = searchParams.get('agent');
+    const agencyParam = searchParams.get('agency');
     
-    console.log('🔍 Dashboard referral detection:', { refParam, agencyParam, agentParam });
+    console.log('🔍 Dashboard referral detection:', { refParam, agentParam, agencyParam });
     
-    // Check if we have a referral token first
+    // Check if we have the new format first (agent + agency)
+    if (agentParam && agencyParam) {
+      console.log('🎯 Found agent/agency params:', { agentParam, agencyParam });
+      try {
+        // Find agency by slug/name
+        const { data: agencyData } = await supabase
+          .from('agencies')
+          .select('id, name')
+          .ilike('name', agencyParam.replace(/-/g, ' '))
+          .single();
+
+        if (agencyData) {
+          console.log('✅ Found agency:', agencyData);
+          
+          // Find agent by email prefix within the agency
+          const agentEmail = `${agentParam.replace(/\./g, '')}@%`;
+          const { data: agentData } = await supabase
+            .from('users')
+            .select('id, full_name, email')
+            .eq('agency_id', agencyData.id)
+            .eq('role', 'agent')
+            .ilike('email', agentEmail)
+            .single();
+
+          if (agentData) {
+            console.log('✅ Found agent:', agentData);
+            console.log('✅ Setting agent/agency context:', {
+              agencyId: agencyData.id,
+              agencyName: agencyData.name,
+              agentId: agentData.id,
+              agentName: agentData.full_name
+            });
+            setCurrentAgentAgency({
+              agencyId: agencyData.id,
+              agencyName: agencyData.name,
+              agentId: agentData.id,
+              agentName: agentData.full_name
+            });
+            return;
+          } else {
+            console.log('❌ No agent found for email pattern:', agentEmail);
+          }
+        } else {
+          console.log('❌ No agency found for name:', agencyParam);
+        }
+      } catch (error) {
+        console.error('Error loading agent/agency info:', error);
+      }
+    }
+    
+    // Fall back to old ref token format if present
     if (refParam) {
       console.log('🎯 Found referral token:', refParam);
       try {

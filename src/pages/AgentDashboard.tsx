@@ -135,48 +135,28 @@ const AgentDashboard = () => {
     }
   };
 
+  const generateReferralLink = () => {
+    if (!userProfile?.email || !agencyName) return '';
+    
+    // Create clean, readable referral URLs using agent email and agency name
+    const agentSlug = userProfile.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '.').toLowerCase();
+    const agencySlug = agencyName.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '').toLowerCase();
+    
+    return `/client/login?agent=${agentSlug}&agency=${agencySlug}`;
+  };
+
   const fetchOrCreateReferralLink = async () => {
     if (!userProfile?.id || !userProfile?.agency_id) return;
     
     try {
-      // First try to get existing referral link
-      const { data: existingLink, error: fetchError } = await supabase
-        .from('agent_referral_links')
-        .select('ref_token')
-        .eq('agent_id', userProfile.id)
-        .eq('agency_id', userProfile.agency_id)
-        .maybeSingle();
-
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        throw fetchError;
-      }
-
-      if (existingLink) {
-        // Link exists, use it
-        const linkUrl = `/client/login?ref=${existingLink.ref_token}`;
-        setReferralLink(linkUrl);
-      } else {
-        // Create new referral link
-        const { data: newLink, error: createError } = await supabase
-          .from('agent_referral_links')
-          .insert({
-            agent_id: userProfile.id,
-            agency_id: userProfile.agency_id,
-            is_active: true
-          })
-          .select('ref_token')
-          .single();
-
-        if (createError) throw createError;
-
-        const linkUrl = `/client/login?ref=${newLink.ref_token}`;
-        setReferralLink(linkUrl);
-      }
+      // Set the clean referral link format
+      const linkUrl = generateReferralLink();
+      setReferralLink(linkUrl);
     } catch (error: any) {
       console.error('Error with referral link:', error);
       toast({
         title: "Error",
-        description: "Failed to load referral link.",
+        description: "Failed to generate referral link.",
         variant: "destructive",
       });
     }
@@ -185,10 +165,15 @@ const AgentDashboard = () => {
   useEffect(() => {
     if (userProfile) {
       fetchClientsAndProperties();
-      fetchOrCreateReferralLink();
       fetchAgencyName();
     }
   }, [userProfile]);
+
+  useEffect(() => {
+    if (agencyName && userProfile) {
+      fetchOrCreateReferralLink();
+    }
+  }, [agencyName, userProfile]);
 
   return (
     <div className="min-h-screen bg-gray-50">

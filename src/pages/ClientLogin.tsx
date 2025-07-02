@@ -248,17 +248,25 @@ const ClientLogin = () => {
         description: "Welcome to Secura!",
       });
 
+      // Get URL parameters for agent/agency
+      const agentParam = searchParams.get('agent');
+      const agencyParam = searchParams.get('agency');
+
       // Check if onboarding is completed - only send to onboarding if NOT completed
       if (!client.onboarding_completed) {
-        // Redirect to onboarding with referral token if present
+        // Redirect to onboarding with referral parameters if present
         const onboardingUrl = referralToken 
           ? `/client/onboarding?ref=${referralToken}`
+          : agentParam && agencyParam 
+          ? `/client/onboarding?agent=${agentParam}&agency=${agencyParam}`
           : '/client/onboarding';
         navigate(onboardingUrl);
       } else {
-        // Client has completed onboarding, go directly to dashboard with referral token
+        // Client has completed onboarding, go directly to dashboard with referral parameters
         const dashboardUrl = referralToken 
           ? `/client/dashboard?ref=${referralToken}`
+          : agentParam && agencyParam
+          ? `/client/dashboard?agent=${agentParam}&agency=${agencyParam}`
           : '/client/dashboard';
         navigate(dashboardUrl);
       }
