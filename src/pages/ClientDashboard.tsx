@@ -91,9 +91,29 @@ const ClientDashboard = () => {
   }, []);
 
   useEffect(() => {
-    console.log('🚀 Component mounted, checking for referral context...');
-    checkForAgentAgencyContext();
+    loadClientData();
   }, []);
+
+  useEffect(() => {
+    // Force check for referral context immediately and with a delay
+    console.log('🚀 FORCING referral context check...');
+    checkForAgentAgencyContext();
+    
+    // Also check after a short delay in case of timing issues
+    setTimeout(() => {
+      console.log('🔄 DELAYED referral context check...');
+      checkForAgentAgencyContext();
+    }, 500);
+  }, []);
+
+  useEffect(() => {
+    console.log('🔄 Context state changed:', currentAgentAgency);
+    if (currentAgentAgency) {
+      console.log('✅ CONTEXT IS NOW SET! Agency:', currentAgentAgency.agencyName, 'Agent:', currentAgentAgency.agentName);
+    } else {
+      console.log('❌ Context is still null');
+    }
+  }, [currentAgentAgency]);
 
   const checkForAgentAgencyContext = async () => {
     console.log('🎯 checkForAgentAgencyContext function called!');
