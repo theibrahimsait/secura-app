@@ -255,19 +255,21 @@ const ClientLogin = () => {
       // Check if onboarding is completed - only send to onboarding if NOT completed
       if (!client.onboarding_completed) {
         // Redirect to onboarding with referral parameters if present
-        const onboardingUrl = referralToken 
-          ? `/client/onboarding?ref=${referralToken}`
-          : agentParam && agencyParam 
-          ? `/client/onboarding?agent=${agentParam}&agency=${agencyParam}`
-          : '/client/onboarding';
+        let onboardingUrl = '/client/onboarding';
+        if (referralToken) {
+          onboardingUrl += `?ref=${referralToken}`;
+        } else if (agentParam && agencyParam) {
+          onboardingUrl += `?agent=${agentParam}&agency=${agencyParam}`;
+        }
         navigate(onboardingUrl);
       } else {
         // Client has completed onboarding, go directly to dashboard with referral parameters
-        const dashboardUrl = referralToken 
-          ? `/client/dashboard?ref=${referralToken}`
-          : agentParam && agencyParam
-          ? `/client/dashboard?agent=${agentParam}&agency=${agencyParam}`
-          : '/client/dashboard';
+        let dashboardUrl = '/client/dashboard';
+        if (referralToken) {
+          dashboardUrl += `?ref=${referralToken}`;
+        } else if (agentParam && agencyParam) {
+          dashboardUrl += `?agent=${agentParam}&agency=${agencyParam}`;
+        }
         navigate(dashboardUrl);
       }
 

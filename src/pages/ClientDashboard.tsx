@@ -90,9 +90,8 @@ const ClientDashboard = () => {
     const checkReferral = async () => {
       console.log("🎯 Checking referral context...");
 
-      const params = new URLSearchParams(window.location.search);
-      const agentParam = params.get("agent");
-      const agencyParam = params.get("agency");
+      const agentParam = searchParams.get("agent");
+      const agencyParam = searchParams.get("agency");
 
       if (!agentParam || !agencyParam) {
         console.warn("❌ No agent/agency in URL.");
