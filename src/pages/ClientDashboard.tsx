@@ -91,13 +91,20 @@ const ClientDashboard = () => {
     checkForAgentAgencyContext();
   }, []);
 
+  useEffect(() => {
+    console.log('🔄 Current agent/agency state:', currentAgentAgency);
+  }, [currentAgentAgency]);
+
   const checkForAgentAgencyContext = async () => {
     const refParam = searchParams.get('ref');
     const agencyParam = searchParams.get('agency');
     const agentParam = searchParams.get('agent');
     
+    console.log('🔍 Dashboard referral detection:', { refParam, agencyParam, agentParam });
+    
     // Check if we have a referral token first
     if (refParam) {
+      console.log('🎯 Found referral token:', refParam);
       try {
         const { data: linkData } = await supabase
           .from('agent_referral_links')
@@ -117,7 +124,14 @@ const ClientDashboard = () => {
           .eq('is_active', true)
           .single();
 
+        console.log('📥 Referral query result:', linkData);
         if (linkData) {
+          console.log('✅ Setting agent/agency context:', {
+            agencyId: linkData.agency_id,
+            agencyName: linkData.agencies.name,
+            agentId: linkData.agent_id,
+            agentName: linkData.users?.full_name || null
+          });
           setCurrentAgentAgency({
             agencyId: linkData.agency_id,
             agencyName: linkData.agencies.name,
@@ -125,6 +139,8 @@ const ClientDashboard = () => {
             agentName: linkData.users?.full_name || null
           });
           return;
+        } else {
+          console.log('❌ No referral link data found for token:', refParam);
         }
       } catch (error) {
         console.error('Error loading referral info:', error);
@@ -416,7 +432,7 @@ const ClientDashboard = () => {
                 </Button>
                 
                 {/* Show agency submission button if agent and agency are available */}
-                {currentAgentAgency && (
+                {currentAgentAgency ? (
                   <Button
                     onClick={() => setShowSubmissionModal(true)}
                     variant="outline"
@@ -425,6 +441,10 @@ const ClientDashboard = () => {
                     <Send className="w-4 h-4 mr-2" />
                     Submit to {currentAgentAgency.agencyName}
                   </Button>
+                ) : (
+                  <div className="text-xs text-gray-500 p-2">
+                    🔍 Debug: No agent/agency context found
+                  </div>
                 )}
               </CardContent>
             </Card>
