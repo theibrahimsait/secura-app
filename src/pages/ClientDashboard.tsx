@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send, Link } from 'lucide-react';
 import ClientDashboardMobile from '@/components/ClientDashboardMobile';
-import AgencySubmissionModal from '@/components/AgencySubmissionModal';
+import PropertySubmissionModal from '@/components/PropertySubmissionModal';
 
 interface ClientData {
   id: string;
@@ -92,9 +92,46 @@ const ClientDashboard = () => {
   }, []);
 
   const checkForAgentAgencyContext = async () => {
+    const refParam = searchParams.get('ref');
     const agencyParam = searchParams.get('agency');
     const agentParam = searchParams.get('agent');
     
+    // Check if we have a referral token first
+    if (refParam) {
+      try {
+        const { data: linkData } = await supabase
+          .from('agent_referral_links')
+          .select(`
+            agent_id,
+            agency_id,
+            users!agent_referral_links_agent_id_fkey (
+              full_name,
+              email
+            ),
+            agencies (
+              name,
+              email
+            )
+          `)
+          .eq('ref_token', refParam)
+          .eq('is_active', true)
+          .single();
+
+        if (linkData) {
+          setCurrentAgentAgency({
+            agencyId: linkData.agency_id,
+            agencyName: linkData.agencies.name,
+            agentId: linkData.agent_id,
+            agentName: linkData.users?.full_name || null
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Error loading referral info:', error);
+      }
+    }
+    
+    // Fall back to agency/agent params
     if (agencyParam) {
       try {
         // First try to find agency by a slug/identifier
@@ -160,24 +197,37 @@ const ClientDashboard = () => {
         setProperties(propertiesData);
       }
 
-      // Load property submissions with agent info
+      // Load submissions with related data
       const { data: submissionsData } = await supabase
-        .from('property_agency_submissions')
+        .from('submissions')
         .select(`
           id,
-          property_id,
-          agency_id,
-          agent_id,
           status,
-          submitted_at,
+          created_at,
           agencies (name),
-          users (full_name)
+          users (full_name),
+          submission_properties (
+            property_id
+          )
         `)
         .eq('client_id', client.id)
-        .order('submitted_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (submissionsData) {
-        setSubmissions(submissionsData);
+        // Transform the data to match the expected format
+        const transformedSubmissions = submissionsData.flatMap(submission => 
+          submission.submission_properties.map(sp => ({
+            id: submission.id,
+            property_id: sp.property_id,
+            agency_id: '', // This will be inferred from the property
+            agent_id: null,
+            status: submission.status,
+            submitted_at: submission.created_at,
+            agencies: submission.agencies,
+            users: submission.users
+          }))
+        );
+        setSubmissions(transformedSubmissions);
       }
 
       // Load tasks
@@ -488,17 +538,17 @@ const ClientDashboard = () => {
         </div>
       </div>
 
-      {/* Agency Submission Modal */}
-      <AgencySubmissionModal
-        isOpen={showSubmissionModal}
-        onClose={() => setShowSubmissionModal(false)}
-        clientData={{
-          id: clientData.id,
-          agency_id: currentAgentAgency?.agencyId || null,
-          agent_id: currentAgentAgency?.agentId || null
-        }}
-        onSubmissionComplete={handleSubmissionComplete}
-      />
+      {/* Property Submission Modal */}
+      {currentAgentAgency && clientData && (
+        <PropertySubmissionModal
+          isOpen={showSubmissionModal}
+          onClose={() => setShowSubmissionModal(false)}
+          properties={properties}
+          clientData={clientData}
+          agentAgencyInfo={currentAgentAgency}
+          onSubmissionComplete={handleSubmissionComplete}
+        />
+      )}
     </div>
   );
 };
