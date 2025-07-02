@@ -59,8 +59,8 @@ interface PropertySubmission {
 interface AgentAgencyInfo {
   agencyId: string;
   agencyName: string;
-  agentId: string | null;
-  agentName: string | null;
+  agentId: string;
+  agentName: string;
 }
 
 const ClientDashboard = () => {
@@ -90,51 +90,50 @@ const ClientDashboard = () => {
     const checkReferral = async () => {
       console.log("🎯 Checking referral context...");
 
-      const agentParam = searchParams.get("agent");
-      const agencyParam = searchParams.get("agency");
+      const refParam = searchParams.get("ref");
 
-      if (!agentParam || !agencyParam) {
-        console.warn("❌ No agent/agency in URL.");
+      if (!refParam) {
+        console.warn("❌ No ref parameter in URL.");
         return;
       }
 
-      // Normalize
-      const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, "");
+      try {
+        // Query referral_links table to get agent and agency info
+        const { data: referralData, error } = await supabase
+          .from('referral_links')
+          .select(`
+            id,
+            agent_id,
+            agency_id,
+            agencies!inner(
+              id,
+              name
+            ),
+            users!inner(
+              id,
+              full_name
+            )
+          `)
+          .eq('id', refParam)
+          .single();
 
-      const { data: agencies } = await supabase.from("agencies").select("id, name");
-      const agency = agencies?.find(
-        (a) => normalize(a.name) === normalize(agencyParam.replace(/-/g, ' '))
-      );
+        if (error || !referralData) {
+          console.warn("❌ Invalid or expired referral link:", error);
+          return;
+        }
 
-      if (!agency) {
-        console.warn("❌ No matching agency found.");
-        return;
+        const context = {
+          agencyId: referralData.agencies.id,
+          agencyName: referralData.agencies.name,
+          agentId: referralData.users.id,
+          agentName: referralData.users.full_name
+        };
+
+        setCurrentAgentAgency(context);
+        console.log("✅ Context set:", context);
+      } catch (error) {
+        console.error("❌ Error fetching referral context:", error);
       }
-
-      const { data: agentsInAgency } = await supabase
-        .from("users")
-        .select("id, email, full_name")
-        .eq("agency_id", agency.id)
-        .eq("role", "agent");
-
-      const agent = agentsInAgency?.find((a) =>
-        normalize(a.email.split("@")[0]) === normalize(agentParam)
-      );
-
-      if (!agent) {
-        console.warn("❌ No matching agent found.");
-        return;
-      }
-
-      const context = {
-        agencyId: agency.id,
-        agencyName: agency.name,
-        agentId: agent.id,
-        agentName: agent.full_name
-      };
-
-      setCurrentAgentAgency(context);
-      console.log("✅ Context set:", context);
     };
 
     loadClientData();

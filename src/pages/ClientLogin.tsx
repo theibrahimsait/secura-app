@@ -63,9 +63,10 @@ const ClientLogin = () => {
   const loadAgencyInfo = async (refToken: string) => {
     try {
       const { data: linkData } = await supabase
-        .from('agent_referral_links')
+        .from('referral_links')
         .select(`
           agency_id,
+          agent_id,
           agencies!inner(
             name,
             logo_url,
@@ -73,7 +74,7 @@ const ClientLogin = () => {
             primary_color
           )
         `)
-        .eq('ref_token', refToken)
+        .eq('id', refToken)
         .single();
 
       if (linkData?.agencies) {
@@ -248,18 +249,12 @@ const ClientLogin = () => {
         description: "Welcome to Secura!",
       });
 
-      // Get URL parameters for agent/agency
-      const agentParam = searchParams.get('agent');
-      const agencyParam = searchParams.get('agency');
-
       // Check if onboarding is completed - only send to onboarding if NOT completed
       if (!client.onboarding_completed) {
         // Redirect to onboarding with referral parameters if present
         let onboardingUrl = '/client/onboarding';
         if (referralToken) {
           onboardingUrl += `?ref=${referralToken}`;
-        } else if (agentParam && agencyParam) {
-          onboardingUrl += `?agent=${agentParam}&agency=${agencyParam}`;
         }
         navigate(onboardingUrl);
       } else {
@@ -267,8 +262,6 @@ const ClientLogin = () => {
         let dashboardUrl = '/client/dashboard';
         if (referralToken) {
           dashboardUrl += `?ref=${referralToken}`;
-        } else if (agentParam && agencyParam) {
-          dashboardUrl += `?agent=${agentParam}&agency=${agencyParam}`;
         }
         navigate(dashboardUrl);
       }
