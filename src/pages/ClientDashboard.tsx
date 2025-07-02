@@ -91,37 +91,21 @@ const ClientDashboard = () => {
   }, []);
 
   useEffect(() => {
-    console.log('🚀 Running referral context check...');
-    console.log('🔍 searchParams on mount:', searchParams.toString());
+    console.log('🚀 Component mounted, checking for referral context...');
     checkForAgentAgencyContext();
-  }, []); // Run on mount
-
-  useEffect(() => {
-    console.log('🚀 URL params changed, re-running referral check...');
-    console.log('🔍 searchParams changed:', searchParams.toString());
-    if (searchParams.toString()) {
-      checkForAgentAgencyContext();
-    }
-  }, [searchParams]); // Re-run when URL params change
-
-  useEffect(() => {
-    console.log('🔄 Current agent/agency state:', currentAgentAgency);
-    if (currentAgentAgency) {
-      console.log('✅ Context is now set:', currentAgentAgency);
-    } else {
-      console.log('❌ Context is still null');
-    }
-  }, [currentAgentAgency]);
+  }, []);
 
   const checkForAgentAgencyContext = async () => {
     console.log('🎯 checkForAgentAgencyContext function called!');
-    console.log('🔍 URL at function call:', window.location.href);
-    console.log('🔍 searchParams object:', searchParams);
-    console.log('🔍 searchParams.toString():', searchParams.toString());
     
-    const refParam = searchParams.get('ref');
-    const agentParam = searchParams.get('agent');
-    const agencyParam = searchParams.get('agency');
+    // Use window.location.search as primary source since useSearchParams might not work
+    const urlParams = new URLSearchParams(window.location.search);
+    console.log('🔍 URL:', window.location.href);
+    console.log('🔍 URL params from window:', urlParams.toString());
+    
+    const refParam = urlParams.get('ref');
+    const agentParam = urlParams.get('agent');
+    const agencyParam = urlParams.get('agency');
     
     console.log('🔍 Dashboard referral detection:', { refParam, agentParam, agencyParam });
     console.log('🔍 Current URL:', window.location.href);
