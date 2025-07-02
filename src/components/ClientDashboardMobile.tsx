@@ -131,7 +131,11 @@ const ClientDashboardMobile = ({ properties, tasks, onAddProperty, currentAgentA
           
           {/* Debug button */}
           <Button 
-            onClick={() => console.log("🎯 Mobile Context:", currentAgentAgency)} 
+            onClick={() => {
+              console.log("🎯 Mobile Context:", currentAgentAgency);
+              console.log("🎯 URL params:", window.location.search);
+              alert(`Context: ${JSON.stringify(currentAgentAgency, null, 2)}\nURL: ${window.location.search}`);
+            }} 
             variant="outline"
             className="w-full text-xs"
           >
