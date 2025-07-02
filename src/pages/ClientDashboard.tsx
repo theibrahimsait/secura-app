@@ -86,252 +86,64 @@ const ClientDashboard = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  useEffect(() => {
-    loadClientData();
-  }, []);
-
-  useEffect(() => {
-    loadClientData();
-  }, []);
-
-  useEffect(() => {
-    // Force check for referral context immediately and with a delay
-    console.log('🚀 FORCING referral context check...');
-    checkForAgentAgencyContext();
-    
-    // Also check after a short delay in case of timing issues
-    setTimeout(() => {
-      console.log('🔄 DELAYED referral context check...');
-      checkForAgentAgencyContext();
-    }, 500);
-  }, []);
-
-  useEffect(() => {
-    console.log('🔄 Context state changed:', currentAgentAgency);
-    if (currentAgentAgency) {
-      console.log('✅ CONTEXT IS NOW SET! Agency:', currentAgentAgency.agencyName, 'Agent:', currentAgentAgency.agentName);
-    } else {
-      console.log('❌ Context is still null');
-    }
-  }, [currentAgentAgency]);
-
   const checkForAgentAgencyContext = async () => {
-    console.log('🎯 checkForAgentAgencyContext function called!');
+    console.log('🎯 FUNCTION IS BEING CALLED!');
     
-    // Use window.location.search as primary source since useSearchParams might not work
     const urlParams = new URLSearchParams(window.location.search);
-    console.log('🔍 URL:', window.location.href);
-    console.log('🔍 URL params from window:', urlParams.toString());
-    
-    const refParam = urlParams.get('ref');
     const agentParam = urlParams.get('agent');
     const agencyParam = urlParams.get('agency');
     
-    console.log('🔍 Dashboard referral detection:', { refParam, agentParam, agencyParam });
-    console.log('🔍 Current URL:', window.location.href);
-    console.log('🔍 Search params:', Object.fromEntries(searchParams.entries()));
+    console.log('Agent param:', agentParam, 'Agency param:', agencyParam);
     
-    // Check if we have the new format first (agent + agency)
     if (agentParam && agencyParam) {
-      console.log('🎯 Found agent/agency params:', { agentParam, agencyParam });
       try {
-        // Debug: First let's see what agencies exist
-        const { data: allAgencies } = await supabase
+        // Find agency
+        const { data: agencies } = await supabase
           .from('agencies')
           .select('id, name');
-        console.log('📋 All agencies in database:', allAgencies);
         
-        // Find agency by slug/name - try multiple approaches
-        const agencyNameToMatch = agencyParam.replace(/-/g, ' ');
-        console.log('🔍 Looking for agency with name like:', agencyNameToMatch);
+        const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const agencyMatch = agencies?.find(agency => 
+          normalize(agency.name) === normalize(agencyParam.replace(/-/g, ' '))
+        );
         
-        // Try exact case-insensitive match first
-        let agencyData = null;
-        const { data: exactMatch } = await supabase
-          .from('agencies')
-          .select('id, name')
-          .ilike('name', agencyNameToMatch)
-          .maybeSingle();
-        
-        if (exactMatch) {
-          agencyData = exactMatch;
-        } else {
-          // Try fuzzy matching by converting both to lowercase and removing special chars
-          const { data: allAgencies } = await supabase
-            .from('agencies')
-            .select('id, name');
-          
-          const normalizeString = (str: string) => 
-            str.toLowerCase().replace(/[^a-z0-9]/g, '');
-          
-          const targetNormalized = normalizeString(agencyParam);
-          agencyData = allAgencies?.find(agency => 
-            normalizeString(agency.name) === targetNormalized
-          ) || null;
-        }
-
-        console.log('🔍 Agency query result:', { agencyData });
-
-        if (agencyData) {
-          console.log('✅ Found agency:', agencyData);
-          
-          // Find agent - improved matching logic
-          console.log('🔍 Looking for agent with param:', agentParam);
-          
-          // Create normalize function for consistent matching
-          const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-          
-          // Get all agents in this agency
-          const { data: agentsInAgency } = await supabase
+        if (agencyMatch) {
+          // Find agent  
+          const { data: agents } = await supabase
             .from('users')
             .select('id, full_name, email')
-            .eq('agency_id', agencyData.id)
+            .eq('agency_id', agencyMatch.id)
             .eq('role', 'agent');
           
-          console.log('📋 All agents in agency:', agentsInAgency);
+          const agentMatch = agents?.find(agent => {
+            const emailPrefix = agent.email.split('@')[0];
+            return normalize(emailPrefix) === normalize(agentParam);
+          });
           
-          // Try multiple matching strategies
-          const agentParamNormalized = normalize(agentParam);
-          let agentData = null;
-          
-          if (agentsInAgency && agentsInAgency.length > 0) {
-            // Strategy 1: Match by email prefix (before @)
-            agentData = agentsInAgency.find(agent => {
-              const emailPrefix = agent.email.split('@')[0];
-              return normalize(emailPrefix) === agentParamNormalized;
-            });
-            
-            // Strategy 2: If no match, try partial email match
-            if (!agentData) {
-              agentData = agentsInAgency.find(agent => 
-                normalize(agent.email).includes(agentParamNormalized)
-              );
-            }
-            
-            // Strategy 3: Try full name match
-            if (!agentData) {
-              agentData = agentsInAgency.find(agent => 
-                normalize(agent.full_name) === agentParamNormalized
-              );
-            }
-          }
-          
-          console.log('🔍 Final agent match result:', agentData);
-
-          if (agentData) {
-            console.log('✅ Found agent:', agentData);
-            console.log('✅ Setting agent/agency context:', {
-              agencyId: agencyData.id,
-              agencyName: agencyData.name,
-              agentId: agentData.id,
-              agentName: agentData.full_name
-            });
+          if (agentMatch) {
+            console.log('✅ SETTING CONTEXT NOW!');
             setCurrentAgentAgency({
-              agencyId: agencyData.id,
-              agencyName: agencyData.name,
-              agentId: agentData.id,
-              agentName: agentData.full_name
+              agencyId: agencyMatch.id,
+              agencyName: agencyMatch.name,
+              agentId: agentMatch.id,
+              agentName: agentMatch.full_name
             });
-            return;
-          } else {
-            console.log('❌ No agent found for param:', agentParam);
           }
-        } else {
-          console.log('❌ No agency found for name pattern:', agencyNameToMatch);
         }
       } catch (error) {
-        console.error('Error loading agent/agency info:', error);
-      }
-    }
-    
-    // Fall back to old ref token format if present
-    if (refParam) {
-      console.log('🎯 Found referral token:', refParam);
-      try {
-        const { data: linkData } = await supabase
-          .from('agent_referral_links')
-          .select(`
-            agent_id,
-            agency_id,
-            users!agent_referral_links_agent_id_fkey (
-              full_name,
-              email
-            ),
-            agencies (
-              name,
-              email
-            )
-          `)
-          .eq('ref_token', refParam)
-          .eq('is_active', true)
-          .single();
-
-        console.log('📥 Referral query result:', linkData);
-        if (linkData) {
-          console.log('✅ Setting agent/agency context:', {
-            agencyId: linkData.agency_id,
-            agencyName: linkData.agencies.name,
-            agentId: linkData.agent_id,
-            agentName: linkData.users?.full_name || null
-          });
-          setCurrentAgentAgency({
-            agencyId: linkData.agency_id,
-            agencyName: linkData.agencies.name,
-            agentId: linkData.agent_id,
-            agentName: linkData.users?.full_name || null
-          });
-          return;
-        } else {
-          console.log('❌ No referral link data found for token:', refParam);
-        }
-      } catch (error) {
-        console.error('Error loading referral info:', error);
-      }
-    }
-    
-    // Fall back to agency/agent params
-    if (agencyParam) {
-      try {
-        // First try to find agency by a slug/identifier
-        let agencyQuery = supabase
-          .from('agencies')
-          .select('id, name')
-          .eq('name', agencyParam);
-
-        const { data: agencyData } = await agencyQuery.single();
-        
-        if (agencyData) {
-          let agentData = null;
-          let agentId = null;
-          
-          if (agentParam) {
-            // Try to find agent by email/identifier within the agency
-            const { data: agentResult } = await supabase
-              .from('users')
-              .select('id, full_name, email')
-              .eq('agency_id', agencyData.id)
-              .eq('role', 'agent')
-              .or(`email.eq.${agentParam},full_name.ilike.%${agentParam}%`)
-              .single();
-            
-            if (agentResult) {
-              agentData = agentResult;
-              agentId = agentResult.id;
-            }
-          }
-          
-          setCurrentAgentAgency({
-            agencyId: agencyData.id,
-            agencyName: agencyData.name,
-            agentId: agentId,
-            agentName: agentData?.full_name || null
-          });
-        }
-      } catch (error) {
-        console.error('Error loading agent/agency context:', error);
+        console.error('Error:', error);
       }
     }
   };
+
+  useEffect(() => {
+    loadClientData();
+  }, []);
+
+  useEffect(() => {
+    checkForAgentAgencyContext();
+  }, []);
+
 
   const loadClientData = async () => {
     try {
