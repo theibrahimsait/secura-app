@@ -65,8 +65,8 @@ interface AgentAgencyInfo {
 
 const ClientDashboard = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [clientData, setClientData] = useState<ClientData | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
