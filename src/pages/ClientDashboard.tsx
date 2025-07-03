@@ -100,41 +100,52 @@ const ClientDashboard = () => {
       try {
         console.log("🔍 Searching for referral link with ID:", refParam);
         
-        // Query referral_links table to get agent and agency info
-        const { data: referralData, error } = await supabase
+        // First, get the referral link data
+        const { data: linkData, error: linkError } = await supabase
           .from('referral_links')
-          .select(`
-            id,
-            agent_id,
-            agency_id,
-            agencies!inner(
-              id,
-              name
-            ),
-            users!inner(
-              id,
-              full_name
-            )
-          `)
+          .select('id, agent_id, agency_id')
           .eq('id', refParam)
           .single();
 
-        console.log("📊 Referral query result:", { referralData, error });
+        console.log("📊 Referral link data:", { linkData, linkError });
 
-        if (error || !referralData) {
-          console.warn("❌ Invalid or expired referral link:", error);
+        if (linkError || !linkData) {
+          console.warn("❌ Invalid or expired referral link:", linkError);
+          return;
+        }
+
+        // Then get agency data
+        const { data: agencyData, error: agencyError } = await supabase
+          .from('agencies')
+          .select('id, name')
+          .eq('id', linkData.agency_id)
+          .single();
+
+        console.log("📊 Agency data:", { agencyData, agencyError });
+
+        // And get user data
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('id, full_name')
+          .eq('id', linkData.agent_id)
+          .single();
+
+        console.log("📊 User data:", { userData, userError });
+
+        if (agencyError || !agencyData || userError || !userData) {
+          console.warn("❌ Failed to fetch agency or user data:", { agencyError, userError });
           return;
         }
 
         const context = {
-          agencyId: referralData.agencies.id,
-          agencyName: referralData.agencies.name,
-          agentId: referralData.users.id,
-          agentName: referralData.users.full_name
+          agencyId: agencyData.id,
+          agencyName: agencyData.name,
+          agentId: userData.id,
+          agentName: userData.full_name
         };
 
         setCurrentAgentAgency(context);
-        console.log("✅ Context set:", context);
+        console.log("✅ Context set successfully:", context);
       } catch (error) {
         console.error("❌ Error fetching referral context:", error);
       }
