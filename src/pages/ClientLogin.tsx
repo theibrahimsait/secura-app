@@ -67,7 +67,7 @@ const ClientLogin = () => {
         .select(`
           agency_id,
           agent_id,
-          agencies!inner(
+          agencies(
             name,
             logo_url,
             description,

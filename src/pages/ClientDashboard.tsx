@@ -105,11 +105,11 @@ const ClientDashboard = () => {
             id,
             agent_id,
             agency_id,
-            agencies!inner(
+            agencies(
               id,
               name
             ),
-            users!inner(
+            users(
               id,
               full_name
             )
