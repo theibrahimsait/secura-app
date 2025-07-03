@@ -98,6 +98,8 @@ const ClientDashboard = () => {
       }
 
       try {
+        console.log("🔍 Searching for referral link with ID:", refParam);
+        
         // Query referral_links table to get agent and agency info
         const { data: referralData, error } = await supabase
           .from('referral_links')
@@ -105,17 +107,19 @@ const ClientDashboard = () => {
             id,
             agent_id,
             agency_id,
-            agencies(
+            agencies!inner(
               id,
               name
             ),
-            users(
+            users!inner(
               id,
               full_name
             )
           `)
           .eq('id', refParam)
           .single();
+
+        console.log("📊 Referral query result:", { referralData, error });
 
         if (error || !referralData) {
           console.warn("❌ Invalid or expired referral link:", error);
