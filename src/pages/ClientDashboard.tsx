@@ -5,8 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send, Link, Home, Building } from 'lucide-react';
+import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send, Link, Home, Building, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import PropertySubmissionModal from '@/components/PropertySubmissionModal';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface ClientData {
   id: string;
@@ -72,6 +80,9 @@ const ClientDashboard = () => {
   const [submissions, setSubmissions] = useState<PropertySubmission[]>([]);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [currentAgentAgency, setCurrentAgentAgency] = useState<AgentAgencyInfo | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
+  const propertiesPerPage = 5;
 
   useEffect(() => {
     const checkReferral = async () => {
@@ -201,6 +212,46 @@ const ClientDashboard = () => {
     loadClientData();
   };
 
+  const handleDeleteProperty = async (propertyId: string) => {
+    if (!clientData) return;
+    
+    setDeletingPropertyId(propertyId);
+    
+    try {
+      const { error } = await supabase
+        .from('client_properties')
+        .delete()
+        .eq('id', propertyId)
+        .eq('client_id', clientData.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Property deleted successfully",
+      });
+
+      // Reload the data to update the UI
+      loadClientData();
+      
+      // Reset page if we're on a page that no longer has properties
+      const remainingProperties = properties.length - 1;
+      const maxPage = Math.ceil(remainingProperties / propertiesPerPage);
+      if (currentPage > maxPage && maxPage > 0) {
+        setCurrentPage(maxPage);
+      }
+    } catch (error) {
+      console.error('Error deleting property:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete property",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingPropertyId(null);
+    }
+  };
+
   const getPropertySubmissions = (propertyId: string) => {
     return submissions.filter(sub => sub.property_id === propertyId);
   };
@@ -230,6 +281,12 @@ const ClientDashboard = () => {
       </div>
     );
   };
+
+  // Calculate pagination
+  const totalPages = Math.ceil(properties.length / propertiesPerPage);
+  const startIndex = (currentPage - 1) * propertiesPerPage;
+  const endIndex = startIndex + propertiesPerPage;
+  const currentProperties = properties.slice(startIndex, endIndex);
 
   if (loading) {
     return (
@@ -280,14 +337,14 @@ const ClientDashboard = () => {
 
       {/* Agency Connection Banner */}
       {currentAgentAgency && (
-        <div className="bg-primary/5 border-b">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div className="agency-connection-glow border-b border-secura-lime/20">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-center text-center">
-              <Link className="w-4 h-4 text-primary mr-2 flex-shrink-0" />
-              <span className="text-sm font-medium text-primary">
+              <Link className="w-4 h-4 text-secura-teal mr-2 flex-shrink-0" />
+              <span className="text-sm font-medium text-secura-teal">
                 Connected to {currentAgentAgency.agencyName}
                 {currentAgentAgency.agentName && (
-                  <span className="text-muted-foreground"> • {currentAgentAgency.agentName}</span>
+                  <span className="text-secura-moss"> • {currentAgentAgency.agentName}</span>
                 )}
               </span>
             </div>
@@ -302,8 +359,8 @@ const ClientDashboard = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-primary/10 rounded-full">
-                  <Home className="w-5 h-5 text-primary" />
+                <div className="p-2 bg-secura-mint rounded-full">
+                  <Home className="w-5 h-5 text-secura-teal" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{properties.length}</p>
@@ -316,8 +373,8 @@ const ClientDashboard = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-orange-100 rounded-full">
-                  <Clock className="w-5 h-5 text-orange-600" />
+                <div className="p-2 bg-secura-mint rounded-full">
+                  <Clock className="w-5 h-5 text-secura-moss" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{tasks.filter(t => t.status !== 'completed').length}</p>
@@ -330,8 +387,8 @@ const ClientDashboard = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-green-100 rounded-full">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
+                <div className="p-2 bg-secura-mint rounded-full">
+                  <CheckCircle className="w-5 h-5 text-secura-teal" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{submissions.length}</p>
@@ -344,8 +401,8 @@ const ClientDashboard = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-full">
-                  <Building className="w-5 h-5 text-blue-600" />
+                <div className="p-2 bg-secura-mint rounded-full">
+                  <Building className="w-5 h-5 text-secura-teal" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{currentAgentAgency ? '1' : '0'}</p>
@@ -367,7 +424,7 @@ const ClientDashboard = () => {
               <CardContent className="space-y-3">
                 <Button 
                   onClick={handleAddProperty}
-                  className="w-full"
+                  className="w-full bg-secura-teal hover:bg-secura-moss text-white"
                   size="lg"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -378,7 +435,7 @@ const ClientDashboard = () => {
                   <Button
                     onClick={() => setShowSubmissionModal(true)}
                     variant="outline"
-                    className="w-full"
+                    className="w-full border-secura-teal text-secura-teal hover:bg-secura-mint"
                     size="lg"
                   >
                     <Send className="w-4 h-4 mr-2" />
@@ -406,38 +463,85 @@ const ClientDashboard = () => {
                     </div>
                     <h3 className="text-lg font-medium mb-2">No properties yet</h3>
                     <p className="text-muted-foreground mb-6">Start building your property portfolio</p>
-                    <Button onClick={handleAddProperty}>
+                    <Button 
+                      onClick={handleAddProperty}
+                      className="bg-secura-teal hover:bg-secura-moss text-white"
+                    >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Your First Property
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {properties.map((property) => (
-                      <div key={property.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-foreground truncate">{property.title}</h3>
-                            <p className="text-muted-foreground truncate">{property.location}</p>
+                  <>
+                    <div className="space-y-4">
+                      {currentProperties.map((property) => (
+                        <div key={property.id} className="border border-secura-mint/30 rounded-lg p-4 hover:bg-secura-mint/10 transition-colors">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-foreground truncate">{property.title}</h3>
+                              <p className="text-muted-foreground truncate">{property.location}</p>
+                            </div>
+                            <div className="ml-4 flex items-center gap-2">
+                              {getPropertyStatusBadge(property)}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteProperty(property.id)}
+                                disabled={deletingPropertyId === property.id}
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10 p-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="ml-4 flex-shrink-0">
-                            {getPropertyStatusBadge(property)}
+                          <div className="flex justify-between items-center text-sm text-muted-foreground">
+                            <span className="capitalize">{property.property_type}</span>
+                            <span>{new Date(property.created_at).toLocaleDateString()}</span>
                           </div>
+                          {(property.bedrooms || property.bathrooms || property.area_sqft) && (
+                            <div className="flex gap-4 mt-3 text-sm text-muted-foreground">
+                              {property.bedrooms && <span>{property.bedrooms} bed</span>}
+                              {property.bathrooms && <span>{property.bathrooms} bath</span>}
+                              {property.area_sqft && <span>{property.area_sqft} sqft</span>}
+                            </div>
+                          )}
                         </div>
-                        <div className="flex justify-between items-center text-sm text-muted-foreground">
-                          <span className="capitalize">{property.property_type}</span>
-                          <span>{new Date(property.created_at).toLocaleDateString()}</span>
-                        </div>
-                        {(property.bedrooms || property.bathrooms || property.area_sqft) && (
-                          <div className="flex gap-4 mt-3 text-sm text-muted-foreground">
-                            {property.bedrooms && <span>{property.bedrooms} bed</span>}
-                            {property.bathrooms && <span>{property.bathrooms} bath</span>}
-                            {property.area_sqft && <span>{property.area_sqft} sqft</span>}
-                          </div>
-                        )}
+                      ))}
+                    </div>
+                    
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="mt-6 flex justify-center">
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious 
+                                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "text-secura-teal hover:bg-secura-mint"}
+                              />
+                            </PaginationItem>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                              <PaginationItem key={page}>
+                                <PaginationLink
+                                  onClick={() => setCurrentPage(page)}
+                                  isActive={currentPage === page}
+                                  className={currentPage === page ? "bg-secura-teal text-white" : "text-secura-teal hover:bg-secura-mint"}
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+                            <PaginationItem>
+                              <PaginationNext 
+                                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "text-secura-teal hover:bg-secura-mint"}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
