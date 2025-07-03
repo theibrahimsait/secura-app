@@ -135,28 +135,36 @@ const AgentDashboard = () => {
     }
   };
 
-  const generateReferralLink = () => {
-    if (!userProfile?.email || !agencyName) return '';
-    
-    // Create clean, readable referral URLs using agent email and agency name
-    const agentSlug = userProfile.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '.').toLowerCase();
-    const agencySlug = agencyName.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '').toLowerCase();
-    
-    return `/client/login?agent=${agentSlug}&agency=${agencySlug}`;
-  };
-
   const fetchOrCreateReferralLink = async () => {
     if (!userProfile?.id || !userProfile?.agency_id) return;
     
     try {
-      // Set the clean referral link format
-      const linkUrl = generateReferralLink();
-      setReferralLink(linkUrl);
+      // Fetch the agent's referral link from the referral_links table
+      const { data, error } = await supabase
+        .from('referral_links')
+        .select('id, slug, url')
+        .eq('agent_id', userProfile.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching referral link:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load referral link.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data) {
+        // Use the UUID from the referral_links table
+        setReferralLink(`/client/login?ref=${data.id}`);
+      }
     } catch (error: any) {
       console.error('Error with referral link:', error);
       toast({
         title: "Error",
-        description: "Failed to generate referral link.",
+        description: "Failed to load referral link.",
         variant: "destructive",
       });
     }
