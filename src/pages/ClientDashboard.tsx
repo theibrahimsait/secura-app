@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send, Link } from 'lucide-react';
-import ClientDashboardMobile from '@/components/ClientDashboardMobile';
+import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send, Link, Home, Building } from 'lucide-react';
 import PropertySubmissionModal from '@/components/PropertySubmissionModal';
 
 interface ClientData {
@@ -72,93 +70,46 @@ const ClientDashboard = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [submissions, setSubmissions] = useState<PropertySubmission[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [currentAgentAgency, setCurrentAgentAgency] = useState<AgentAgencyInfo | null>(null);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  useEffect(() => {
     const checkReferral = async () => {
-      console.log("🎯 Checking referral context...");
-
       const refParam = searchParams.get("ref");
-
-      if (!refParam) {
-        console.warn("❌ No ref parameter in URL.");
-        return;
-      }
+      if (!refParam) return;
 
       try {
-        console.log("🔍 Searching for referral link with ID:", refParam);
-        
-        // First, get the referral link data
+        // Get referral link data
         const { data: linkData, error: linkError } = await supabase
           .from('referral_links')
           .select('id, agent_id, agency_id')
           .eq('id', refParam)
           .single();
 
-        console.log("📊 Referral link data:", { linkData, linkError });
+        if (linkError || !linkData) return;
 
-        if (linkError || !linkData) {
-          console.warn("❌ Invalid or expired referral link:", linkError);
-          return;
+        // Get agency and user data
+        const [{ data: agencyData }, { data: userData }] = await Promise.all([
+          supabase.from('agencies').select('id, name').eq('id', linkData.agency_id).single(),
+          supabase.from('users').select('id, full_name').eq('id', linkData.agent_id).single()
+        ]);
+
+        if (agencyData && userData) {
+          setCurrentAgentAgency({
+            agencyId: agencyData.id,
+            agencyName: agencyData.name,
+            agentId: userData.id,
+            agentName: userData.full_name
+          });
         }
-
-        // Then get agency data
-        const { data: agencyData, error: agencyError } = await supabase
-          .from('agencies')
-          .select('id, name')
-          .eq('id', linkData.agency_id)
-          .single();
-
-        console.log("📊 Agency data:", { agencyData, agencyError });
-
-        // And get user data
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('id, full_name')
-          .eq('id', linkData.agent_id)
-          .single();
-
-        console.log("📊 User data:", { userData, userError });
-
-        if (agencyError || !agencyData || userError || !userData) {
-          console.warn("❌ Failed to fetch agency or user data:", { agencyError, userError });
-          return;
-        }
-
-        const context = {
-          agencyId: agencyData.id,
-          agencyName: agencyData.name,
-          agentId: userData.id,
-          agentName: userData.full_name
-        };
-
-        setCurrentAgentAgency(context);
-        console.log("✅ Context set successfully:", context);
       } catch (error) {
-        console.error("❌ Error fetching referral context:", error);
+        // Silently handle errors - referral is optional
       }
     };
 
     loadClientData();
-    
-    // Delay to ensure hydration is complete
-    setTimeout(() => {
-      checkReferral();
-    }, 50);
-  }, []); // Empty dependency ensures it runs once post-mount
-
+    checkReferral();
+  }, []);
 
   const loadClientData = async () => {
     try {
@@ -258,7 +209,7 @@ const ClientDashboard = () => {
     const propertySubmissions = getPropertySubmissions(property.id);
     
     if (propertySubmissions.length === 0) {
-      return <Badge className="bg-blue-100 text-blue-800">In Portfolio</Badge>;
+      return <Badge variant="secondary" className="bg-muted text-muted-foreground">In Portfolio</Badge>;
     }
 
     return (
@@ -266,15 +217,14 @@ const ClientDashboard = () => {
         {propertySubmissions.map((submission) => (
           <Badge 
             key={submission.id}
-            className={`text-xs ${
-              submission.status === 'submitted' ? 'bg-yellow-100 text-yellow-800'
-              : submission.status === 'under_review' ? 'bg-orange-100 text-orange-800'
-              : submission.status === 'approved' ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
-            }`}
+            variant={
+              submission.status === 'submitted' ? 'default' :
+              submission.status === 'under_review' ? 'secondary' :
+              submission.status === 'approved' ? 'default' : 'destructive'
+            }
+            className="text-xs"
           >
-            submitted to {submission.agencies.name}
-            {submission.users?.full_name && ` (${submission.users.full_name})`}
+            Submitted to {submission.agencies.name}
           </Badge>
         ))}
       </div>
@@ -283,10 +233,10 @@ const ClientDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secura-lime mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -296,109 +246,48 @@ const ClientDashboard = () => {
     return null;
   }
 
-  // Mobile view
-  if (isMobile) {
-    return (
-      <div className="relative">
-        <ClientDashboardMobile
-          properties={properties}
-          tasks={tasks}
-          onAddProperty={handleAddProperty}
-          currentAgentAgency={currentAgentAgency}
-          onSubmitToAgency={() => setShowSubmissionModal(true)}
-        />
-        
-        {/* Property Submission Modal for Mobile */}
-        {currentAgentAgency && clientData && (
-          <PropertySubmissionModal
-            isOpen={showSubmissionModal}
-            onClose={() => setShowSubmissionModal(false)}
-            properties={properties}
-            clientData={clientData}
-            agentAgencyInfo={currentAgentAgency}
-            onSubmissionComplete={handleSubmissionComplete}
-          />
-        )}
-        
-        {/* Mobile Header with logout */}
-        <div className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b z-10 p-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <User className="w-5 h-5 mr-2 text-secura-teal" />
-              <span className="font-medium text-sm truncate">
-                {clientData.full_name || 'Client'}
-              </span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="text-gray-600"
-            >
-              <LogOut className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-        
-        {/* Add top padding to account for fixed header */}
-        <div className="pt-16"></div>
-      </div>
-    );
-  }
-
-  // Desktop view
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Debug UI - Remove after testing */}
-      {currentAgentAgency?.agencyName ? (
-        <div style={{ padding: '10px', backgroundColor: '#e0ffe0' }}>
-          ✅ Detected referral from {currentAgentAgency.agentName} at {currentAgentAgency.agencyName}
-        </div>
-      ) : (
-        <div style={{ padding: '10px', backgroundColor: '#ffe0e0' }}>
-          ❌ No referral detected
-        </div>
-      )}
-      
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
               <img 
                 src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" 
                 alt="Secura" 
-                className="h-8 w-auto mr-4"
+                className="h-8 w-auto"
               />
-              <div>
-                <h1 className="text-xl font-bold text-secura-black">Client Dashboard</h1>
-                <p className="text-sm text-gray-600">
+              <div className="hidden sm:block">
+                <h1 className="text-xl font-semibold">Dashboard</h1>
+                <p className="text-sm text-muted-foreground">
                   Welcome back, {clientData.full_name || 'Client'}
                 </p>
               </div>
             </div>
             <Button
-              variant="outline"
+              variant="ghost"
+              size="sm"
               onClick={handleLogout}
-              className="flex items-center"
+              className="flex items-center gap-2"
             >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Logout</span>
             </Button>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Agency Connection Banner */}
       {currentAgentAgency && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div className="flex items-center">
-              <Link className="w-5 h-5 text-blue-600 mr-2" />
-              <span className="text-blue-800 font-medium">
-                You're connected to: {currentAgentAgency.agencyName}
+        <div className="bg-primary/5 border-b">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-center text-center">
+              <Link className="w-4 h-4 text-primary mr-2 flex-shrink-0" />
+              <span className="text-sm font-medium text-primary">
+                Connected to {currentAgentAgency.agencyName}
                 {currentAgentAgency.agentName && (
-                  <span className="text-blue-600"> • {currentAgentAgency.agentName}</span>
+                  <span className="text-muted-foreground"> • {currentAgentAgency.agentName}</span>
                 )}
               </span>
             </div>
@@ -407,44 +296,95 @@ const ClientDashboard = () => {
       )}
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Overview */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Home className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{properties.length}</p>
+                  <p className="text-sm text-muted-foreground">Properties</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-orange-100 rounded-full">
+                  <Clock className="w-5 h-5 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{tasks.filter(t => t.status !== 'completed').length}</p>
+                  <p className="text-sm text-muted-foreground">Pending Tasks</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-green-100 rounded-full">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{submissions.length}</p>
+                  <p className="text-sm text-muted-foreground">Submissions</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-full">
+                  <Building className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{currentAgentAgency ? '1' : '0'}</p>
+                  <p className="text-sm text-muted-foreground">Connections</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
-          <div className="lg:col-span-1 space-y-4">
+          <div className="lg:col-span-1">
             <Card>
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Manage your properties</CardDescription>
+                <CardDescription>Manage your portfolio</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button 
                   onClick={handleAddProperty}
-                  className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
+                  className="w-full"
+                  size="lg"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add New Property
                 </Button>
                 
-                 {/* Show agency submission button if agent and agency are available */}
                 {currentAgentAgency?.agencyName && (
                   <Button
                     onClick={() => setShowSubmissionModal(true)}
                     variant="outline"
-                    className="w-full border-secura-lime text-secura-teal hover:bg-secura-lime/10"
+                    className="w-full"
+                    size="lg"
                   >
                     <Send className="w-4 h-4 mr-2" />
                     Submit to {currentAgentAgency.agencyName}
                   </Button>
                 )}
-                
-                {/* Force-test button for debugging */}
-                <Button 
-                  onClick={() => console.log("🎯 Current Agent/Agency Context:", currentAgentAgency)} 
-                  variant="outline"
-                  className="w-full text-xs"
-                >
-                  🧪 Debug: Log Context
-                </Button>
               </CardContent>
             </Card>
           </div>
@@ -460,33 +400,36 @@ const ClientDashboard = () => {
               </CardHeader>
               <CardContent>
                 {properties.length === 0 ? (
-                  <div className="text-center py-8">
-                    <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No properties yet</h3>
-                    <p className="text-gray-600 mb-4">Start by adding your first property</p>
-                    <Button onClick={handleAddProperty} className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal">
-                      Add Property
+                  <div className="text-center py-12">
+                    <div className="w-24 h-24 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                      <FileText className="w-12 h-12 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-medium mb-2">No properties yet</h3>
+                    <p className="text-muted-foreground mb-6">Start building your property portfolio</p>
+                    <Button onClick={handleAddProperty}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Your First Property
                     </Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {properties.map((property) => (
-                      <div key={property.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
+                      <div key={property.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                        <div className="flex justify-between items-start mb-3">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-gray-900 truncate">{property.title}</h3>
-                            <p className="text-gray-500 truncate">{property.location}</p>
+                            <h3 className="font-semibold text-foreground truncate">{property.title}</h3>
+                            <p className="text-muted-foreground truncate">{property.location}</p>
                           </div>
                           <div className="ml-4 flex-shrink-0">
                             {getPropertyStatusBadge(property)}
                           </div>
                         </div>
-                        <div className="flex justify-between items-center text-gray-500">
+                        <div className="flex justify-between items-center text-sm text-muted-foreground">
                           <span className="capitalize">{property.property_type}</span>
                           <span>{new Date(property.created_at).toLocaleDateString()}</span>
                         </div>
                         {(property.bedrooms || property.bathrooms || property.area_sqft) && (
-                          <div className="flex gap-4 mt-2 text-gray-600">
+                          <div className="flex gap-4 mt-3 text-sm text-muted-foreground">
                             {property.bedrooms && <span>{property.bedrooms} bed</span>}
                             {property.bathrooms && <span>{property.bathrooms} bath</span>}
                             {property.area_sqft && <span>{property.area_sqft} sqft</span>}
@@ -512,36 +455,38 @@ const ClientDashboard = () => {
               <CardContent>
                 {tasks.length === 0 ? (
                   <div className="text-center py-8">
-                    <CheckCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <p className="text-gray-600">No tasks assigned yet</p>
+                    <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-muted-foreground">No tasks assigned yet</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {tasks.map((task) => (
-                      <div key={task.id} className="border rounded-lg p-4">
+                      <div key={task.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
                         <div className="flex items-start gap-3">
                           {task.status === 'completed' ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
                           ) : task.status === 'in_progress' ? (
-                            <Clock className="w-4 h-4 text-blue-500" />
+                            <Clock className="w-5 h-5 text-blue-500 mt-0.5" />
                           ) : task.status === 'action_required' ? (
-                            <AlertCircle className="w-4 h-4 text-orange-500" />
+                            <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5" />
                           ) : (
-                            <Clock className="w-4 h-4 text-gray-500" />
+                            <Clock className="w-5 h-5 text-muted-foreground mt-0.5" />
                           )}
-                          <div>
-                            <h3 className="font-medium text-gray-900">{task.title}</h3>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-foreground">{task.title}</h3>
                             {task.description && (
-                              <p className="text-gray-600 mt-1 line-clamp-2">{task.description}</p>
+                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
                             )}
                             {task.action_required && (
-                              <div className="mt-2 p-2 bg-orange-50 rounded border border-orange-200">
-                                <p className="text-orange-800 font-medium">Action Required:</p>
-                                <p className="text-orange-700">{task.action_required}</p>
+                              <div className="mt-3 p-3 bg-orange-50 rounded-md border border-orange-200">
+                                <p className="text-sm font-medium text-orange-800">Action Required:</p>
+                                <p className="text-sm text-orange-700 mt-1">{task.action_required}</p>
                               </div>
                             )}
                             {task.due_date && (
-                              <p className="text-gray-500 mt-2">
+                              <p className="text-xs text-muted-foreground mt-2">
                                 Due: {new Date(task.due_date).toLocaleDateString()}
                               </p>
                             )}
@@ -555,7 +500,7 @@ const ClientDashboard = () => {
             </Card>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Property Submission Modal */}
       {currentAgentAgency && clientData && (
