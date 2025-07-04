@@ -169,15 +169,6 @@ const ClientDashboard = () => {
       // Load properties
       console.log('Loading properties for client:', client.id);
       
-      // Debug the session function
-      try {
-        const { data: debugData } = await clientSupabase
-          .rpc('debug_client_session');
-        console.log('Session debug:', debugData);
-      } catch (debugError) {
-        console.error('Debug error:', debugError);
-      }
-      
       const { data: propertiesData, error: propertiesError } = await clientSupabase
         .from('client_properties')
         .select('*')
