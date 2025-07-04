@@ -171,8 +171,10 @@ const ClientSettings = () => {
         description: `${files.length} document(s) uploaded successfully`,
       });
 
-      // Reload documents
-      loadClientData();
+      // Reload documents with a small delay to ensure database is updated
+      setTimeout(() => {
+        loadClientData();
+      }, 500);
     } catch (error: any) {
       console.error('Error uploading documents:', error);
       toast({

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { clientSupabase } from '@/lib/client-supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -97,7 +98,7 @@ const AddProperty = () => {
     }
 
     // Create document record
-    const { error: docError } = await supabase
+    const { error: docError } = await clientSupabase
       .from('property_documents')
       .insert({
         property_id: propertyId,
@@ -168,7 +169,7 @@ const AddProperty = () => {
 
       console.log('Attempting to create property with data:', propertyData);
 
-      const { data: property, error: propertyError } = await supabase
+      const { data: property, error: propertyError } = await clientSupabase
         .from('client_properties')
         .insert(propertyData)
         .select()
