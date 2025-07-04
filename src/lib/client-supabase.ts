@@ -41,7 +41,7 @@ class ClientSupabaseClient {
       return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
         global: {
           headers: {
-            'Authorization': `Bearer ${sessionToken}`
+            'X-Client-Session': sessionToken
           }
         }
       });
