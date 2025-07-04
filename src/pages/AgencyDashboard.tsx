@@ -79,7 +79,56 @@ const AgencyDashboard = () => {
     file_size: number;
     document_type: string;
     uploaded_at: string;
+    file_path: string;
+    source: string;
   }>>([]);
+
+  const handleViewDocument = async (document: any) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('property-documents')
+        .createSignedUrl(document.file_path, 60);
+
+      if (error) throw error;
+      
+      // Open in new tab
+      window.open(data.signedUrl, '_blank');
+    } catch (error) {
+      console.error('Error viewing document:', error);
+      toast({
+        title: "Error",
+        description: "Failed to view document",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadDocument = async (document: any) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('property-documents')
+        .download(document.file_path);
+
+      if (error) throw error;
+
+      // Create download link
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = document.file_name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download document",
+        variant: "destructive",
+      });
+    }
+  };
 
   const fetchAgencyName = async () => {
     if (!userProfile?.agency_id) return;
@@ -540,12 +589,24 @@ const AgencyDashboard = () => {
                               variant="outline"
                               onClick={async () => {
                                 setSelectedSubmission(submission);
-                                // Fetch documents for this submission
-                                const { data: docs } = await supabase
-                                  .from('property_documents')
-                                  .select('*')
-                                  .eq('property_id', submission.property_id);
-                                setSubmissionDocuments(docs || []);
+                                // Fetch both property documents and client documents
+                                const [propertyDocs, clientDocs] = await Promise.all([
+                                  supabase
+                                    .from('property_documents')
+                                    .select('*')
+                                    .eq('property_id', submission.property_id),
+                                  supabase
+                                    .from('client_documents')
+                                    .select('*')
+                                    .eq('client_id', submission.client_id)
+                                ]);
+                                
+                                const allDocs = [
+                                  ...(propertyDocs.data || []).map(doc => ({...doc, source: 'property'})),
+                                  ...(clientDocs.data || []).map(doc => ({...doc, source: 'client'}))
+                                ];
+                                
+                                setSubmissionDocuments(allDocs);
                                 setShowViewDetailsModal(true);
                               }}
                             >
@@ -767,10 +828,18 @@ const AgencyDashboard = () => {
                                   </div>
                                 </div>
                                 <div className="flex space-x-2">
-                                  <Button size="sm" variant="outline">
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleViewDocument(doc)}
+                                  >
                                     View
                                   </Button>
-                                  <Button size="sm" variant="outline">
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleDownloadDocument(doc)}
+                                  >
                                     Download
                                   </Button>
                                 </div>
