@@ -24,11 +24,13 @@ class ClientSupabaseClient {
       const clientData = localStorage.getItem('client_data');
       if (clientData) {
         const parsed = JSON.parse(clientData);
+        console.log('Client session token retrieved:', parsed.session_token ? 'Present' : 'Missing');
         return parsed.session_token || null;
       }
     } catch (error) {
       console.error('Error parsing client data:', error);
     }
+    console.log('No client data found in localStorage');
     return null;
   }
 
@@ -41,7 +43,7 @@ class ClientSupabaseClient {
       return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
         global: {
           headers: {
-            'X-Client-Session': sessionToken
+            'x-client-session': sessionToken
           }
         }
       });
