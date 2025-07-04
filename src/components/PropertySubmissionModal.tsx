@@ -5,7 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { clientSupabase } from '@/lib/client-supabase';
 import { Send, Building2 } from 'lucide-react';
 
 interface Property {
@@ -91,7 +91,7 @@ const PropertySubmissionModal = ({
     
     try {
       // Create submission record
-      const { data: submission, error: submissionError } = await supabase
+      const { data: submission, error: submissionError } = await clientSupabase
         .from('submissions')
         .insert({
           client_id: clientData.id,
@@ -110,14 +110,14 @@ const PropertySubmissionModal = ({
         property_id: propertyId
       }));
 
-      const { error: propertiesError } = await supabase
+      const { error: propertiesError } = await clientSupabase
         .from('submission_properties')
         .insert(submissionProperties);
 
       if (propertiesError) throw propertiesError;
 
       // Update property statuses to indicate they've been submitted
-      const { error: updateError } = await supabase
+      const { error: updateError } = await clientSupabase
         .from('client_properties')
         .update({ 
           status: 'submitted',

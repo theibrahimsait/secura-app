@@ -486,6 +486,41 @@ export type Database = {
           },
         ]
       }
+      client_sessions: {
+        Row: {
+          client_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          last_used_at: string | null
+          session_token: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_used_at?: string | null
+          session_token: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_used_at?: string | null
+          session_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_tasks: {
         Row: {
           action_required: string | null
@@ -1161,6 +1196,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_client_id_from_session: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_superadmin_auth_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string

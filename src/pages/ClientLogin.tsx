@@ -241,8 +241,26 @@ const ClientLogin = () => {
         })
         .eq('id', client.id);
 
-      // Store client session
-      localStorage.setItem('client_data', JSON.stringify(client));
+      // Create session token for client
+      const sessionToken = crypto.randomUUID();
+      const { error: sessionError } = await supabase
+        .from('client_sessions')
+        .insert({
+          client_id: client.id,
+          session_token: sessionToken,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+        });
+
+      if (sessionError) {
+        console.error('Session creation error:', sessionError);
+      }
+
+      // Store client session with token
+      const clientWithSession = {
+        ...client,
+        session_token: sessionToken
+      };
+      localStorage.setItem('client_data', JSON.stringify(clientWithSession));
 
       toast({
         title: "Login Successful",
