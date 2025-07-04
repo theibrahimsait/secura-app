@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { clientSupabase } from '@/lib/client-supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -152,10 +153,9 @@ const ClientDashboard = () => {
       setClientData(client);
 
       // Load properties
-      const { data: propertiesData } = await supabase
+      const { data: propertiesData } = await clientSupabase
         .from('client_properties')
         .select('*')
-        .eq('client_id', client.id)
         .order('created_at', { ascending: false });
 
       if (propertiesData) {
@@ -163,19 +163,23 @@ const ClientDashboard = () => {
       }
 
       // Load submissions with related data
-      const { data: submissionsData } = await supabase
+      const { data: submissionsData } = await clientSupabase
         .from('submissions')
         .select(`
           id,
           status,
           created_at,
+          agency_id,
           agencies (name),
           users (full_name),
           submission_properties (
-            property_id
+            property_id,
+            client_properties (
+              title,
+              location
+            )
           )
         `)
-        .eq('client_id', client.id)
         .order('created_at', { ascending: false });
 
       if (submissionsData) {
@@ -184,22 +188,23 @@ const ClientDashboard = () => {
           submission.submission_properties.map(sp => ({
             id: submission.id,
             property_id: sp.property_id,
-            agency_id: '', // This will be inferred from the property
+            agency_id: submission.agency_id,
             agent_id: null,
             status: submission.status,
             submitted_at: submission.created_at,
             agencies: submission.agencies,
-            users: submission.users
+            users: submission.users,
+            property_title: sp.client_properties?.title || 'Unknown Property',
+            property_location: sp.client_properties?.location || ''
           }))
         );
         setSubmissions(transformedSubmissions);
       }
 
       // Load tasks
-      const { data: tasksData } = await supabase
+      const { data: tasksData } = await clientSupabase
         .from('client_tasks')
         .select('*')
-        .eq('client_id', client.id)
         .order('created_at', { ascending: false });
 
       if (tasksData) {
@@ -236,11 +241,10 @@ const ClientDashboard = () => {
     setDeletingPropertyId(propertyId);
     
     try {
-      const { error } = await supabase
+      const { error } = await clientSupabase
         .from('client_properties')
         .delete()
-        .eq('id', propertyId)
-        .eq('client_id', clientData.id);
+        .eq('id', propertyId);
 
       if (error) throw error;
 
