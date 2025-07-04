@@ -166,6 +166,10 @@ const ClientDashboard = () => {
       const client = JSON.parse(storedData);
       setClientData(client);
 
+      // Set the client ID for RLS before making any queries
+      console.log('Setting client ID for RLS:', client.id);
+      await clientSupabase.rpc('set_client_id', { client_uuid: client.id });
+
       // Load properties
       console.log('Loading properties for client:', client.id);
       
