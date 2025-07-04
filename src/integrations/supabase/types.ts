@@ -1196,6 +1196,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      debug_client_session: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_client_id_from_session: {
         Args: Record<PropertyKey, never>
         Returns: string

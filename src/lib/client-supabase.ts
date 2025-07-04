@@ -74,6 +74,11 @@ class ClientSupabaseClient {
     return this.client.realtime;
   }
 
+  // Expose the rpc method
+  rpc(fn: any, args?: Record<string, any>, options?: any) {
+    return this.getAuthenticatedClient().rpc(fn, args, options);
+  }
+
   // Method to manually refresh the client with new session
   refreshAuth() {
     // This will get the updated session token on next request
