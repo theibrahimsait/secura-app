@@ -467,6 +467,16 @@ const ClientDashboard = () => {
                   Add New Property
                 </Button>
                 
+                <Button
+                  onClick={() => navigate('/client/settings')}
+                  variant="outline"
+                  className="w-full border-secura-teal text-secura-teal hover:bg-secura-mint"
+                  size="lg"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </Button>
+                
                 {currentAgentAgency?.agencyName && (
                   <Button
                     onClick={() => setShowSubmissionModal(true)}

@@ -53,6 +53,14 @@ const ClientOnboarding = () => {
       navigate(loginUrl);
       return;
     }
+
+    // Check if client has already completed onboarding
+    const clientData = JSON.parse(clientDataStr);
+    if (clientData.onboarding_completed) {
+      // Already completed onboarding, redirect to dashboard
+      navigate('/client/dashboard');
+      return;
+    }
   }, [searchParams, navigate]);
 
   const fetchReferralInfo = async (token: string) => {
@@ -144,6 +152,7 @@ const ClientOnboarding = () => {
           full_name: profileData.fullName,
           email: profileData.email,
           terms_accepted_at: new Date().toISOString(),
+          onboarding_completed: true,
           onboarding_status: {
             intro_complete: true,
             tos_accepted: true,
@@ -199,6 +208,7 @@ const ClientOnboarding = () => {
         ...clientData,
         full_name: profileData.fullName,
         email: profileData.email,
+        onboarding_completed: true,
         onboarding_status: {
           intro_complete: true,
           tos_accepted: true,
