@@ -82,15 +82,35 @@ const AgencyDashboard = () => {
     file_path: string;
     source: string;
   }>>([]);
-  const [viewingDocument, setViewingDocument] = useState<{url: string, name: string} | null>(null);
+  const [viewingDocument, setViewingDocument] = useState<{url: string, name: string, error?: string} | null>(null);
+  const [documentZoom, setDocumentZoom] = useState(100);
 
   const handleViewDocument = async (document: any) => {
     try {
+      // First check if file exists in storage
+      const { data: fileData, error: fileError } = await supabase.storage
+        .from('property-documents')
+        .list(document.file_path.substring(0, document.file_path.lastIndexOf('/')), {
+          search: document.file_path.substring(document.file_path.lastIndexOf('/') + 1)
+        });
+
+      if (fileError || !fileData || fileData.length === 0) {
+        setViewingDocument({
+          url: '',
+          name: document.file_name,
+          error: 'Document file not found in storage. The file may have been moved or deleted.'
+        });
+        return;
+      }
+
       const { data, error } = await supabase.storage
         .from('property-documents')
         .createSignedUrl(document.file_path, 300); // 5 minutes
 
       if (error) throw error;
+      
+      // Reset zoom when viewing new document
+      setDocumentZoom(100);
       
       // Set viewing document to show in iframe
       setViewingDocument({
@@ -114,6 +134,11 @@ const AgencyDashboard = () => {
 
     } catch (error) {
       console.error('Error viewing document:', error);
+      setViewingDocument({
+        url: '',
+        name: document.file_name,
+        error: 'Failed to load document. Please try again or contact support if the issue persists.'
+      });
       toast({
         title: "Error",
         description: "Failed to view document",
@@ -124,6 +149,22 @@ const AgencyDashboard = () => {
 
   const handleDownloadDocument = async (document: any) => {
     try {
+      // First check if file exists in storage before attempting download
+      const { data: fileData, error: fileError } = await supabase.storage
+        .from('property-documents')
+        .list(document.file_path.substring(0, document.file_path.lastIndexOf('/')), {
+          search: document.file_path.substring(document.file_path.lastIndexOf('/') + 1)
+        });
+
+      if (fileError || !fileData || fileData.length === 0) {
+        toast({
+          title: "Error",
+          description: "Document file not found in storage. The file may have been moved or deleted.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data, error } = await supabase.storage
         .from('property-documents')
         .download(document.file_path);
@@ -163,7 +204,7 @@ const AgencyDashboard = () => {
       console.error('Error downloading document:', error);
       toast({
         title: "Error",
-        description: "Failed to download document",
+        description: "Failed to download document. Please try again or contact support if the issue persists.",
         variant: "destructive",
       });
     }
@@ -902,20 +943,73 @@ const AgencyDashboard = () => {
                     <>
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="font-semibold">Viewing: {viewingDocument.name}</h3>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setViewingDocument(null)}
-                        >
-                          Close Preview
-                        </Button>
+                        <div className="flex items-center space-x-2">
+                          {/* Zoom Controls */}
+                          {viewingDocument.url && !viewingDocument.error && (
+                            <div className="flex items-center space-x-2 border rounded px-3 py-1">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => setDocumentZoom(Math.max(25, documentZoom - 25))}
+                                disabled={documentZoom <= 25}
+                              >
+                                -
+                              </Button>
+                              <span className="text-sm font-medium min-w-[60px] text-center">
+                                {documentZoom}%
+                              </span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => setDocumentZoom(Math.min(200, documentZoom + 25))}
+                                disabled={documentZoom >= 200}
+                              >
+                                +
+                              </Button>
+                            </div>
+                          )}
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setViewingDocument(null);
+                              setDocumentZoom(100);
+                            }}
+                          >
+                            Close Preview
+                          </Button>
+                        </div>
                       </div>
                       <div className="flex-1 border rounded-lg overflow-hidden">
-                        <iframe 
-                          src={viewingDocument.url}
-                          className="w-full h-full"
-                          title={viewingDocument.name}
-                        />
+                        {viewingDocument.error ? (
+                          <div className="h-full flex items-center justify-center bg-red-50">
+                            <div className="text-center p-6">
+                              <FileText className="w-16 h-16 mx-auto mb-4 text-red-300" />
+                              <h4 className="font-medium text-red-800 mb-2">Error</h4>
+                              <p className="text-red-600 text-sm max-w-md">
+                                {viewingDocument.error}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="h-full overflow-auto">
+                            <div 
+                              style={{ 
+                                transform: `scale(${documentZoom / 100})`,
+                                transformOrigin: 'top left',
+                                width: `${10000 / documentZoom}%`,
+                                height: `${10000 / documentZoom}%`
+                              }}
+                            >
+                              <iframe 
+                                src={viewingDocument.url}
+                                className="w-full h-full border-0"
+                                title={viewingDocument.name}
+                                style={{ minHeight: '100vh' }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </>
                   ) : (
@@ -923,6 +1017,7 @@ const AgencyDashboard = () => {
                       <div className="text-center">
                         <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                         <p>Click "View" on any document to preview it here</p>
+                        <p className="text-sm mt-2">Use zoom controls to adjust document size</p>
                       </div>
                     </div>
                   )}
