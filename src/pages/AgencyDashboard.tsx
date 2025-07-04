@@ -93,6 +93,8 @@ const AgencyDashboard = () => {
       const folder = document.file_path.substring(0, document.file_path.lastIndexOf('/'));
       const filename = document.file_path.substring(document.file_path.lastIndexOf('/') + 1);
       
+      console.log('Viewing document:', { folder, filename, fullPath: document.file_path });
+      
       // Try to find the file with the exact name first
       let { data: fileData, error: fileError } = await supabase.storage
         .from(bucket)
@@ -100,26 +102,34 @@ const AgencyDashboard = () => {
           search: filename
         });
 
+      console.log('First search result:', { fileData, fileError, searchTerm: filename });
+
       let actualFilePath = document.file_path;
 
       // If not found and filename contains underscore, try with hyphen
       if ((!fileData || fileData.length === 0) && filename.includes('_')) {
         const filenameWithHyphen = filename.replace('_', '-');
+        console.log('Trying with hyphen:', filenameWithHyphen);
+        
         const { data: altFileData, error: altFileError } = await supabase.storage
           .from(bucket)
           .list(folder, {
             search: filenameWithHyphen
           });
         
+        console.log('Second search result:', { altFileData, altFileError, searchTerm: filenameWithHyphen });
+        
         if (altFileData && altFileData.length > 0) {
           fileData = altFileData;
           fileError = altFileError;
           // Update the file path to use the correct name
           actualFilePath = `${folder}/${filenameWithHyphen}`;
+          console.log('Using corrected path:', actualFilePath);
         }
       }
 
       if (fileError || !fileData || fileData.length === 0) {
+        console.log('File not found after all attempts');
         setViewingDocument({
           url: '',
           name: document.file_name,
@@ -946,10 +956,28 @@ const AgencyDashboard = () => {
                             acc[category].push(doc);
                             return acc;
                           }, {} as Record<string, any[]>)
-                        ).map(([category, docs]) => (
-                          <div key={category} className="border rounded-lg p-4">
-                            <h4 className="font-medium mb-3 capitalize">{category.replace(/_/g, ' ')}</h4>
-                            <div className="space-y-2">
+                        ).map(([category, docs]) => {
+                          // Function to get display name for document types
+                          const getDisplayName = (docType: string) => {
+                            const displayNames: Record<string, string> = {
+                              'national_id': 'Identity Documents',
+                              'emirates_id': 'Identity Documents', 
+                              'passport': 'Identity Documents',
+                              'visa': 'Identity Documents',
+                              'title_deed': 'Title Deed',
+                              'power_of_attorney': 'Power of Attorney',
+                              'noc': 'NOC',
+                              'ejari': 'Ejari',
+                              'dewa_bill': 'DEWA Bill',
+                              'other': 'Other Documents'
+                            };
+                            return displayNames[docType] || docType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                          };
+
+                          return (
+                            <div key={category} className="border rounded-lg p-4">
+                              <h4 className="font-medium mb-3">{getDisplayName(category)}</h4>
+                               <div className="space-y-2">
                               {docs.map((doc) => (
                                 <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                                   <div className="flex items-center space-x-3">
