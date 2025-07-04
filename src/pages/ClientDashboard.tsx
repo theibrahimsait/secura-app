@@ -86,6 +86,20 @@ const ClientDashboard = () => {
 
   useEffect(() => {
     const checkReferral = async () => {
+      // First check if we have stored referral context
+      const storedReferral = localStorage.getItem('agent_referral_context');
+      if (storedReferral) {
+        try {
+          const parsedReferral = JSON.parse(storedReferral);
+          setCurrentAgentAgency(parsedReferral);
+          return;
+        } catch (error) {
+          // Clear invalid stored data
+          localStorage.removeItem('agent_referral_context');
+        }
+      }
+
+      // Then check URL params for new referral
       const refParam = searchParams.get("ref");
       if (!refParam) return;
 
@@ -106,12 +120,16 @@ const ClientDashboard = () => {
         ]);
 
         if (agencyData && userData) {
-          setCurrentAgentAgency({
+          const referralContext = {
             agencyId: agencyData.id,
             agencyName: agencyData.name,
             agentId: userData.id,
             agentName: userData.full_name
-          });
+          };
+          
+          setCurrentAgentAgency(referralContext);
+          // Persist the referral context
+          localStorage.setItem('agent_referral_context', JSON.stringify(referralContext));
         }
       } catch (error) {
         // Silently handle errors - referral is optional
