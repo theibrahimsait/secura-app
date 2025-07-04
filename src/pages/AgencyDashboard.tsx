@@ -948,7 +948,9 @@ const AgencyDashboard = () => {
                           }, {} as Record<string, any[]>)
                         ).map(([category, docs]) => (
                           <div key={category} className="border rounded-lg p-4">
-                            <h4 className="font-medium mb-3 capitalize">{category.replace(/_/g, ' ')}</h4>
+                            <h4 className="font-medium mb-3 capitalize">
+                              {category === 'national_id' ? 'Identity Documents' : category.replace(/_/g, ' ')}
+                            </h4>
                             <div className="space-y-2">
                               {docs.map((doc) => (
                                 <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
