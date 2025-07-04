@@ -87,15 +87,37 @@ const AgencyDashboard = () => {
 
   const handleViewDocument = async (document: any) => {
     try {
-      // Determine the bucket based on document source/type
-      const bucket = document.source === 'client' ? 'property-documents' : 'property-documents';
+      const bucket = 'property-documents';
       
-      // First check if file exists in storage
-      const { data: fileData, error: fileError } = await supabase.storage
+      // Get the folder and filename from the path
+      const folder = document.file_path.substring(0, document.file_path.lastIndexOf('/'));
+      const filename = document.file_path.substring(document.file_path.lastIndexOf('/') + 1);
+      
+      // Try to find the file with the exact name first
+      let { data: fileData, error: fileError } = await supabase.storage
         .from(bucket)
-        .list(document.file_path.substring(0, document.file_path.lastIndexOf('/')), {
-          search: document.file_path.substring(document.file_path.lastIndexOf('/') + 1)
+        .list(folder, {
+          search: filename
         });
+
+      let actualFilePath = document.file_path;
+
+      // If not found and filename contains underscore, try with hyphen
+      if ((!fileData || fileData.length === 0) && filename.includes('_')) {
+        const filenameWithHyphen = filename.replace('_', '-');
+        const { data: altFileData, error: altFileError } = await supabase.storage
+          .from(bucket)
+          .list(folder, {
+            search: filenameWithHyphen
+          });
+        
+        if (altFileData && altFileData.length > 0) {
+          fileData = altFileData;
+          fileError = altFileError;
+          // Update the file path to use the correct name
+          actualFilePath = `${folder}/${filenameWithHyphen}`;
+        }
+      }
 
       if (fileError || !fileData || fileData.length === 0) {
         setViewingDocument({
@@ -108,7 +130,7 @@ const AgencyDashboard = () => {
 
       const { data, error } = await supabase.storage
         .from(bucket)
-        .createSignedUrl(document.file_path, 300); // 5 minutes
+        .createSignedUrl(actualFilePath, 300); // 5 minutes
 
       if (error) throw error;
       
@@ -152,15 +174,37 @@ const AgencyDashboard = () => {
 
   const handleDownloadDocument = async (document: any) => {
     try {
-      // Determine the bucket based on document source/type
-      const bucket = document.source === 'client' ? 'property-documents' : 'property-documents';
+      const bucket = 'property-documents';
       
-      // First check if file exists in storage before attempting download
-      const { data: fileData, error: fileError } = await supabase.storage
+      // Get the folder and filename from the path
+      const folder = document.file_path.substring(0, document.file_path.lastIndexOf('/'));
+      const filename = document.file_path.substring(document.file_path.lastIndexOf('/') + 1);
+      
+      // Try to find the file with the exact name first
+      let { data: fileData, error: fileError } = await supabase.storage
         .from(bucket)
-        .list(document.file_path.substring(0, document.file_path.lastIndexOf('/')), {
-          search: document.file_path.substring(document.file_path.lastIndexOf('/') + 1)
+        .list(folder, {
+          search: filename
         });
+
+      let actualFilePath = document.file_path;
+
+      // If not found and filename contains underscore, try with hyphen
+      if ((!fileData || fileData.length === 0) && filename.includes('_')) {
+        const filenameWithHyphen = filename.replace('_', '-');
+        const { data: altFileData, error: altFileError } = await supabase.storage
+          .from(bucket)
+          .list(folder, {
+            search: filenameWithHyphen
+          });
+        
+        if (altFileData && altFileData.length > 0) {
+          fileData = altFileData;
+          fileError = altFileError;
+          // Update the file path to use the correct name
+          actualFilePath = `${folder}/${filenameWithHyphen}`;
+        }
+      }
 
       if (fileError || !fileData || fileData.length === 0) {
         toast({
@@ -173,7 +217,7 @@ const AgencyDashboard = () => {
 
       const { data, error } = await supabase.storage
         .from(bucket)
-        .download(document.file_path);
+        .download(actualFilePath);
 
       if (error) throw error;
 
