@@ -1212,6 +1212,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      is_client_authorized: {
+        Args: { target_client_id: string }
+        Returns: boolean
+      }
       log_audit_event: {
         Args: {
           p_user_id: string
@@ -1228,6 +1232,10 @@ export type Database = {
       refresh_jwt_metadata: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      set_client_id: {
+        Args: { client_uuid: string }
+        Returns: undefined
       }
     }
     Enums: {
