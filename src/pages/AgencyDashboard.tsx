@@ -69,9 +69,17 @@ const AgencyDashboard = () => {
     phone: '',
   });
   const [selectedSubmission, setSelectedSubmission] = useState<ClientSubmission | null>(null);
-  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showViewDetailsModal, setShowViewDetailsModal] = useState(false);
+  const [showSendUpdateModal, setShowSendUpdateModal] = useState(false);
   const [taskNote, setTaskNote] = useState('');
   const [taskUploads, setTaskUploads] = useState<File[]>([]);
+  const [submissionDocuments, setSubmissionDocuments] = useState<Array<{
+    id: string;
+    file_name: string;
+    file_size: number;
+    document_type: string;
+    uploaded_at: string;
+  }>>([]);
 
   const fetchAgencyName = async () => {
     if (!userProfile?.agency_id) return;
@@ -521,7 +529,7 @@ const AgencyDashboard = () => {
                               variant="outline"
                               onClick={() => {
                                 setSelectedSubmission(submission);
-                                setShowTaskModal(true);
+                                setShowSendUpdateModal(true);
                               }}
                             >
                               <MessageSquare className="w-4 h-4 mr-2" />
@@ -530,9 +538,15 @@ const AgencyDashboard = () => {
                             <Button 
                               size="sm" 
                               variant="outline"
-                              onClick={() => {
+                              onClick={async () => {
                                 setSelectedSubmission(submission);
-                                setShowTaskModal(true);
+                                // Fetch documents for this submission
+                                const { data: docs } = await supabase
+                                  .from('property_documents')
+                                  .select('*')
+                                  .eq('property_id', submission.property_id);
+                                setSubmissionDocuments(docs || []);
+                                setShowViewDetailsModal(true);
                               }}
                             >
                               View Details
@@ -694,18 +708,18 @@ const AgencyDashboard = () => {
           </Card>
         )}
 
-        {/* Task Management Modal */}
-        {showTaskModal && selectedSubmission && (
+        {/* View Details Modal */}
+        {showViewDetailsModal && selectedSubmission && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div className="bg-white rounded-lg max-w-6xl w-full max-h-[80vh] overflow-hidden">
               <div className="p-6 border-b">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-semibold">Property Submission Details</h2>
-                  <Button variant="ghost" onClick={() => setShowTaskModal(false)}>✕</Button>
+                  <Button variant="ghost" onClick={() => setShowViewDetailsModal(false)}>✕</Button>
                 </div>
               </div>
               <div className="p-6 overflow-y-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
                     <h3 className="font-semibold mb-3">Client Information</h3>
                     <div className="space-y-2">
@@ -724,47 +738,135 @@ const AgencyDashboard = () => {
                   </div>
                 </div>
                 
-                <div className="mt-6">
-                  <h3 className="font-semibold mb-3">Send Update to Client</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="taskNote">Update Note</Label>
-                      <textarea
-                        id="taskNote"
-                        className="w-full p-3 border rounded-lg"
-                        rows={4}
-                        placeholder="Enter your update note for the client..."
-                        value={taskNote}
-                        onChange={(e) => setTaskNote(e.target.value)}
-                      />
+                <div>
+                  <h3 className="font-semibold mb-4">Submitted Documents</h3>
+                  {submissionDocuments.length === 0 ? (
+                    <p className="text-gray-500">No documents submitted yet.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {Object.entries(
+                        submissionDocuments.reduce((acc, doc) => {
+                          const category = doc.document_type;
+                          if (!acc[category]) acc[category] = [];
+                          acc[category].push(doc);
+                          return acc;
+                        }, {} as Record<string, any[]>)
+                      ).map(([category, docs]) => (
+                        <div key={category} className="border rounded-lg p-4">
+                          <h4 className="font-medium mb-3 capitalize">{category.replace(/_/g, ' ')}</h4>
+                          <div className="space-y-2">
+                            {docs.map((doc) => (
+                              <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                <div className="flex items-center space-x-3">
+                                  <FileText className="w-5 h-5 text-gray-400" />
+                                  <div>
+                                    <p className="font-medium">{doc.file_name}</p>
+                                    <p className="text-sm text-gray-500">
+                                      {(doc.file_size / 1024 / 1024).toFixed(2)} MB • {new Date(doc.uploaded_at).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex space-x-2">
+                                  <Button size="sm" variant="outline">
+                                    View
+                                  </Button>
+                                  <Button size="sm" variant="outline">
+                                    Download
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div>
-                      <Label htmlFor="taskUpload">Attach Documents (Optional)</Label>
-                      <input
-                        id="taskUpload"
-                        type="file"
-                        multiple
-                        className="w-full p-2 border rounded-lg"
-                        onChange={(e) => setTaskUploads(Array.from(e.target.files || []))}
-                      />
-                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="p-6 border-t bg-gray-50">
+                <div className="flex justify-end">
+                  <Button variant="outline" onClick={() => setShowViewDetailsModal(false)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Send Update Modal */}
+        {showSendUpdateModal && selectedSubmission && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+              <div className="p-6 border-b">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold">Send Update to Client</h2>
+                  <Button variant="ghost" onClick={() => setShowSendUpdateModal(false)}>✕</Button>
+                </div>
+              </div>
+              <div className="p-6 overflow-y-auto">
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Sending update to: <span className="font-medium">{selectedSubmission.client.full_name}</span>
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="updateNote">Update Note</Label>
+                    <textarea
+                      id="updateNote"
+                      className="w-full p-3 border rounded-lg mt-1"
+                      rows={6}
+                      placeholder="Enter your update note for the client..."
+                      value={taskNote}
+                      onChange={(e) => setTaskNote(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="updateUpload">Attach Documents (Optional)</Label>
+                    <input
+                      id="updateUpload"
+                      type="file"
+                      multiple
+                      className="w-full p-2 border rounded-lg mt-1"
+                      onChange={(e) => setTaskUploads(Array.from(e.target.files || []))}
+                    />
+                    {taskUploads.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600">Selected files:</p>
+                        <ul className="text-sm text-gray-500">
+                          {taskUploads.map((file, index) => (
+                            <li key={index}>• {file.name}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
               <div className="p-6 border-t bg-gray-50">
                 <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setShowTaskModal(false)}>
+                  <Button variant="outline" onClick={() => setShowSendUpdateModal(false)}>
                     Cancel
                   </Button>
                   <Button 
                     className="bg-secura-teal hover:bg-secura-moss"
                     onClick={async () => {
+                      if (!taskNote.trim()) {
+                        toast({
+                          title: "Error",
+                          description: "Please enter an update note",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      
                       // TODO: Implement send update functionality
                       toast({
                         title: "Update Sent",
                         description: "Client has been notified of the update",
                       });
-                      setShowTaskModal(false);
+                      setShowSendUpdateModal(false);
                       setTaskNote('');
                       setTaskUploads([]);
                     }}
