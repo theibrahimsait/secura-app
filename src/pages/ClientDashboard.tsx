@@ -61,6 +61,8 @@ interface PropertySubmission {
   users?: {
     full_name: string;
   } | null;
+  property_title?: string;
+  property_location?: string;
 }
 
 interface AgentAgencyInfo {
@@ -80,6 +82,7 @@ const ClientDashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [submissions, setSubmissions] = useState<PropertySubmission[]>([]);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+  const [showSubmissionsView, setShowSubmissionsView] = useState(false);
   const [currentAgentAgency, setCurrentAgentAgency] = useState<AgentAgencyInfo | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
@@ -414,7 +417,7 @@ const ClientDashboard = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{submissions.length}</p>
-                  <p className="text-sm text-muted-foreground">Submissions</p>
+                  <p className="text-sm text-muted-foreground cursor-pointer hover:text-secura-teal" onClick={() => setShowSubmissionsView(true)}>Submissions</p>
                 </div>
               </div>
             </CardContent>
@@ -638,6 +641,50 @@ const ClientDashboard = () => {
           agentAgencyInfo={currentAgentAgency}
           onSubmissionComplete={handleSubmissionComplete}
         />
+      )}
+
+      {/* Submissions View Modal */}
+      {showSubmissionsView && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold">My Submissions</h2>
+                <Button variant="ghost" onClick={() => setShowSubmissionsView(false)}>✕</Button>
+              </div>
+            </div>
+            <div className="p-6 overflow-y-auto">
+              {submissions.length === 0 ? (
+                <div className="text-center py-8">
+                  <CheckCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <p className="text-muted-foreground">No submissions yet</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {submissions.map((submission) => (
+                    <div key={submission.id} className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium">{submission.property_title}</h3>
+                          <p className="text-sm text-gray-600">{submission.property_location}</p>
+                          <p className="text-sm text-gray-500">Submitted to: {submission.agencies.name}</p>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant={submission.status === 'pending' ? 'secondary' : 'default'}>
+                            {submission.status}
+                          </Badge>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(submission.submitted_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

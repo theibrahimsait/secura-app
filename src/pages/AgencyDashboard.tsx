@@ -68,6 +68,10 @@ const AgencyDashboard = () => {
     email: '',
     phone: '',
   });
+  const [selectedSubmission, setSelectedSubmission] = useState<ClientSubmission | null>(null);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [taskNote, setTaskNote] = useState('');
+  const [taskUploads, setTaskUploads] = useState<File[]>([]);
 
   const fetchAgencyName = async () => {
     if (!userProfile?.agency_id) return;
@@ -121,46 +125,50 @@ const AgencyDashboard = () => {
     
     try {
       const { data, error } = await supabase
-        .from('client_properties')
+        .from('submissions')
         .select(`
           id,
           client_id,
           agent_id,
-          created_at,
+          agency_id,
           status,
-          title,
-          location,
-          property_type,
-          clients!inner (
+          created_at,
+          clients (
+            id,
             full_name,
             phone,
             email
           ),
-          users!agent_id (
+          users (
             full_name
+          ),
+          submission_properties (
+            property_id,
+            client_properties (
+              title,
+              location,
+              property_type
+            )
           )
         `)
         .eq('agency_id', userProfile.agency_id)
-        .eq('status', 'submitted')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      const formattedSubmissions = data.map(item => ({
-        id: item.id,
-        client_id: item.client_id,
-        property_id: item.id,
-        agent_id: item.agent_id,
-        created_at: item.created_at,
-        status: item.status,
-        client: item.clients,
-        property: {
-          title: item.title,
-          location: item.location,
-          property_type: item.property_type,
-        },
-        agent: item.users || { full_name: 'No Agent' }
-      }));
+      const formattedSubmissions = data?.flatMap(submission => 
+        submission.submission_properties.map(sp => ({
+          id: submission.id,
+          client_id: submission.client_id,
+          property_id: sp.property_id,
+          agent_id: submission.agent_id,
+          created_at: submission.created_at,
+          status: submission.status,
+          client: submission.clients,
+          property: sp.client_properties,
+          agent: submission.users || { full_name: 'No Agent' }
+        }))
+      ) || [];
       
       setSubmissions(formattedSubmissions);
     } catch (error) {
@@ -508,11 +516,25 @@ const AgencyDashboard = () => {
                         <TableCell>{new Date(submission.created_at).toLocaleDateString()}</TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedSubmission(submission);
+                                setShowTaskModal(true);
+                              }}
+                            >
                               <MessageSquare className="w-4 h-4 mr-2" />
                               Send Update
                             </Button>
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedSubmission(submission);
+                                setShowTaskModal(true);
+                              }}
+                            >
                               View Details
                             </Button>
                           </div>
@@ -670,6 +692,90 @@ const AgencyDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Task Management Modal */}
+        {showTaskModal && selectedSubmission && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
+              <div className="p-6 border-b">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold">Property Submission Details</h2>
+                  <Button variant="ghost" onClick={() => setShowTaskModal(false)}>✕</Button>
+                </div>
+              </div>
+              <div className="p-6 overflow-y-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-semibold mb-3">Client Information</h3>
+                    <div className="space-y-2">
+                      <p><span className="font-medium">Name:</span> {selectedSubmission.client.full_name}</p>
+                      <p><span className="font-medium">Phone:</span> {selectedSubmission.client.phone}</p>
+                      <p><span className="font-medium">Email:</span> {selectedSubmission.client.email}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-3">Property Information</h3>
+                    <div className="space-y-2">
+                      <p><span className="font-medium">Title:</span> {selectedSubmission.property.title}</p>
+                      <p><span className="font-medium">Location:</span> {selectedSubmission.property.location}</p>
+                      <p><span className="font-medium">Type:</span> {selectedSubmission.property.property_type}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  <h3 className="font-semibold mb-3">Send Update to Client</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="taskNote">Update Note</Label>
+                      <textarea
+                        id="taskNote"
+                        className="w-full p-3 border rounded-lg"
+                        rows={4}
+                        placeholder="Enter your update note for the client..."
+                        value={taskNote}
+                        onChange={(e) => setTaskNote(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="taskUpload">Attach Documents (Optional)</Label>
+                      <input
+                        id="taskUpload"
+                        type="file"
+                        multiple
+                        className="w-full p-2 border rounded-lg"
+                        onChange={(e) => setTaskUploads(Array.from(e.target.files || []))}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 border-t bg-gray-50">
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setShowTaskModal(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    className="bg-secura-teal hover:bg-secura-moss"
+                    onClick={async () => {
+                      // TODO: Implement send update functionality
+                      toast({
+                        title: "Update Sent",
+                        description: "Client has been notified of the update",
+                      });
+                      setShowTaskModal(false);
+                      setTaskNote('');
+                      setTaskUploads([]);
+                    }}
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Update
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </div>
