@@ -89,18 +89,13 @@ const AgencyDashboard = () => {
     try {
       const bucket = 'property-documents';
       
-      // Get the folder and filename from the path
-      const folder = document.file_path.substring(0, document.file_path.lastIndexOf('/'));
-      const filename = document.file_path.substring(document.file_path.lastIndexOf('/') + 1);
-      
-      // Check if file exists in storage
-      const { data: fileData, error: fileError } = await supabase.storage
+      // Check if file exists in storage by trying to create signed URL directly
+      const { data, error } = await supabase.storage
         .from(bucket)
-        .list(folder, {
-          search: filename
-        });
+        .createSignedUrl(document.file_path, 300); // 5 minutes
 
-      if (fileError || !fileData || fileData.length === 0) {
+      if (error) {
+        console.error('Error creating signed URL:', error);
         setViewingDocument({
           url: '',
           name: document.file_name,
@@ -108,12 +103,6 @@ const AgencyDashboard = () => {
         });
         return;
       }
-
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .createSignedUrl(document.file_path, 300); // 5 minutes
-
-      if (error) throw error;
       
       // Reset zoom when viewing new document
       setDocumentZoom(100);

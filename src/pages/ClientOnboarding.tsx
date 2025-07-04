@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Upload, FileText, CheckCircle } from 'lucide-react';
+import OnboardingWelcome from '@/components/OnboardingWelcome';
+import OnboardingProfile from '@/components/OnboardingProfile';
+import OnboardingDocuments from '@/components/OnboardingDocuments';
+import OnboardingComplete from '@/components/OnboardingComplete';
 
 interface Agency {
   id: string;
@@ -243,213 +241,40 @@ const ClientOnboarding = () => {
 
   if (step === 1) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-2xl">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <img 
-                src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" 
-                alt="Secura" 
-                className="h-12 w-auto"
-              />
-            </div>
-            <CardTitle className="text-3xl text-secura-black">Welcome to Secura!</CardTitle>
-            <CardDescription className="text-lg">
-              Your trusted platform for secure property management
-              {agency && (
-                <div className="mt-4 p-4 bg-secura-lime/10 rounded-lg">
-                  <p className="text-secura-teal font-medium">
-                    You've been invited by {agent?.full_name} from {agency.name}
-                  </p>
-                </div>
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4">
-                <Shield className="w-12 h-12 mx-auto mb-2 text-secura-teal" />
-                <h3 className="font-semibold">Secure & Private</h3>
-                <p className="text-sm text-muted-foreground">Your documents are encrypted and protected</p>
-              </div>
-              <div className="text-center p-4">
-                <FileText className="w-12 h-12 mx-auto mb-2 text-secura-moss" />
-                <h3 className="font-semibold">Easy Management</h3>
-                <p className="text-sm text-muted-foreground">Organize all your property documents in one place</p>
-              </div>
-              <div className="text-center p-4">
-                <CheckCircle className="w-12 h-12 mx-auto mb-2 text-green-600" />
-                <h3 className="font-semibold">Expert Support</h3>
-                <p className="text-sm text-muted-foreground">Get help from certified real estate professionals</p>
-              </div>
-            </div>
-            
-            <div className="border-t pt-6">
-              <div className="flex items-start space-x-2">
-                <Checkbox 
-                  id="terms" 
-                  checked={termsAccepted}
-                  onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
-                />
-                <div className="text-sm">
-                  <label htmlFor="terms" className="cursor-pointer">
-                    I agree to the{' '}
-                    <a href="/terms" target="_blank" className="text-secura-teal hover:underline">
-                      Terms of Service
-                    </a>{' '}
-                    and{' '}
-                    <a href="/privacy" target="_blank" className="text-secura-teal hover:underline">
-                      Privacy Policy
-                    </a>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <Button 
-              onClick={handleAcceptTerms}
-              className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
-              size="lg"
-            >
-              Get Started
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <OnboardingWelcome
+        agency={agency}
+        agent={agent}
+        termsAccepted={termsAccepted}
+        onTermsChange={setTermsAccepted}
+        onContinue={handleAcceptTerms}
+      />
     );
   }
 
   if (step === 2) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Complete Your Profile</CardTitle>
-            <CardDescription>
-              Let's set up your profile information
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleProfileSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="fullName">Full Name *</Label>
-                <Input
-                  id="fullName"
-                  value={profileData.fullName}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, fullName: e.target.value }))}
-                  placeholder="Enter your full name"
-                  required
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="email">Email Address *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={profileData.email}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="Enter your email"
-                  required
-                />
-              </div>
-
-              <Button type="submit" className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal">
-                Continue
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+      <OnboardingProfile
+        profileData={profileData}
+        onProfileChange={setProfileData}
+        onSubmit={handleProfileSubmit}
+      />
     );
   }
 
   if (step === 3) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Upload ID Documents</CardTitle>
-            <CardDescription>
-              Upload your identification documents (passport, national ID, etc.)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="documents">Identity Documents</Label>
-              <Input
-                id="documents"
-                type="file"
-                multiple
-                accept="image/*,.pdf"
-                onChange={handleDocumentUpload}
-                className="cursor-pointer"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Upload images or PDF files. You can select multiple files.
-              </p>
-            </div>
-
-            {documents.length > 0 && (
-              <div className="space-y-2">
-                <Label>Selected Documents:</Label>
-                {documents.map((doc, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-100 rounded">
-                    <span className="text-sm truncate">{doc.name}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeDocument(index)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Button
-                onClick={completeOnboarding}
-                disabled={loading}
-                className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
-              >
-                {loading ? 'Setting up...' : 'Complete Setup'}
-              </Button>
-              
-              <Button
-                type="button"
-                variant="outline"
-                onClick={completeOnboarding}
-                disabled={loading}
-                className="w-full"
-              >
-                Skip for now
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <OnboardingDocuments
+        documents={documents}
+        loading={loading}
+        onDocumentUpload={handleDocumentUpload}
+        onRemoveDocument={removeDocument}
+        onComplete={completeOnboarding}
+      />
     );
   }
 
   if (step === 4) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center">
-          <CardContent className="pt-8">
-            <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-600" />
-            <h2 className="text-2xl font-bold mb-2">Welcome to Secura!</h2>
-            <p className="text-muted-foreground mb-4">
-              Your profile has been set up successfully. You'll be redirected to your dashboard shortly.
-            </p>
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-secura-teal mx-auto"></div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <OnboardingComplete />;
   }
 
   return null;
