@@ -163,19 +163,34 @@ const ClientOnboarding = () => {
         for (const doc of documents) {
           const fileName = `${clientData.id}/${Date.now()}_${doc.name}`;
           
-          // For demo purposes, we'll store document info without actual upload
+          // Upload file to Supabase Storage
+          const { error: uploadError } = await supabase.storage
+            .from('property-documents')
+            .upload(fileName, doc);
+
+          if (uploadError) {
+            console.error('Upload error:', uploadError);
+            throw new Error(`Failed to upload ${doc.name}: ${uploadError.message}`);
+          }
+
+          // Store document record in database
           const { error: docError } = await supabase
             .from('client_documents')
             .insert({
               client_id: clientData.id,
-              document_type: 'national_id', // Default type, can be enhanced
+              document_type: 'national_id',
               file_name: doc.name,
               file_path: fileName,
               file_size: doc.size,
               mime_type: doc.type,
             });
 
-          if (docError) throw docError;
+          if (docError) {
+            console.error('Database error:', docError);
+            // Try to clean up the uploaded file
+            await supabase.storage.from('property-documents').remove([fileName]);
+            throw docError;
+          }
         }
       }
 

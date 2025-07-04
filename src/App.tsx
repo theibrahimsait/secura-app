@@ -15,6 +15,7 @@ import AgentDashboard from "./pages/AgentDashboard";
 import ClientLogin from "./pages/ClientLogin";
 import ClientOnboarding from "./pages/ClientOnboarding";
 import ClientDashboard from "./pages/ClientDashboard";
+import ClientSettings from "./pages/ClientSettings";
 import AddProperty from "./pages/AddProperty";
 import Support from "./pages/Support";
 import Privacy from "./pages/Privacy";
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/client/onboarding" element={<ClientOnboarding />} />
             <Route path="/client/dashboard" element={<ClientDashboard />} />
             <Route path="/client/add-property" element={<AddProperty />} />
+            <Route path="/client/settings" element={<ClientSettings />} />
             
             {/* Superadmin Routes (Isolated) */}
             <Route path="/control-panel" element={<SuperAdminLogin />} />
