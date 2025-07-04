@@ -144,6 +144,17 @@ const ClientDashboard = () => {
     checkReferral();
   }, []);
 
+  // Refresh data when the component comes back into focus (e.g., returning from add property page)
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('Dashboard focused, refreshing data...');
+      loadClientData();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
   const loadClientData = async () => {
     try {
       const storedData = localStorage.getItem('client_data');
@@ -156,10 +167,16 @@ const ClientDashboard = () => {
       setClientData(client);
 
       // Load properties
-      const { data: propertiesData } = await clientSupabase
+      console.log('Loading properties for client:', client.id);
+      const { data: propertiesData, error: propertiesError } = await clientSupabase
         .from('client_properties')
         .select('*')
         .order('created_at', { ascending: false });
+
+      console.log('Properties loaded:', propertiesData?.length || 0, 'properties');
+      if (propertiesError) {
+        console.error('Error loading properties:', propertiesError);
+      }
 
       if (propertiesData) {
         setProperties(propertiesData);
