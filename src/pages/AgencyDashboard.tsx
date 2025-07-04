@@ -82,17 +82,36 @@ const AgencyDashboard = () => {
     file_path: string;
     source: string;
   }>>([]);
+  const [viewingDocument, setViewingDocument] = useState<{url: string, name: string} | null>(null);
 
   const handleViewDocument = async (document: any) => {
     try {
       const { data, error } = await supabase.storage
         .from('property-documents')
-        .createSignedUrl(document.file_path, 60);
+        .createSignedUrl(document.file_path, 300); // 5 minutes
 
       if (error) throw error;
       
-      // Open in new tab
-      window.open(data.signedUrl, '_blank');
+      // Set viewing document to show in iframe
+      setViewingDocument({
+        url: data.signedUrl,
+        name: document.file_name
+      });
+
+      // Log audit event
+      await supabase.rpc('log_audit_event', {
+        p_user_id: userProfile?.id,
+        p_client_id: selectedSubmission?.client_id,
+        p_action: 'view',
+        p_resource_type: 'document',
+        p_resource_id: document.id,
+        p_details: {
+          document_name: document.file_name,
+          document_type: document.document_type,
+          action: 'view_document'
+        }
+      });
+
     } catch (error) {
       console.error('Error viewing document:', error);
       toast({
@@ -113,13 +132,33 @@ const AgencyDashboard = () => {
 
       // Create download link
       const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = document.file_name;
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
+
+      // Log audit event
+      await supabase.rpc('log_audit_event', {
+        p_user_id: userProfile?.id,
+        p_client_id: selectedSubmission?.client_id,
+        p_action: 'download',
+        p_resource_type: 'document',
+        p_resource_id: document.id,
+        p_details: {
+          document_name: document.file_name,
+          document_type: document.document_type,
+          action: 'download_document'
+        }
+      });
+
+      toast({
+        title: "Success",
+        description: "Document downloaded successfully",
+      });
+
     } catch (error) {
       console.error('Error downloading document:', error);
       toast({
@@ -772,89 +811,129 @@ const AgencyDashboard = () => {
         {/* View Details Modal */}
         {showViewDetailsModal && selectedSubmission && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-6xl w-full max-h-[80vh] overflow-hidden">
-              <div className="p-6 border-b">
+            <div className="bg-white rounded-lg max-w-6xl w-full h-[90vh] flex flex-col">
+              <div className="p-6 border-b flex-shrink-0">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-semibold">Property Submission Details</h2>
-                  <Button variant="ghost" onClick={() => setShowViewDetailsModal(false)}>✕</Button>
+                  <Button variant="ghost" onClick={() => {
+                    setShowViewDetailsModal(false);
+                    setViewingDocument(null);
+                  }}>✕</Button>
                 </div>
               </div>
-              <div className="p-6 overflow-y-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <h3 className="font-semibold mb-3">Client Information</h3>
-                    <div className="space-y-2">
-                      <p><span className="font-medium">Name:</span> {selectedSubmission.client.full_name}</p>
-                      <p><span className="font-medium">Phone:</span> {selectedSubmission.client.phone}</p>
-                      <p><span className="font-medium">Email:</span> {selectedSubmission.client.email}</p>
+              <div className="flex-1 flex overflow-hidden">
+                <div className="w-1/2 p-6 overflow-y-auto border-r">
+                  <div className="grid grid-cols-1 gap-6 mb-6">
+                    <div>
+                      <h3 className="font-semibold mb-3">Client Information</h3>
+                      <div className="space-y-2">
+                        <p><span className="font-medium">Name:</span> {selectedSubmission.client.full_name}</p>
+                        <p><span className="font-medium">Phone:</span> {selectedSubmission.client.phone}</p>
+                        <p><span className="font-medium">Email:</span> {selectedSubmission.client.email}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-3">Property Information</h3>
+                      <div className="space-y-2">
+                        <p><span className="font-medium">Title:</span> {selectedSubmission.property.title}</p>
+                        <p><span className="font-medium">Location:</span> {selectedSubmission.property.location}</p>
+                        <p><span className="font-medium">Type:</span> {selectedSubmission.property.property_type}</p>
+                      </div>
                     </div>
                   </div>
+                  
                   <div>
-                    <h3 className="font-semibold mb-3">Property Information</h3>
-                    <div className="space-y-2">
-                      <p><span className="font-medium">Title:</span> {selectedSubmission.property.title}</p>
-                      <p><span className="font-medium">Location:</span> {selectedSubmission.property.location}</p>
-                      <p><span className="font-medium">Type:</span> {selectedSubmission.property.property_type}</p>
-                    </div>
+                    <h3 className="font-semibold mb-4">Submitted Documents</h3>
+                    {submissionDocuments.length === 0 ? (
+                      <p className="text-gray-500">No documents submitted yet.</p>
+                    ) : (
+                      <div className="space-y-4">
+                        {Object.entries(
+                          submissionDocuments.reduce((acc, doc) => {
+                            const category = doc.document_type;
+                            if (!acc[category]) acc[category] = [];
+                            acc[category].push(doc);
+                            return acc;
+                          }, {} as Record<string, any[]>)
+                        ).map(([category, docs]) => (
+                          <div key={category} className="border rounded-lg p-4">
+                            <h4 className="font-medium mb-3 capitalize">{category.replace(/_/g, ' ')}</h4>
+                            <div className="space-y-2">
+                              {docs.map((doc) => (
+                                <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                  <div className="flex items-center space-x-3">
+                                    <FileText className="w-5 h-5 text-gray-400" />
+                                    <div>
+                                      <p className="font-medium">{doc.file_name}</p>
+                                      <p className="text-sm text-gray-500">
+                                        {(doc.file_size / 1024 / 1024).toFixed(2)} MB • {new Date(doc.uploaded_at).toLocaleDateString()}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex space-x-2">
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => handleViewDocument(doc)}
+                                    >
+                                      View
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => handleDownloadDocument(doc)}
+                                    >
+                                      Download
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
                 
-                <div>
-                  <h3 className="font-semibold mb-4">Submitted Documents</h3>
-                  {submissionDocuments.length === 0 ? (
-                    <p className="text-gray-500">No documents submitted yet.</p>
+                {/* Document Viewer Panel */}
+                <div className="w-1/2 p-6 overflow-hidden flex flex-col">
+                  {viewingDocument ? (
+                    <>
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold">Viewing: {viewingDocument.name}</h3>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setViewingDocument(null)}
+                        >
+                          Close Preview
+                        </Button>
+                      </div>
+                      <div className="flex-1 border rounded-lg overflow-hidden">
+                        <iframe 
+                          src={viewingDocument.url}
+                          className="w-full h-full"
+                          title={viewingDocument.name}
+                        />
+                      </div>
+                    </>
                   ) : (
-                    <div className="space-y-4">
-                      {Object.entries(
-                        submissionDocuments.reduce((acc, doc) => {
-                          const category = doc.document_type;
-                          if (!acc[category]) acc[category] = [];
-                          acc[category].push(doc);
-                          return acc;
-                        }, {} as Record<string, any[]>)
-                      ).map(([category, docs]) => (
-                        <div key={category} className="border rounded-lg p-4">
-                          <h4 className="font-medium mb-3 capitalize">{category.replace(/_/g, ' ')}</h4>
-                          <div className="space-y-2">
-                            {docs.map((doc) => (
-                              <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                                <div className="flex items-center space-x-3">
-                                  <FileText className="w-5 h-5 text-gray-400" />
-                                  <div>
-                                    <p className="font-medium">{doc.file_name}</p>
-                                    <p className="text-sm text-gray-500">
-                                      {(doc.file_size / 1024 / 1024).toFixed(2)} MB • {new Date(doc.uploaded_at).toLocaleDateString()}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="flex space-x-2">
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline"
-                                    onClick={() => handleViewDocument(doc)}
-                                  >
-                                    View
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline"
-                                    onClick={() => handleDownloadDocument(doc)}
-                                  >
-                                    Download
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+                    <div className="flex-1 flex items-center justify-center text-gray-500">
+                      <div className="text-center">
+                        <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                        <p>Click "View" on any document to preview it here</p>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
-              <div className="p-6 border-t bg-gray-50">
+              <div className="p-6 border-t bg-gray-50 flex-shrink-0">
                 <div className="flex justify-end">
-                  <Button variant="outline" onClick={() => setShowViewDetailsModal(false)}>
+                  <Button variant="outline" onClick={() => {
+                    setShowViewDetailsModal(false);
+                    setViewingDocument(null);
+                  }}>
                     Close
                   </Button>
                 </div>
