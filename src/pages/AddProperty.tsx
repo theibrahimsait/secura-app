@@ -169,6 +169,16 @@ const AddProperty = () => {
 
       console.log('Attempting to create property with data:', propertyData);
 
+      // Set client context for RLS before creating property
+      const { error: contextError } = await clientSupabase.rpc('set_client_id', { 
+        client_uuid: clientData.id 
+      });
+      
+      if (contextError) {
+        console.error('Failed to set client context:', contextError);
+        throw new Error('Authentication failed');
+      }
+
       const { data: property, error: propertyError } = await clientSupabase
         .from('client_properties')
         .insert(propertyData)
