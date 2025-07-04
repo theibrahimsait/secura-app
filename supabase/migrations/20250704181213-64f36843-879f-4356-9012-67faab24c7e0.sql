@@ -3,6 +3,8 @@
 CREATE OR REPLACE FUNCTION public.set_client_id(client_uuid uuid)
 RETURNS void
 LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
   SELECT set_config('request.client_id', client_uuid::text, true);
 $$;
@@ -11,6 +13,8 @@ $$;
 CREATE OR REPLACE FUNCTION public.is_client_authorized(target_client_id UUID)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   actual_client_id UUID;
