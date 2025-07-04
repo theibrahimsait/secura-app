@@ -89,80 +89,29 @@ const AgencyDashboard = () => {
     try {
       const bucket = 'property-documents';
       
-      // Debug logging
-      console.log('🔍 Document Debug Info:', {
-        document_id: document.id,
-        file_name: document.file_name,
-        file_path: document.file_path,
-        document_type: document.document_type,
-        source: document.source
-      });
-      
       // Get the folder and filename from the path
       const folder = document.file_path.substring(0, document.file_path.lastIndexOf('/'));
       const filename = document.file_path.substring(document.file_path.lastIndexOf('/') + 1);
       
-      console.log('📁 Path Analysis:', {
-        original_path: document.file_path,
-        folder: folder,
-        filename: filename
-      });
-      
-      // List all files in the folder to see what's actually there
-      const { data: allFiles, error: listError } = await supabase.storage
-        .from(bucket)
-        .list(folder);
-      
-      console.log('📋 All files in folder:', {
-        folder: folder,
-        files: allFiles?.map(f => f.name) || [],
-        error: listError
-      });
-      
-      // Try to find the file with the exact name first
-      let { data: fileData, error: fileError } = await supabase.storage
+      // Check if file exists in storage
+      const { data: fileData, error: fileError } = await supabase.storage
         .from(bucket)
         .list(folder, {
           search: filename
         });
 
-      console.log('🔎 Search for exact filename:', {
-        searching_for: filename,
-        found_files: fileData?.map(f => f.name) || [],
-        error: fileError
-      });
-
-      let actualFilePath = document.file_path;
-
-      // If not found and filename contains underscore, try with hyphen
-      if ((!fileData || fileData.length === 0) && filename.includes('_')) {
-        const filenameWithHyphen = filename.replace('_', '-');
-        const { data: altFileData, error: altFileError } = await supabase.storage
-          .from(bucket)
-          .list(folder, {
-            search: filenameWithHyphen
-          });
-        
-        if (altFileData && altFileData.length > 0) {
-          fileData = altFileData;
-          fileError = altFileError;
-          // Update the file path to use the correct name
-          actualFilePath = `${folder}/${filenameWithHyphen}`;
-        }
-      }
-
       if (fileError || !fileData || fileData.length === 0) {
         setViewingDocument({
           url: '',
           name: document.file_name,
-          error: 'Document file not found in storage. The file may have been moved or deleted.'
+          error: 'This document was not properly uploaded to storage. The client may need to re-upload this file.'
         });
         return;
       }
 
       const { data, error } = await supabase.storage
         .from(bucket)
-        .createSignedUrl(actualFilePath, 300); // 5 minutes
+        .createSignedUrl(document.file_path, 300); // 5 minutes
 
       if (error) throw error;
       
