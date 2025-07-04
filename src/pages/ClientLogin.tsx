@@ -267,8 +267,15 @@ const ClientLogin = () => {
         description: "Welcome to Secura!",
       });
 
-      // Check if onboarding is completed - only send to onboarding if NOT completed
-      if (!client.onboarding_completed) {
+      // Check if onboarding is completed or if all onboarding steps are done
+      const onboardingStatus = client.onboarding_status as any;
+      const isOnboardingDone = client.onboarding_completed || 
+        (onboardingStatus && 
+         onboardingStatus.intro_complete && 
+         onboardingStatus.tos_accepted && 
+         onboardingStatus.profile_set);
+
+      if (!isOnboardingDone) {
         // Redirect to onboarding with referral parameters if present
         let onboardingUrl = '/client/onboarding';
         if (referralToken) {
@@ -276,6 +283,14 @@ const ClientLogin = () => {
         }
         navigate(onboardingUrl);
       } else {
+        // If onboarding steps are done but flag not set, update it
+        if (!client.onboarding_completed && onboardingStatus?.profile_set) {
+          await supabase
+            .from('clients')
+            .update({ onboarding_completed: true })
+            .eq('id', client.id);
+        }
+        
         // Client has completed onboarding, go directly to dashboard with referral parameters
         let dashboardUrl = '/client/dashboard';
         if (referralToken) {
