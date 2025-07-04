@@ -87,9 +87,12 @@ const AgencyDashboard = () => {
 
   const handleViewDocument = async (document: any) => {
     try {
+      // Determine the bucket based on document source/type
+      const bucket = document.source === 'client' ? 'property-documents' : 'property-documents';
+      
       // First check if file exists in storage
       const { data: fileData, error: fileError } = await supabase.storage
-        .from('property-documents')
+        .from(bucket)
         .list(document.file_path.substring(0, document.file_path.lastIndexOf('/')), {
           search: document.file_path.substring(document.file_path.lastIndexOf('/') + 1)
         });
@@ -104,7 +107,7 @@ const AgencyDashboard = () => {
       }
 
       const { data, error } = await supabase.storage
-        .from('property-documents')
+        .from(bucket)
         .createSignedUrl(document.file_path, 300); // 5 minutes
 
       if (error) throw error;
@@ -149,9 +152,12 @@ const AgencyDashboard = () => {
 
   const handleDownloadDocument = async (document: any) => {
     try {
+      // Determine the bucket based on document source/type
+      const bucket = document.source === 'client' ? 'property-documents' : 'property-documents';
+      
       // First check if file exists in storage before attempting download
       const { data: fileData, error: fileError } = await supabase.storage
-        .from('property-documents')
+        .from(bucket)
         .list(document.file_path.substring(0, document.file_path.lastIndexOf('/')), {
           search: document.file_path.substring(document.file_path.lastIndexOf('/') + 1)
         });
@@ -166,7 +172,7 @@ const AgencyDashboard = () => {
       }
 
       const { data, error } = await supabase.storage
-        .from('property-documents')
+        .from(bucket)
         .download(document.file_path);
 
       if (error) throw error;
