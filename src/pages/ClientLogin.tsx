@@ -123,13 +123,23 @@ const ClientLogin = () => {
         .single();
 
       if (existingClient) {
-        // Update existing client
+        // Update existing client with new referral info if provided
+        const updateData: any = {
+          mobile_number: formattedPhone,
+          updated_at: new Date().toISOString(),
+        };
+        
+        // If there's a referral token, update it and reset agency/agent assignment
+        if (referralToken) {
+          updateData.referral_token = referralToken;
+          // Clear existing agency/agent to allow trigger to reassign
+          updateData.agent_id = null;
+          updateData.agency_id = null;
+        }
+
         const { error } = await supabase
           .from('clients')
-          .update({
-            mobile_number: formattedPhone,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updateData)
           .eq('id', existingClient.id);
 
         if (error) throw error;
