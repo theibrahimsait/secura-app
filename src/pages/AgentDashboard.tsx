@@ -151,6 +151,40 @@ const AgentDashboard = () => {
         return;
       }
 
+      // DIAGNOSTIC LOGGING
+      console.log('=== DIAGNOSTIC INFO ===');
+      submissions.forEach((submission, index) => {
+        console.log(`Submission ${index + 1}:`, {
+          id: submission.id,
+          property_id: submission.property_id,
+          client_id: submission.client_id,
+          client_properties_exists: !!submission.client_properties,
+          client_properties_id: submission.client_properties?.id,
+          clients_exists: !!submission.clients,
+          clients_id: submission.clients?.id
+        });
+      });
+
+      // Check if we can fetch properties directly using property_id
+      console.log('Attempting direct property fetch for missing properties...');
+      const missingPropertyIds = submissions
+        .filter(s => !s.client_properties && s.property_id)
+        .map(s => s.property_id);
+      
+      let directProperties = [];
+      if (missingPropertyIds.length > 0) {
+        console.log('Fetching missing properties directly:', missingPropertyIds);
+        const { data: directProps, error: directError } = await supabase
+          .from('client_properties')
+          .select('*')
+          .in('id', missingPropertyIds);
+        
+        if (!directError && directProps) {
+          directProperties = directProps;
+          console.log('Direct property fetch results:', directProperties);
+        }
+      }
+
       // Extract unique clients (filter out null clients)
       const clientsMap = new Map();
       submissions.forEach(submission => {
@@ -160,23 +194,42 @@ const AgentDashboard = () => {
       });
       const uniqueClients = Array.from(clientsMap.values());
       
-      // Extract properties with client names (filter out null properties)
-      const propertiesWithClients: Property[] = submissions
+      // Extract properties with client names - include both joined and directly fetched
+      const propertiesWithClients: Property[] = [];
+      
+      // Add properties from successful joins
+      submissions
         .filter(submission => submission.client_properties && submission.client_properties.id)
-        .map(submission => ({
-          id: submission.client_properties.id,
-          location: submission.client_properties.location,
-          property_type: submission.client_properties.property_type,
-          client_id: submission.client_properties.client_id,
-          created_at: submission.client_properties.created_at,
-          client_name: submission.clients?.full_name || 'N/A'
-        }));
+        .forEach(submission => {
+          propertiesWithClients.push({
+            id: submission.client_properties.id,
+            location: submission.client_properties.location,
+            property_type: submission.client_properties.property_type,
+            client_id: submission.client_properties.client_id,
+            created_at: submission.client_properties.created_at,
+            client_name: submission.clients?.full_name || 'N/A'
+          });
+        });
+
+      // Add properties from direct fetch
+      directProperties.forEach(prop => {
+        const matchingSubmission = submissions.find(s => s.property_id === prop.id);
+        propertiesWithClients.push({
+          id: prop.id,
+          location: prop.location,
+          property_type: prop.property_type,
+          client_id: prop.client_id,
+          created_at: prop.created_at,
+          client_name: matchingSubmission?.clients?.full_name || 'N/A'
+        });
+      });
 
       console.log('Final processed data:', { 
         clients: uniqueClients, 
         properties: propertiesWithClients,
         submissionsCount: submissions.length,
-        validSubmissions: submissions.filter(s => s.client_properties && s.clients)
+        validSubmissions: submissions.filter(s => s.client_properties && s.clients),
+        directlyFetchedProperties: directProperties.length
       });
 
       setClients(uniqueClients);
