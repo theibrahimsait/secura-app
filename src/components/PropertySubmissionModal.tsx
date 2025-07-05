@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -49,11 +49,42 @@ const PropertySubmissionModal = ({
 }: PropertySubmissionModalProps) => {
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [existingSubmissions, setExistingSubmissions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Filter properties that are in portfolio and not already submitted to this agency
+  // Load existing submissions for this agency when modal opens
+  useEffect(() => {
+    if (isOpen && agentAgencyInfo.agencyId) {
+      loadExistingSubmissions();
+    }
+  }, [isOpen, agentAgencyInfo.agencyId]);
+
+  const loadExistingSubmissions = async () => {
+    setLoading(true);
+    try {
+      const { data: submissions, error } = await clientSupabase
+        .from('property_agency_submissions')
+        .select('property_id')
+        .eq('agency_id', agentAgencyInfo.agencyId);
+
+      if (error) {
+        console.error('Error loading existing submissions:', error);
+        return;
+      }
+
+      const submittedPropertyIds = submissions?.map(s => s.property_id) || [];
+      setExistingSubmissions(submittedPropertyIds);
+    } catch (error) {
+      console.error('Error loading existing submissions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter properties that haven't been submitted to this agency yet
   const availableProperties = properties.filter(property => 
-    property.status === 'draft' || property.status === 'in_portfolio'
+    !existingSubmissions.includes(property.id)
   );
 
   const handlePropertyToggle = (propertyId: string) => {
@@ -152,12 +183,20 @@ const PropertySubmissionModal = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          {availableProperties.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-secura-teal mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading available properties...</p>
+            </div>
+          ) : availableProperties.length === 0 ? (
             <div className="text-center py-8">
               <Building2 className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No Properties Available</h3>
               <p className="text-gray-600">
-                You don't have any properties in your portfolio to submit.
+                {properties.length === 0 
+                  ? "You don't have any properties in your portfolio to submit."
+                  : "All your properties have already been submitted to this agency."
+                }
               </p>
             </div>
           ) : (
