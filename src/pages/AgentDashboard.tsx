@@ -46,6 +46,7 @@ interface Property {
   client_id: string;
   created_at: string;
   client_name?: string;
+  source?: 'joined' | 'direct'; // Add source tracking
 }
 
 interface GenerateLinkForm {
@@ -197,32 +198,47 @@ const AgentDashboard = () => {
       // Extract properties with client names - include both joined and directly fetched
       const propertiesWithClients: Property[] = [];
       
+      // Track source for debugging
+      const propertySourceMap = new Map();
+      
       // Add properties from successful joins
       submissions
         .filter(submission => submission.client_properties && submission.client_properties.id)
         .forEach(submission => {
-          propertiesWithClients.push({
+          const propertyData = {
             id: submission.client_properties.id,
             location: submission.client_properties.location,
             property_type: submission.client_properties.property_type,
             client_id: submission.client_properties.client_id,
             created_at: submission.client_properties.created_at,
-            client_name: submission.clients?.full_name || 'N/A'
-          });
+            client_name: submission.clients?.full_name || 'N/A',
+            source: 'joined' as const
+          };
+          propertiesWithClients.push(propertyData);
+          propertySourceMap.set(propertyData.id, 'joined');
         });
 
-      // Add properties from direct fetch
+      // Add properties from direct fetch (avoid duplicates)
       directProperties.forEach(prop => {
-        const matchingSubmission = submissions.find(s => s.property_id === prop.id);
-        propertiesWithClients.push({
-          id: prop.id,
-          location: prop.location,
-          property_type: prop.property_type,
-          client_id: prop.client_id,
-          created_at: prop.created_at,
-          client_name: matchingSubmission?.clients?.full_name || 'N/A'
-        });
+        // Check if property already exists from joined data
+        const existsInJoined = propertiesWithClients.some(p => p.id === prop.id);
+        if (!existsInJoined) {
+          const matchingSubmission = submissions.find(s => s.property_id === prop.id);
+          const propertyData = {
+            id: prop.id,
+            location: prop.location,
+            property_type: prop.property_type,
+            client_id: prop.client_id,
+            created_at: prop.created_at,
+            client_name: matchingSubmission?.clients?.full_name || 'N/A',
+            source: 'direct' as const
+          };
+          propertiesWithClients.push(propertyData);
+          propertySourceMap.set(propertyData.id, 'direct');
+        }
       });
+      
+      console.log('Property source mapping:', Object.fromEntries(propertySourceMap));
 
       console.log('Final processed data:', { 
         clients: uniqueClients, 
@@ -609,25 +625,34 @@ const AgentDashboard = () => {
               {properties.length > 0 ? (
                 <>
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Property</TableHead>
-                        <TableHead>Client</TableHead>
-                        <TableHead>Added On</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedProperties.map((property) => (
-                        <TableRow key={property.id}>
-                          <TableCell>
-                            <div className="font-medium">{property.location}</div>
-                            <div className="text-muted-foreground">{property.property_type}</div>
-                          </TableCell>
-                          <TableCell>{property.client_name}</TableCell>
-                          <TableCell>{new Date(property.created_at).toLocaleDateString()}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
+                     <TableHeader>
+                       <TableRow>
+                         <TableHead>Property</TableHead>
+                         <TableHead>Client</TableHead>
+                         <TableHead>Source</TableHead>
+                         <TableHead>Added On</TableHead>
+                       </TableRow>
+                     </TableHeader>
+                     <TableBody>
+                       {paginatedProperties.map((property) => (
+                         <TableRow key={property.id}>
+                           <TableCell>
+                             <div className="font-medium">{property.location}</div>
+                             <div className="text-muted-foreground">{property.property_type}</div>
+                           </TableCell>
+                           <TableCell>{property.client_name}</TableCell>
+                           <TableCell>
+                             <Badge 
+                               variant={property.source === 'direct' ? 'destructive' : 'default'}
+                               className="text-xs"
+                             >
+                               {property.source === 'direct' ? 'Direct Fetch' : 'Joined'}
+                             </Badge>
+                           </TableCell>
+                           <TableCell>{new Date(property.created_at).toLocaleDateString()}</TableCell>
+                         </TableRow>
+                       ))}
+                     </TableBody>
                   </Table>
                   
                   {totalPropertiesPages > 1 && (
