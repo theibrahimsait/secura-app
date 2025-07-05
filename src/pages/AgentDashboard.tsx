@@ -98,32 +98,53 @@ const AgentDashboard = () => {
     if (!userProfile?.id) return;
 
     try {
-      // Fetch properties and their associated clients, filtered by the agent
-      const { data: propertyData, error: propertyError } = await supabase
-        .from('properties')
-        .select(`
-          *,
-          clients (
-            id,
-            full_name,
-            phone,
-            email
-          )
-        `)
+      // First, get all clients who used this agent's referral links
+      const { data: agentClients, error: clientsError } = await supabase
+        .from('clients')
+        .select('*')
         .eq('agent_id', userProfile.id);
 
-      if (propertyError) throw propertyError;
+      if (clientsError) throw clientsError;
 
-      // Process data
-      const processedProperties: Property[] = propertyData.map((p: any) => ({
-        ...p,
-        client_name: p.clients?.full_name || 'N/A',
-      }));
+      if (!agentClients || agentClients.length === 0) {
+        setClients([]);
+        setProperties([]);
+        return;
+      }
 
-      const uniqueClients = Array.from(new Map(propertyData.map((p: any) => [p.clients?.id, p.clients])).values()).filter(Boolean);
+      const clientIds = agentClients.map(client => client.id);
 
+      // Get all client properties for these clients that have been submitted to agencies
+      const { data: submittedProperties, error: propertiesError } = await supabase
+        .from('client_properties')
+        .select(`
+          *,
+          property_agency_submissions!inner (
+            id,
+            status,
+            submitted_at,
+            agency_id
+          )
+        `)
+        .in('client_id', clientIds);
+
+      if (propertiesError) throw propertiesError;
+
+      // Process properties data
+      const processedProperties: Property[] = (submittedProperties || []).map((p: any) => {
+        const client = agentClients.find(c => c.id === p.client_id);
+        return {
+          id: p.id,
+          location: p.location,
+          property_type: p.property_type,
+          client_id: p.client_id,
+          created_at: p.created_at,
+          client_name: client?.full_name || 'N/A'
+        };
+      });
+
+      setClients(agentClients);
       setProperties(processedProperties);
-      setClients(uniqueClients);
 
     } catch (error: any) {
       console.error('Error fetching data:', error);
