@@ -87,6 +87,8 @@ const AddProperty = () => {
   };
 
   const uploadDocument = async (file: File, propertyId: string, docType: string) => {
+    console.log(`Starting upload for ${docType} document. Property ID: ${propertyId}, File: ${file.name}`);
+    
     const fileName = `${propertyId}/${Date.now()}-${file.name}`;
     
     const { error: uploadError } = await supabase.storage
@@ -94,9 +96,11 @@ const AddProperty = () => {
       .upload(fileName, file);
 
     if (uploadError) {
-      console.error('Error uploading file:', uploadError);
+      console.error('Error uploading file to storage:', uploadError);
       return false;
     }
+
+    console.log(`File uploaded to storage successfully: ${fileName}`);
 
     // Create document record - using both property_id and client_property_id for schema compatibility
     const { error: docError } = await clientSupabase
@@ -113,10 +117,11 @@ const AddProperty = () => {
       });
 
     if (docError) {
-      console.error('Error creating document record:', docError);
+      console.error('Error creating document record in database:', docError);
       return false;
     }
 
+    console.log(`Document record created successfully for ${docType}`);
     return true;
   };
 
