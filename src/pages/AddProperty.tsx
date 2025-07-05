@@ -89,7 +89,14 @@ const AddProperty = () => {
   const uploadDocument = async (file: File, propertyId: string, docType: string) => {
     console.log(`Starting upload for ${docType} document. Property ID: ${propertyId}, File: ${file.name}`);
     
-    const fileName = `${propertyId}/${Date.now()}-${file.name}`;
+    // Sanitize file name to remove unsafe characters for storage
+    const sanitizedFileName = file.name
+      .replace(/\s+/g, '_')                     // Replace spaces with underscores
+      .replace(/[^a-zA-Z0-9_\-.]/g, '')         // Remove invalid characters
+      .toLowerCase();                           // Normalize case
+    
+    const fileName = `${propertyId}/${Date.now()}-${sanitizedFileName}`;
+    console.log(`Sanitized file name: ${file.name} -> ${sanitizedFileName}`);
     
     const { error: uploadError } = await supabase.storage
       .from('property-documents')
