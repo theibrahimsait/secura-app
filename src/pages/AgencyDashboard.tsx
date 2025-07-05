@@ -693,6 +693,7 @@ const AgencyDashboard = () => {
                               variant="outline"
                               onClick={async () => {
                                 setSelectedSubmission(submission);
+                                console.log('Fetching docs for submission:', submission.property_id);
                                 // Fetch both property documents and client documents
                                 const [propertyDocs, clientDocs] = await Promise.all([
                                   supabase
@@ -704,6 +705,8 @@ const AgencyDashboard = () => {
                                     .select('*')
                                     .eq('client_id', submission.client_id)
                                 ]);
+                                console.log('Property documents found:', propertyDocs.data?.length || 0);
+                                console.log('Client documents found:', clientDocs.data?.length || 0);
                                 
                                 const allDocs = [
                                   ...(propertyDocs.data || []).map(doc => ({...doc, source: 'property'})),
