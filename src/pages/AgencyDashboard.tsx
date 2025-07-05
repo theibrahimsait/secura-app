@@ -311,9 +311,6 @@ const AgencyDashboard = () => {
 
       if (error) throw error;
       
-      // Log raw data to inspect for null properties
-      console.log('Raw submissions data:', data);
-      
       const formattedSubmissions = data?.map(submission => ({
         id: submission.id,
         client_id: submission.client_id,
@@ -325,7 +322,7 @@ const AgencyDashboard = () => {
         property: submission.client_properties,
         agent: submission.users || { full_name: 'No Agent' }
       }))
-      // Filter out submissions with null properties
+      // Filter out submissions with null properties (should be rare now with proper RLS)
       .filter(submission => {
         if (!submission.property) {
           console.warn('Filtered out submission with null property:', submission);
@@ -334,7 +331,6 @@ const AgencyDashboard = () => {
         return true;
       }) || [];
       
-      console.log('Filtered submissions:', formattedSubmissions);
       setSubmissions(formattedSubmissions);
     } catch (error) {
       console.error('Error fetching submissions:', error);
