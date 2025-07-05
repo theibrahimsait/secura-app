@@ -113,20 +113,21 @@ const AgentDashboard = () => {
     try {
       console.log('Fetching data for agent:', userProfile.id);
       
-      // Query property_agency_submissions where agent_id = currentAgentId
+      // First get all property submissions for this agent with proper joins
       const { data: submissions, error: submissionsError } = await supabase
         .from('property_agency_submissions')
         .select(`
           *,
-          client_properties (
+          client_properties!inner (
             id,
             title,
             location,
             property_type,
             created_at,
-            client_id
+            client_id,
+            status
           ),
-          clients (
+          clients!inner (
             id,
             full_name,
             phone,
@@ -136,9 +137,12 @@ const AgentDashboard = () => {
         `)
         .eq('agent_id', userProfile.id);
 
-      console.log('Submissions query result:', { submissions, submissionsError });
+      console.log('Submissions with joins result:', { submissions, submissionsError });
 
-      if (submissionsError) throw submissionsError;
+      if (submissionsError) {
+        console.error('Submissions error:', submissionsError);
+        throw submissionsError;
+      }
 
       if (!submissions || submissions.length === 0) {
         console.log('No submissions found for agent');
@@ -156,35 +160,22 @@ const AgentDashboard = () => {
       });
       const uniqueClients = Array.from(clientsMap.values());
       
-      // Extract properties with client names - using property_id from submissions
-      const propertiesWithClients: Property[] = [];
-      
-      for (const submission of submissions) {
-        if (submission.property_id) {
-          // Fetch the actual property data using property_id
-          const { data: propertyData, error: propError } = await supabase
-            .from('client_properties')
-            .select('*')
-            .eq('id', submission.property_id)
-            .single();
-
-          if (!propError && propertyData) {
-            const client = submission.clients;
-            propertiesWithClients.push({
-              id: propertyData.id,
-              location: propertyData.location,
-              property_type: propertyData.property_type,
-              client_id: propertyData.client_id,
-              created_at: propertyData.created_at,
-              client_name: client?.full_name || 'N/A'
-            });
-          }
-        }
-      }
+      // Extract properties with client names
+      const propertiesWithClients: Property[] = submissions
+        .filter(submission => submission.client_properties)
+        .map(submission => ({
+          id: submission.client_properties.id,
+          location: submission.client_properties.location,
+          property_type: submission.client_properties.property_type,
+          client_id: submission.client_properties.client_id,
+          created_at: submission.client_properties.created_at,
+          client_name: submission.clients?.full_name || 'N/A'
+        }));
 
       console.log('Final processed data:', { 
         clients: uniqueClients, 
-        properties: propertiesWithClients 
+        properties: propertiesWithClients,
+        submissionsCount: submissions.length 
       });
 
       setClients(uniqueClients);
