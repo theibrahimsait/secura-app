@@ -23,7 +23,10 @@ import {
   Clock,
   Phone,
   Mail,
-  CheckCircle
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Eye
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -67,6 +70,16 @@ const AgentDashboard = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [referralLink, setReferralLink] = useState<string>('');
   const [agencyName, setAgencyName] = useState<string>('');
+  
+  // Pagination state
+  const [clientsPage, setClientsPage] = useState(1);
+  const [propertiesPage, setPropertiesPage] = useState(1);
+  const clientsPerPage = 5;
+  const propertiesPerPage = 5;
+  
+  // Client modal state
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [clientProperties, setClientProperties] = useState<Property[]>([]);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -236,6 +249,67 @@ const AgentDashboard = () => {
     }
   };
 
+  const fetchClientProperties = async (clientId: string) => {
+    try {
+      const { data: clientSubmissions, error } = await supabase
+        .from('property_agency_submissions')
+        .select(`
+          *,
+          client_properties (
+            id,
+            title,
+            location,
+            property_type,
+            created_at,
+            status
+          )
+        `)
+        .eq('agent_id', userProfile?.id)
+        .eq('client_id', clientId);
+
+      if (error) throw error;
+
+      const clientPropsData = clientSubmissions
+        ?.filter(sub => sub.client_properties)
+        .map(sub => ({
+          id: sub.client_properties.id,
+          location: sub.client_properties.location,
+          property_type: sub.client_properties.property_type,
+          client_id: clientId,
+          created_at: sub.client_properties.created_at,
+          status: sub.client_properties.status || 'submitted'
+        })) || [];
+
+      setClientProperties(clientPropsData);
+    } catch (error) {
+      console.error('Error fetching client properties:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load client properties.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleClientClick = (client: Client) => {
+    setSelectedClient(client);
+    fetchClientProperties(client.id);
+  };
+
+  // Pagination calculations
+  const totalClientsPages = Math.ceil(clients.length / clientsPerPage);
+  const totalPropertiesPages = Math.ceil(properties.length / propertiesPerPage);
+  
+  const paginatedClients = clients.slice(
+    (clientsPage - 1) * clientsPerPage,
+    clientsPage * clientsPerPage
+  );
+  
+  const paginatedProperties = properties.slice(
+    (propertiesPage - 1) * propertiesPerPage,
+    propertiesPage * propertiesPerPage
+  );
+
   useEffect(() => {
     if (userProfile) {
       fetchClientsAndProperties();
@@ -383,27 +457,69 @@ const AgentDashboard = () => {
             </CardHeader>
             <CardContent>
               {clients.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Client</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Added On</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {clients.map((client) => (
-                      <TableRow key={client.id}>
-                        <TableCell className="font-medium">{client.full_name || 'N/A'}</TableCell>
-                        <TableCell>
-                          <div>{client.email || 'N/A'}</div>
-                          <div className="text-muted-foreground">{client.phone}</div>
-                        </TableCell>
-                        <TableCell>{new Date(client.created_at).toLocaleDateString()}</TableCell>
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Added On</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedClients.map((client) => (
+                        <TableRow key={client.id} className="hover:bg-muted/50 cursor-pointer">
+                          <TableCell className="font-medium">{client.full_name || 'N/A'}</TableCell>
+                          <TableCell>
+                            <div>{client.email || 'N/A'}</div>
+                            <div className="text-muted-foreground">{client.phone}</div>
+                          </TableCell>
+                          <TableCell>{new Date(client.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleClientClick(client)}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              View Properties
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  
+                  {totalClientsPages > 1 && (
+                    <div className="flex items-center justify-between mt-4">
+                      <p className="text-sm text-muted-foreground">
+                        Showing {(clientsPage - 1) * clientsPerPage + 1} to {Math.min(clientsPage * clientsPerPage, clients.length)} of {clients.length} clients
+                      </p>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={clientsPage === 1}
+                          onClick={() => setClientsPage(clientsPage - 1)}
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        <span className="text-sm">
+                          Page {clientsPage} of {totalClientsPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={clientsPage === totalClientsPages}
+                          onClick={() => setClientsPage(clientsPage + 1)}
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -422,27 +538,58 @@ const AgentDashboard = () => {
             </CardHeader>
             <CardContent>
               {properties.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Property</TableHead>
-                      <TableHead>Client</TableHead>
-                      <TableHead>Added On</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {properties.map((property) => (
-                      <TableRow key={property.id}>
-                        <TableCell>
-                          <div className="font-medium">{property.location}</div>
-                          <div className="text-muted-foreground">{property.property_type}</div>
-                        </TableCell>
-                        <TableCell>{property.client_name}</TableCell>
-                        <TableCell>{new Date(property.created_at).toLocaleDateString()}</TableCell>
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Property</TableHead>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Added On</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedProperties.map((property) => (
+                        <TableRow key={property.id}>
+                          <TableCell>
+                            <div className="font-medium">{property.location}</div>
+                            <div className="text-muted-foreground">{property.property_type}</div>
+                          </TableCell>
+                          <TableCell>{property.client_name}</TableCell>
+                          <TableCell>{new Date(property.created_at).toLocaleDateString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  
+                  {totalPropertiesPages > 1 && (
+                    <div className="flex items-center justify-between mt-4">
+                      <p className="text-sm text-muted-foreground">
+                        Showing {(propertiesPage - 1) * propertiesPerPage + 1} to {Math.min(propertiesPage * propertiesPerPage, properties.length)} of {properties.length} properties
+                      </p>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={propertiesPage === 1}
+                          onClick={() => setPropertiesPage(propertiesPage - 1)}
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        <span className="text-sm">
+                          Page {propertiesPage} of {totalPropertiesPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={propertiesPage === totalPropertiesPages}
+                          onClick={() => setPropertiesPage(propertiesPage + 1)}
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Home className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -453,6 +600,56 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
         </div>
+        
+        {/* Client Properties Modal */}
+        <Dialog open={!!selectedClient} onOpenChange={() => setSelectedClient(null)}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedClient?.full_name || 'Client'} - Properties
+              </DialogTitle>
+              <DialogDescription>
+                All properties submitted by this client
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="mt-4">
+              {clientProperties.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Property</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Submitted On</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {clientProperties.map((property: any) => (
+                      <TableRow key={property.id}>
+                        <TableCell>
+                          <div className="font-medium">{property.location}</div>
+                        </TableCell>
+                        <TableCell className="capitalize">{property.property_type}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {property.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(property.created_at).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Home className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No properties found for this client</p>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
