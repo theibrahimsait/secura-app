@@ -113,12 +113,12 @@ const AgentDashboard = () => {
     try {
       console.log('Fetching data for agent:', userProfile.id);
       
-      // First get all property submissions for this agent with proper joins
+      // Query with LEFT JOINs to preserve all submissions
       const { data: submissions, error: submissionsError } = await supabase
         .from('property_agency_submissions')
         .select(`
           *,
-          client_properties!inner (
+          client_properties (
             id,
             title,
             location,
@@ -127,7 +127,7 @@ const AgentDashboard = () => {
             client_id,
             status
           ),
-          clients!inner (
+          clients (
             id,
             full_name,
             phone,
@@ -137,7 +137,7 @@ const AgentDashboard = () => {
         `)
         .eq('agent_id', userProfile.id);
 
-      console.log('Submissions with joins result:', { submissions, submissionsError });
+      console.log('Submissions with LEFT joins result:', { submissions, submissionsError });
 
       if (submissionsError) {
         console.error('Submissions error:', submissionsError);
@@ -151,18 +151,18 @@ const AgentDashboard = () => {
         return;
       }
 
-      // Extract unique clients
+      // Extract unique clients (filter out null clients)
       const clientsMap = new Map();
       submissions.forEach(submission => {
-        if (submission.clients) {
+        if (submission.clients && submission.clients.id) {
           clientsMap.set(submission.clients.id, submission.clients);
         }
       });
       const uniqueClients = Array.from(clientsMap.values());
       
-      // Extract properties with client names
+      // Extract properties with client names (filter out null properties)
       const propertiesWithClients: Property[] = submissions
-        .filter(submission => submission.client_properties)
+        .filter(submission => submission.client_properties && submission.client_properties.id)
         .map(submission => ({
           id: submission.client_properties.id,
           location: submission.client_properties.location,
@@ -175,7 +175,8 @@ const AgentDashboard = () => {
       console.log('Final processed data:', { 
         clients: uniqueClients, 
         properties: propertiesWithClients,
-        submissionsCount: submissions.length 
+        submissionsCount: submissions.length,
+        validSubmissions: submissions.filter(s => s.client_properties && s.clients)
       });
 
       setClients(uniqueClients);
