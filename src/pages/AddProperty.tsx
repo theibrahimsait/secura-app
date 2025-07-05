@@ -18,6 +18,7 @@ interface ClientData {
   phone: string;
   agent_id: string | null;
   agency_id: string | null;
+  session_token?: string;
 }
 
 type PropertyType = 'apartment' | 'villa' | 'townhouse' | 'penthouse' | 'studio' | 'office' | 'retail' | 'warehouse' | 'land';
@@ -169,19 +170,10 @@ const AddProperty = () => {
       };
 
       console.log('Attempting to create property with data:', propertyData);
-
-      // Set client context for RLS before creating property
-      console.log('Setting client context for:', clientData.id);
-      const { data: contextResult, error: contextError } = await clientSupabase.rpc('set_client_id', { 
-        client_uuid: clientData.id 
-      });
       
-      console.log('Context setting result:', contextResult, 'Error:', contextError);
-      
-      if (contextError) {
-        console.error('Failed to set client context:', contextError);
-        throw new Error(`Authentication failed: ${contextError.message}`);
-      }
+      // Client authentication is now handled automatically via session token in headers
+      console.log('Creating property for client:', clientData.id);
+      console.log('Client session token available:', clientData.session_token ? 'Yes' : 'No');
 
       const { data: property, error: propertyError } = await clientSupabase
         .from('client_properties')

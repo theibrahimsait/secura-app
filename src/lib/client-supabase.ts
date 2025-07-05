@@ -13,6 +13,8 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
 // Create a custom client for authenticated client requests
 class ClientSupabaseClient {
   private client: SupabaseClient<Database>;
+  private authenticatedClient: SupabaseClient<Database> | null = null;
+  private currentSessionToken: string | null = null;
 
   constructor() {
     this.client = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
@@ -24,23 +26,28 @@ class ClientSupabaseClient {
       const clientData = localStorage.getItem('client_data');
       if (clientData) {
         const parsed = JSON.parse(clientData);
-        console.log('Client session token retrieved:', parsed.session_token ? 'Present' : 'Missing');
         return parsed.session_token || null;
       }
     } catch (error) {
       console.error('Error parsing client data:', error);
     }
-    console.log('No client data found in localStorage');
     return null;
   }
 
-  // Create a client with session token in headers
+  // Get or create authenticated client (cached per session token)
   private getAuthenticatedClient(): SupabaseClient<Database> {
     const sessionToken = this.getSessionToken();
     
-    if (sessionToken) {
-      // Create a new client instance with the session token in headers
-      return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    // If no session token, return base client
+    if (!sessionToken) {
+      return this.client;
+    }
+    
+    // If session token changed, recreate authenticated client
+    if (sessionToken !== this.currentSessionToken) {
+      console.log('Creating new authenticated client for session');
+      this.currentSessionToken = sessionToken;
+      this.authenticatedClient = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
         global: {
           headers: {
             'x-client-session': sessionToken
@@ -49,7 +56,7 @@ class ClientSupabaseClient {
       });
     }
     
-    return this.client;
+    return this.authenticatedClient || this.client;
   }
 
   // Expose the from method with authentication
@@ -81,7 +88,9 @@ class ClientSupabaseClient {
 
   // Method to manually refresh the client with new session
   refreshAuth() {
-    // This will get the updated session token on next request
+    // Clear cached client to force recreation with new token
+    this.authenticatedClient = null;
+    this.currentSessionToken = null;
     return this.getAuthenticatedClient();
   }
 }
