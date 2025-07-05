@@ -168,15 +168,19 @@ const ClientDashboard = () => {
 
       // Set the client ID for RLS before making any queries
       console.log('Setting client ID for RLS:', client.id);
+      console.log('Client session token available:', client.session_token ? 'Yes' : 'No');
+      
       const { data: setContextResult, error: setContextError } = await clientSupabase.rpc('set_client_id', { 
         client_uuid: client.id 
       });
+      
+      console.log('RLS context result:', setContextResult, 'Error:', setContextError);
       
       if (setContextError) {
         console.error('Failed to set client context:', setContextError);
         toast({
           title: "Authentication Error",
-          description: "Failed to set client context for data access",
+          description: `Failed to set client context: ${setContextError.message}`,
           variant: "destructive",
         });
         return;
