@@ -1149,6 +1149,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      resolve_referral_context: {
+        Args: { referral_code: string }
+        Returns: {
+          agency_id: string
+          agency_name: string
+          agent_id: string
+          agent_name: string
+          agency_logo_url: string
+          agency_primary_color: string
+        }[]
+      }
       set_client_id: {
         Args: { client_uuid: string }
         Returns: undefined

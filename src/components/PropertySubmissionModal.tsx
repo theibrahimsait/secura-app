@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { clientSupabase } from '@/lib/client-supabase';
+import { type AgencyContext } from '@/hooks/useAgencyContext';
 import { Send, Building2 } from 'lucide-react';
 
 interface Property {
@@ -27,19 +28,14 @@ interface ClientData {
   phone: string;
 }
 
-interface AgentAgencyInfo {
-  agencyId: string;
-  agencyName: string;
-  agentId: string | null;
-  agentName: string | null;
-}
+// Using AgencyContext from the hook instead of local interface
 
 interface PropertySubmissionModalProps {
   isOpen: boolean;
   onClose: () => void;
   properties: Property[];
   clientData: ClientData;
-  agentAgencyInfo: AgentAgencyInfo;
+  agentAgencyInfo: AgencyContext;
   onSubmissionComplete: () => void;
 }
 

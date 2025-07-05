@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { clientSupabase } from '@/lib/client-supabase';
+import { useAgencyContext, type AgencyContext } from '@/hooks/useAgencyContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -65,12 +66,7 @@ interface PropertySubmission {
   property_location?: string;
 }
 
-interface AgentAgencyInfo {
-  agencyId: string;
-  agencyName: string;
-  agentId: string;
-  agentName: string;
-}
+// Using AgencyContext from the hook instead of local interface
 
 const ClientDashboard = () => {
   const navigate = useNavigate();
@@ -83,65 +79,15 @@ const ClientDashboard = () => {
   const [submissions, setSubmissions] = useState<PropertySubmission[]>([]);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [showSubmissionsView, setShowSubmissionsView] = useState(false);
-  const [currentAgentAgency, setCurrentAgentAgency] = useState<AgentAgencyInfo | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
   const propertiesPerPage = 5;
 
+  // Use the new session-safe agency context hook
+  const { agencyContext, loading: agencyLoading } = useAgencyContext();
+
   useEffect(() => {
-    const checkReferral = async () => {
-      // First check if we have stored referral context
-      const storedReferral = localStorage.getItem('agent_referral_context');
-      if (storedReferral) {
-        try {
-          const parsedReferral = JSON.parse(storedReferral);
-          setCurrentAgentAgency(parsedReferral);
-          return;
-        } catch (error) {
-          // Clear invalid stored data
-          localStorage.removeItem('agent_referral_context');
-        }
-      }
-
-      // Then check URL params for new referral
-      const refParam = searchParams.get("ref");
-      if (!refParam) return;
-
-      try {
-        // Get referral link data
-        const { data: linkData, error: linkError } = await supabase
-          .from('referral_links')
-          .select('id, agent_id, agency_id')
-          .eq('id', refParam)
-          .single();
-
-        if (linkError || !linkData) return;
-
-        // Get agency and user data
-        const [{ data: agencyData }, { data: userData }] = await Promise.all([
-          supabase.from('agencies').select('id, name').eq('id', linkData.agency_id).single(),
-          supabase.from('users').select('id, full_name').eq('id', linkData.agent_id).single()
-        ]);
-
-        if (agencyData && userData) {
-          const referralContext = {
-            agencyId: agencyData.id,
-            agencyName: agencyData.name,
-            agentId: userData.id,
-            agentName: userData.full_name
-          };
-          
-          setCurrentAgentAgency(referralContext);
-          // Persist the referral context
-          localStorage.setItem('agent_referral_context', JSON.stringify(referralContext));
-        }
-      } catch (error) {
-        // Silently handle errors - referral is optional
-      }
-    };
-
     loadClientData();
-    checkReferral();
   }, []);
 
   // Refresh data when the component comes back into focus (e.g., returning from add property page)
@@ -409,15 +355,15 @@ const ClientDashboard = () => {
       </header>
 
       {/* Agency Connection Banner */}
-      {currentAgentAgency && (
+      {agencyContext && (
         <div className="agency-connection-glow border-b border-secura-lime/20">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-center text-center">
               <Link className="w-4 h-4 text-secura-teal mr-2 flex-shrink-0" />
               <span className="text-sm font-medium text-secura-teal">
-                Connected to {currentAgentAgency.agencyName}
-                {currentAgentAgency.agentName && (
-                  <span className="text-secura-moss"> • {currentAgentAgency.agentName}</span>
+                Connected to {agencyContext.agencyName}
+                {agencyContext.agentName && (
+                  <span className="text-secura-moss"> • {agencyContext.agentName}</span>
                 )}
               </span>
             </div>
@@ -478,7 +424,7 @@ const ClientDashboard = () => {
                   <Building className="w-5 h-5 text-secura-teal" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{currentAgentAgency ? '1' : '0'}</p>
+                  <p className="text-2xl font-bold">{agencyContext ? '1' : '0'}</p>
                   <p className="text-sm text-muted-foreground">Connections</p>
                 </div>
               </div>
@@ -514,7 +460,7 @@ const ClientDashboard = () => {
                   Settings
                 </Button>
                 
-                {currentAgentAgency?.agencyName && (
+                {agencyContext?.agencyName && (
                   <Button
                     onClick={() => setShowSubmissionModal(true)}
                     variant="outline"
@@ -522,7 +468,7 @@ const ClientDashboard = () => {
                     size="lg"
                   >
                     <Send className="w-4 h-4 mr-2" />
-                    Submit to {currentAgentAgency.agencyName}
+                    Submit to {agencyContext.agencyName}
                   </Button>
                 )}
               </CardContent>
@@ -690,13 +636,13 @@ const ClientDashboard = () => {
       </main>
 
       {/* Property Submission Modal */}
-      {currentAgentAgency && clientData && (
+      {agencyContext && clientData && (
         <PropertySubmissionModal
           isOpen={showSubmissionModal}
           onClose={() => setShowSubmissionModal(false)}
           properties={properties}
           clientData={clientData}
-          agentAgencyInfo={currentAgentAgency}
+          agentAgencyInfo={agencyContext}
           onSubmissionComplete={handleSubmissionComplete}
         />
       )}

@@ -290,6 +290,8 @@ const ClientLogin = () => {
         let onboardingUrl = '/client/onboarding';
         if (referralToken) {
           onboardingUrl += `?ref=${referralToken}`;
+          // Store referral in sessionStorage for the new tab-safe system
+          sessionStorage.setItem('agency_ref', referralToken);
         }
         navigate(onboardingUrl);
       } else {
@@ -305,6 +307,8 @@ const ClientLogin = () => {
         let dashboardUrl = '/client/dashboard';
         if (referralToken) {
           dashboardUrl += `?ref=${referralToken}`;
+          // Store referral in sessionStorage for the new tab-safe system  
+          sessionStorage.setItem('agency_ref', referralToken);
         }
         navigate(dashboardUrl);
       }
