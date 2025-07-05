@@ -698,7 +698,7 @@ const AgencyDashboard = () => {
                                   supabase
                                     .from('property_documents')
                                     .select('*')
-                                    .eq('property_id', submission.property_id),
+                                    .eq('client_property_id', submission.property_id), // Use client_property_id instead of property_id
                                   supabase
                                     .from('client_documents')
                                     .select('*')
