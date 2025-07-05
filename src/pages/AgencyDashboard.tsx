@@ -311,6 +311,9 @@ const AgencyDashboard = () => {
 
       if (error) throw error;
       
+      // Log raw data to inspect for null properties
+      console.log('Raw submissions data:', data);
+      
       const formattedSubmissions = data?.map(submission => ({
         id: submission.id,
         client_id: submission.client_id,
@@ -321,8 +324,17 @@ const AgencyDashboard = () => {
         client: submission.clients,
         property: submission.client_properties,
         agent: submission.users || { full_name: 'No Agent' }
-      })) || [];
+      }))
+      // Filter out submissions with null properties
+      .filter(submission => {
+        if (!submission.property) {
+          console.warn('Filtered out submission with null property:', submission);
+          return false;
+        }
+        return true;
+      }) || [];
       
+      console.log('Filtered submissions:', formattedSubmissions);
       setSubmissions(formattedSubmissions);
     } catch (error) {
       console.error('Error fetching submissions:', error);
@@ -605,9 +617,9 @@ const AgencyDashboard = () => {
                     {submissions.slice(0, 5).map((submission) => (
                       <div key={submission.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex-1">
-                          <h3 className="font-medium">{submission.property.title}</h3>
-                          <p className="text-sm text-gray-600">{submission.client.full_name} • {submission.property.location}</p>
-                          <p className="text-xs text-gray-500">Agent: {submission.agent.full_name}</p>
+                          <h3 className="font-medium">{submission.property?.title || 'Property Details Unavailable'}</h3>
+                          <p className="text-sm text-gray-600">{submission.client?.full_name || 'Unknown Client'} • {submission.property?.location || 'Location Unknown'}</p>
+                          <p className="text-xs text-gray-500">Agent: {submission.agent?.full_name || 'No Agent'}</p>
                         </div>
                         <div className="text-right">
                           <Badge variant="secondary">Pending</Badge>
@@ -658,8 +670,8 @@ const AgencyDashboard = () => {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{submission.property.title}</p>
-                            <p className="text-sm text-gray-600">{submission.property.location}</p>
+                            <p className="font-medium">{submission.property?.title || 'Property Details Unavailable'}</p>
+                            <p className="text-sm text-gray-600">{submission.property?.location || 'Location Unknown'}</p>
                           </div>
                         </TableCell>
                         <TableCell>{submission.agent.full_name}</TableCell>
@@ -892,9 +904,9 @@ const AgencyDashboard = () => {
                     <div>
                       <h3 className="font-semibold mb-3">Property Information</h3>
                       <div className="space-y-2">
-                        <p><span className="font-medium">Title:</span> {selectedSubmission.property.title}</p>
-                        <p><span className="font-medium">Location:</span> {selectedSubmission.property.location}</p>
-                        <p><span className="font-medium">Type:</span> {selectedSubmission.property.property_type}</p>
+                        <p><span className="font-medium">Title:</span> {selectedSubmission.property?.title || 'Property Details Unavailable'}</p>
+                        <p><span className="font-medium">Location:</span> {selectedSubmission.property?.location || 'Location Unknown'}</p>
+                        <p><span className="font-medium">Type:</span> {selectedSubmission.property?.property_type || 'Type Unknown'}</p>
                       </div>
                     </div>
                   </div>
