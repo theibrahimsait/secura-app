@@ -100,87 +100,67 @@ const AgentDashboard = () => {
     try {
       console.log('Fetching data for agent:', userProfile.id);
       
-      // First, get all clients who used this agent's referral links
-      const { data: agentClients, error: clientsError } = await supabase
-        .from('clients')
-        .select('*')
+      // Query property_agency_submissions where agent_id = currentAgentId
+      const { data: submissions, error: submissionsError } = await supabase
+        .from('property_agency_submissions')
+        .select(`
+          *,
+          client_properties (
+            id,
+            title,
+            location,
+            property_type,
+            created_at,
+            client_id
+          ),
+          clients (
+            id,
+            full_name,
+            phone,
+            email,
+            created_at
+          )
+        `)
         .eq('agent_id', userProfile.id);
 
-      console.log('Direct agent_id query result:', { agentClients, clientsError });
+      console.log('Submissions query result:', { submissions, submissionsError });
 
-      // Also check via referral_links table to see if there are clients linked through referrals
-      const { data: referralLinks, error: referralError } = await supabase
-        .from('referral_links')
-        .select('*')
-        .eq('agent_id', userProfile.id);
+      if (submissionsError) throw submissionsError;
 
-      console.log('Agent referral links:', { referralLinks, referralError });
-
-      // Check for clients via referral_link_id
-      let clientsViaReferral = [];
-      if (referralLinks && referralLinks.length > 0) {
-        const referralLinkIds = referralLinks.map(link => link.id);
-        const { data: referralClients, error: refClientError } = await supabase
-          .from('clients')
-          .select('*')
-          .in('referral_link_id', referralLinkIds);
-        
-        console.log('Clients via referral_link_id:', { referralClients, refClientError });
-        clientsViaReferral = referralClients || [];
-      }
-
-      // Combine clients from both sources (remove duplicates)
-      const allClients = [
-        ...(agentClients || []),
-        ...clientsViaReferral.filter(rc => !(agentClients || []).find(ac => ac.id === rc.id))
-      ];
-
-      console.log('All clients for agent:', allClients);
-
-      if (allClients.length === 0) {
+      if (!submissions || submissions.length === 0) {
         setClients([]);
         setProperties([]);
         return;
       }
 
-      const clientIds = allClients.map(client => client.id);
-      console.log('Client IDs to query properties for:', clientIds);
+      // Extract unique clients
+      const clientsMap = new Map();
+      submissions.forEach(submission => {
+        if (submission.clients) {
+          clientsMap.set(submission.clients.id, submission.clients);
+        }
+      });
+      const uniqueClients = Array.from(clientsMap.values());
+      
+      // Extract properties with client names
+      const propertiesWithClients: Property[] = submissions
+        .filter(submission => submission.client_properties)
+        .map(submission => ({
+          id: submission.client_properties.id,
+          location: submission.client_properties.location,
+          property_type: submission.client_properties.property_type,
+          client_id: submission.client_properties.client_id,
+          created_at: submission.client_properties.created_at,
+          client_name: submission.clients?.full_name || 'N/A'
+        }));
 
-      // Get all client properties for these clients that have been submitted to agencies
-      const { data: submittedProperties, error: propertiesError } = await supabase
-        .from('client_properties')
-        .select(`
-          *,
-          property_agency_submissions!inner (
-            id,
-            status,
-            submitted_at,
-            agency_id
-          )
-        `)
-        .in('client_id', clientIds);
-
-      console.log('Submitted properties result:', { submittedProperties, propertiesError });
-
-      if (propertiesError) throw propertiesError;
-
-      // Process properties data
-      const processedProperties: Property[] = (submittedProperties || []).map((p: any) => {
-        const client = allClients.find(c => c.id === p.client_id);
-        return {
-          id: p.id,
-          location: p.location,
-          property_type: p.property_type,
-          client_id: p.client_id,
-          created_at: p.created_at,
-          client_name: client?.full_name || 'N/A'
-        };
+      console.log('Final processed data:', { 
+        clients: uniqueClients, 
+        properties: propertiesWithClients 
       });
 
-      console.log('Final processed data:', { clients: allClients, properties: processedProperties });
-
-      setClients(allClients);
-      setProperties(processedProperties);
+      setClients(uniqueClients);
+      setProperties(propertiesWithClients);
 
     } catch (error: any) {
       console.error('Error fetching data:', error);
