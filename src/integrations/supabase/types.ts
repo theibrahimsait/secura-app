@@ -1124,6 +1124,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_current_client_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_superadmin_auth_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
