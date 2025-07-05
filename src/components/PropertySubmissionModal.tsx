@@ -90,40 +90,26 @@ const PropertySubmissionModal = ({
     setIsSubmitting(true);
     
     try {
-      // Create submission record
-      const { data: submission, error: submissionError } = await clientSupabase
-        .from('submissions')
-        .insert({
-          client_id: clientData.id,
-          agent_id: agentAgencyInfo.agentId,
-          agency_id: agentAgencyInfo.agencyId,
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (submissionError) throw submissionError;
-
-      // Create submission_properties records
-      const submissionProperties = selectedProperties.map(propertyId => ({
-        submission_id: submission.id,
-        property_id: propertyId
+      // Create property_agency_submissions records directly
+      const submissionRecords = selectedProperties.map(propertyId => ({
+        client_id: clientData.id,
+        property_id: propertyId,
+        agent_id: agentAgencyInfo.agentId,
+        agency_id: agentAgencyInfo.agencyId,
+        status: 'submitted'
       }));
 
-      const { error: propertiesError } = await clientSupabase
-        .from('submission_properties')
-        .insert(submissionProperties);
+      const { error: submissionError } = await clientSupabase
+        .from('property_agency_submissions')
+        .insert(submissionRecords);
 
-      if (propertiesError) throw propertiesError;
+      if (submissionError) throw submissionError;
 
       // Update property statuses to indicate they've been submitted
       const { error: updateError } = await clientSupabase
         .from('client_properties')
         .update({ 
-          status: 'submitted',
-          agency_id: agentAgencyInfo.agencyId,
-          agent_id: agentAgencyInfo.agentId,
-          submitted_at: new Date().toISOString()
+          status: 'submitted'
         })
         .in('id', selectedProperties);
 

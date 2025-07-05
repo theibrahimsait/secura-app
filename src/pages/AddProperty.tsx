@@ -97,11 +97,12 @@ const AddProperty = () => {
       return false;
     }
 
-    // Create document record
+    // Create document record - using both property_id and client_property_id for schema compatibility
     const { error: docError } = await clientSupabase
       .from('property_documents')
       .insert({
-        property_id: propertyId,
+        property_id: propertyId, // Still required by schema
+        client_property_id: propertyId, // New field for proper linking
         client_id: clientData!.id,
         document_type: docType as any,
         file_name: file.name,

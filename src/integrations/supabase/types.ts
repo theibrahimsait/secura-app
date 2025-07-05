@@ -412,76 +412,73 @@ export type Database = {
       }
       client_properties: {
         Row: {
-          agency_id: string | null
-          agent_id: string | null
           area_sqft: number | null
           bathrooms: number | null
           bedrooms: number | null
           client_id: string
           created_at: string | null
+          created_by: string | null
           details: Json | null
           id: string
           location: string
           property_type: Database["public"]["Enums"]["property_type"]
           status: string | null
-          submitted_at: string | null
           title: string
           updated_at: string | null
+          updated_by: string | null
         }
         Insert: {
-          agency_id?: string | null
-          agent_id?: string | null
           area_sqft?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
           client_id: string
           created_at?: string | null
+          created_by?: string | null
           details?: Json | null
           id?: string
           location: string
           property_type: Database["public"]["Enums"]["property_type"]
           status?: string | null
-          submitted_at?: string | null
           title: string
           updated_at?: string | null
+          updated_by?: string | null
         }
         Update: {
-          agency_id?: string | null
-          agent_id?: string | null
           area_sqft?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
           client_id?: string
           created_at?: string | null
+          created_by?: string | null
           details?: Json | null
           id?: string
           location?: string
           property_type?: Database["public"]["Enums"]["property_type"]
           status?: string | null
-          submitted_at?: string | null
           title?: string
           updated_at?: string | null
+          updated_by?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "client_properties_agency_id_fkey"
-            columns: ["agency_id"]
-            isOneToOne: false
-            referencedRelation: "agencies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "client_properties_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "client_properties_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_properties_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_properties_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -811,39 +808,54 @@ export type Database = {
           agent_id: string | null
           client_id: string
           created_at: string
+          created_by: string | null
           id: string
+          is_active: boolean | null
           notes: string | null
           property_id: string
           reviewed_at: string | null
+          sold_at: string | null
+          sold_by: string | null
           status: string
           submitted_at: string
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
           agency_id: string
           agent_id?: string | null
           client_id: string
           created_at?: string
+          created_by?: string | null
           id?: string
+          is_active?: boolean | null
           notes?: string | null
           property_id: string
           reviewed_at?: string | null
+          sold_at?: string | null
+          sold_by?: string | null
           status?: string
           submitted_at?: string
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
           agency_id?: string
           agent_id?: string | null
           client_id?: string
           created_at?: string
+          created_by?: string | null
           id?: string
+          is_active?: boolean | null
           notes?: string | null
           property_id?: string
           reviewed_at?: string | null
+          sold_at?: string | null
+          sold_by?: string | null
           status?: string
           submitted_at?: string
           updated_at?: string
+          updated_by?: string | null
         }
         Relationships: [
           {
@@ -868,10 +880,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "property_agency_submissions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "property_agency_submissions_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "client_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_agency_submissions_sold_by_fkey"
+            columns: ["sold_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_agency_submissions_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -879,6 +912,8 @@ export type Database = {
       property_documents: {
         Row: {
           client_id: string
+          client_property_id: string | null
+          created_by: string | null
           document_type: Database["public"]["Enums"]["document_type"]
           file_name: string
           file_path: string
@@ -886,10 +921,13 @@ export type Database = {
           id: string
           mime_type: string
           property_id: string
+          updated_by: string | null
           uploaded_at: string | null
         }
         Insert: {
           client_id: string
+          client_property_id?: string | null
+          created_by?: string | null
           document_type: Database["public"]["Enums"]["document_type"]
           file_name: string
           file_path: string
@@ -897,10 +935,13 @@ export type Database = {
           id?: string
           mime_type: string
           property_id: string
+          updated_by?: string | null
           uploaded_at?: string | null
         }
         Update: {
           client_id?: string
+          client_property_id?: string | null
+          created_by?: string | null
           document_type?: Database["public"]["Enums"]["document_type"]
           file_name?: string
           file_path?: string
@@ -908,14 +949,29 @@ export type Database = {
           id?: string
           mime_type?: string
           property_id?: string
+          updated_by?: string | null
           uploaded_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_property_documents_client_property"
+            columns: ["client_property_id"]
+            isOneToOne: false
+            referencedRelation: "client_properties"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "property_documents_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_documents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
@@ -925,69 +981,11 @@ export type Database = {
             referencedRelation: "client_properties"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      property_submissions: {
-        Row: {
-          agency_id: string
-          agent_id: string | null
-          client_id: string
-          id: string
-          notes: string | null
-          property_id: string
-          reviewed_at: string | null
-          status: Database["public"]["Enums"]["submission_status"] | null
-          submitted_at: string | null
-        }
-        Insert: {
-          agency_id: string
-          agent_id?: string | null
-          client_id: string
-          id?: string
-          notes?: string | null
-          property_id: string
-          reviewed_at?: string | null
-          status?: Database["public"]["Enums"]["submission_status"] | null
-          submitted_at?: string | null
-        }
-        Update: {
-          agency_id?: string
-          agent_id?: string | null
-          client_id?: string
-          id?: string
-          notes?: string | null
-          property_id?: string
-          reviewed_at?: string | null
-          status?: Database["public"]["Enums"]["submission_status"] | null
-          submitted_at?: string | null
-        }
-        Relationships: [
           {
-            foreignKeyName: "property_submissions_agency_id_fkey"
-            columns: ["agency_id"]
-            isOneToOne: false
-            referencedRelation: "agencies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "property_submissions_agent_id_fkey"
-            columns: ["agent_id"]
+            foreignKeyName: "property_documents_updated_by_fkey"
+            columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "property_submissions_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "property_submissions_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "client_properties"
             referencedColumns: ["id"]
           },
         ]
@@ -1030,88 +1028,6 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: true
             referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      submission_properties: {
-        Row: {
-          property_id: string
-          submission_id: string
-        }
-        Insert: {
-          property_id: string
-          submission_id: string
-        }
-        Update: {
-          property_id?: string
-          submission_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "submission_properties_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "client_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "submission_properties_submission_id_fkey"
-            columns: ["submission_id"]
-            isOneToOne: false
-            referencedRelation: "submissions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      submissions: {
-        Row: {
-          agency_id: string
-          agent_id: string
-          client_id: string
-          created_at: string
-          id: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          agency_id: string
-          agent_id: string
-          client_id: string
-          created_at?: string
-          id?: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          agency_id?: string
-          agent_id?: string
-          client_id?: string
-          created_at?: string
-          id?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "submissions_agency_id_fkey"
-            columns: ["agency_id"]
-            isOneToOne: false
-            referencedRelation: "agencies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "submissions_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "submissions_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]

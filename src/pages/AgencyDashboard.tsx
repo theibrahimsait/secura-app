@@ -282,10 +282,11 @@ const AgencyDashboard = () => {
     
     try {
       const { data, error } = await supabase
-        .from('submissions')
+        .from('property_agency_submissions')
         .select(`
           id,
           client_id,
+          property_id,
           agent_id,
           agency_id,
           status,
@@ -296,16 +297,13 @@ const AgencyDashboard = () => {
             phone,
             email
           ),
-          users (
+          users!property_agency_submissions_agent_id_fkey (
             full_name
           ),
-          submission_properties (
-            property_id,
-            client_properties (
-              title,
-              location,
-              property_type
-            )
+          client_properties (
+            title,
+            location,
+            property_type
           )
         `)
         .eq('agency_id', userProfile.agency_id)
@@ -313,19 +311,17 @@ const AgencyDashboard = () => {
 
       if (error) throw error;
       
-      const formattedSubmissions = data?.flatMap(submission => 
-        submission.submission_properties.map(sp => ({
-          id: submission.id,
-          client_id: submission.client_id,
-          property_id: sp.property_id,
-          agent_id: submission.agent_id,
-          created_at: submission.created_at,
-          status: submission.status,
-          client: submission.clients,
-          property: sp.client_properties,
-          agent: submission.users || { full_name: 'No Agent' }
-        }))
-      ) || [];
+      const formattedSubmissions = data?.map(submission => ({
+        id: submission.id,
+        client_id: submission.client_id,
+        property_id: submission.property_id,
+        agent_id: submission.agent_id,
+        created_at: submission.created_at,
+        status: submission.status,
+        client: submission.clients,
+        property: submission.client_properties,
+        agent: submission.users || { full_name: 'No Agent' }
+      })) || [];
       
       setSubmissions(formattedSubmissions);
     } catch (error) {

@@ -203,40 +203,37 @@ const ClientDashboard = () => {
 
       // Load submissions with related data
       const { data: submissionsData } = await clientSupabase
-        .from('submissions')
+        .from('property_agency_submissions')
         .select(`
           id,
+          property_id,
+          agency_id,
+          agent_id,
           status,
           created_at,
-          agency_id,
           agencies (name),
-          users (full_name),
-          submission_properties (
-            property_id,
-            client_properties (
-              title,
-              location
-            )
+          users:users!property_agency_submissions_agent_id_fkey (full_name),
+          client_properties (
+            title,
+            location
           )
         `)
         .order('created_at', { ascending: false });
 
       if (submissionsData) {
         // Transform the data to match the expected format
-        const transformedSubmissions = submissionsData.flatMap(submission => 
-          submission.submission_properties.map(sp => ({
-            id: submission.id,
-            property_id: sp.property_id,
-            agency_id: submission.agency_id,
-            agent_id: null,
-            status: submission.status,
-            submitted_at: submission.created_at,
-            agencies: submission.agencies,
-            users: submission.users,
-            property_title: sp.client_properties?.title || 'Unknown Property',
-            property_location: sp.client_properties?.location || ''
-          }))
-        );
+        const transformedSubmissions = submissionsData.map(submission => ({
+          id: submission.id,
+          property_id: submission.property_id,
+          agency_id: submission.agency_id,
+          agent_id: submission.agent_id,
+          status: submission.status,
+          submitted_at: submission.created_at,
+          agencies: submission.agencies,
+          users: submission.users,
+          property_title: submission.client_properties?.title || 'Unknown Property',
+          property_location: submission.client_properties?.location || ''
+        }));
         setSubmissions(transformedSubmissions);
       }
 
