@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
-import { Client } from '@/types/agent';
+import { Client, Property } from '@/types/agent';
 import { useAgentData } from '@/hooks/useAgentData';
 import { useAgencyName } from '@/hooks/useAgencyName';
 import { useReferralLink } from '@/hooks/useReferralLink';
@@ -11,6 +11,7 @@ import { AgentReferralLink } from '@/components/agent/AgentReferralLink';
 import { AgentClientsTable } from '@/components/agent/AgentClientsTable';
 import { AgentPropertiesTable } from '@/components/agent/AgentPropertiesTable';
 import { ClientPropertiesModal } from '@/components/agent/ClientPropertiesModal';
+import { PropertyDetailsModal } from '@/components/agent/PropertyDetailsModal';
 
 const AgentDashboard = () => {
   const { signOut, userProfile, loading, isAuthenticated } = useAuth();
@@ -18,6 +19,7 @@ const AgentDashboard = () => {
   const { agencyName } = useAgencyName();
   const { referralLink } = useReferralLink(agencyName);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -30,6 +32,10 @@ const AgentDashboard = () => {
 
   const handleClientClick = (client: Client) => {
     setSelectedClient(client);
+  };
+
+  const handlePropertyClick = (property: Property) => {
+    setSelectedProperty(property);
   };
 
   return (
@@ -85,7 +91,10 @@ const AgentDashboard = () => {
             clients={clients} 
             onClientClick={handleClientClick} 
           />
-          <AgentPropertiesTable properties={properties} />
+          <AgentPropertiesTable 
+            properties={properties} 
+            onPropertyClick={handlePropertyClick} 
+          />
         </div>
         
         {/* Client Properties Modal */}
@@ -93,6 +102,13 @@ const AgentDashboard = () => {
           client={selectedClient}
           open={!!selectedClient}
           onOpenChange={() => setSelectedClient(null)}
+        />
+        
+        {/* Property Details Modal */}
+        <PropertyDetailsModal
+          property={selectedProperty}
+          open={!!selectedProperty}
+          onOpenChange={() => setSelectedProperty(null)}
         />
       </main>
     </div>

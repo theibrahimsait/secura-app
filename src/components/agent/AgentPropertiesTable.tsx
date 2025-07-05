@@ -2,15 +2,15 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Home, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { Property } from '@/types/agent';
 
 interface AgentPropertiesTableProps {
   properties: Property[];
+  onPropertyClick: (property: Property) => void;
 }
 
-export const AgentPropertiesTable = ({ properties }: AgentPropertiesTableProps) => {
+export const AgentPropertiesTable = ({ properties, onPropertyClick }: AgentPropertiesTableProps) => {
   const [propertiesPage, setPropertiesPage] = useState(1);
   const propertiesPerPage = 5;
 
@@ -34,27 +34,29 @@ export const AgentPropertiesTable = ({ properties }: AgentPropertiesTableProps) 
                 <TableRow>
                   <TableHead>Property</TableHead>
                   <TableHead>Client</TableHead>
-                  <TableHead>Source</TableHead>
                   <TableHead>Added On</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedProperties.map((property) => (
-                  <TableRow key={property.id}>
+                  <TableRow key={property.id} className="hover:bg-muted/50">
                     <TableCell>
                       <div className="font-medium">{property.location}</div>
-                      <div className="text-muted-foreground">{property.property_type}</div>
+                      <div className="text-muted-foreground capitalize">{property.property_type}</div>
                     </TableCell>
                     <TableCell>{property.client_name}</TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={property.source === 'direct' ? 'destructive' : 'default'}
-                        className="text-xs"
-                      >
-                        {property.source === 'direct' ? 'Direct Fetch' : 'Joined'}
-                      </Badge>
-                    </TableCell>
                     <TableCell>{new Date(property.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onPropertyClick(property)}
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        View Details
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
