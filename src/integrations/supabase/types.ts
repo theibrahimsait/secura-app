@@ -1164,10 +1164,6 @@ export type Database = {
           agency_primary_color: string
         }[]
       }
-      set_client_id: {
-        Args: { client_uuid: string }
-        Returns: undefined
-      }
     }
     Enums: {
       audit_action:
