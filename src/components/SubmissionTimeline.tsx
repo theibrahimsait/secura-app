@@ -117,84 +117,87 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
   };
 
   return (
-    <Card className={`${className} flex flex-col h-full`}>
-      <CardHeader className="flex-shrink-0 pb-2">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <MessageSquare className="w-5 h-5" />
-          Communication Timeline
-          {unreadCount > 0 && (
-            <Badge variant="destructive" className="ml-auto">
-              {unreadCount} new
+    <div className={`${className} h-full flex flex-col bg-white border rounded-lg shadow-sm`}>
+      {/* Messages - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {unreadCount > 0 && (
+          <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded-md text-center">
+            <Badge variant="destructive" className="text-xs">
+              {unreadCount} new message{unreadCount > 1 ? 's' : ''}
             </Badge>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col flex-1 p-4 pt-0 min-h-0 space-y-3">
-        {/* Timeline */}
-        <div className="flex-1 space-y-4 overflow-y-auto min-h-0 pr-2">
-          {loading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading conversation...
+          </div>
+        )}
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="text-center text-gray-500">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+              <p>Loading conversation...</p>
             </div>
-          ) : updates.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No messages yet</p>
-              <p className="text-sm">Start the conversation by sending a message below</p>
-            </div>
-          ) : (
-            <>
-              {updates.map((update) => (
-                <div key={update.id} className="flex gap-3">
-                  <Avatar className="w-8 h-8">
-                    <AvatarFallback className={`text-white text-xs ${getSenderColor(update.sender_role)}`}>
-                      {getSenderInitials(update.sender_name || 'UN')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{update.sender_name}</span>
-                      <Badge variant="outline" className="text-xs capitalize">
-                        {update.sender_role}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {formatTimestamp(update.created_at)}
-                      </span>
-                    </div>
-                    
-                    {update.message && (
-                      <div className="bg-muted rounded-lg p-3 text-sm">
-                        {update.message}
-                      </div>
-                    )}
-                    
-                    {update.attachments && update.attachments.length > 0 && (
-                      <div className="space-y-2">
-                        {update.attachments.map((attachment) => (
-                          <div 
-                            key={attachment.id}
-                            className="flex items-center gap-2 p-2 bg-card border rounded-lg cursor-pointer hover:bg-muted/50"
-                            onClick={() => downloadFile(attachment.file_path, attachment.file_name)}
-                          >
-                            <FileText className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-sm flex-1">{attachment.file_name}</span>
-                            <Download className="w-4 h-4 text-muted-foreground" />
-                          </div>
-                        ))}
-                      </div>
-                    )}
+          </div>
+        ) : updates.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-32 text-gray-500">
+            <MessageSquare className="w-12 h-12 mb-4 opacity-50" />
+            <p className="font-medium">No messages yet</p>
+            <p className="text-sm">Start the conversation by sending a message below</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {updates.map((update) => (
+              <div key={update.id} className="flex gap-3">
+                <Avatar className="w-8 h-8 flex-shrink-0">
+                  <AvatarFallback className={`text-white text-xs ${getSenderColor(update.sender_role)}`}>
+                    {getSenderInitials(update.sender_name || 'UN')}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-sm text-gray-900">{update.sender_name}</span>
+                    <Badge variant="outline" className="text-xs">
+                      {update.sender_role === 'client' ? 'Client' : update.sender_role}
+                    </Badge>
+                    <span className="text-xs text-gray-500">
+                      {formatTimestamp(update.created_at)}
+                    </span>
                   </div>
+                  
+                  {update.message && (
+                    <div className={`rounded-lg p-3 text-sm max-w-lg ${
+                      update.sender_role === 'client' 
+                        ? 'bg-blue-500 text-white ml-4' 
+                        : 'bg-gray-100 text-gray-900'
+                    }`}>
+                      {update.message}
+                    </div>
+                  )}
+                  
+                  {update.attachments && update.attachments.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      {update.attachments.map((attachment) => (
+                        <div 
+                          key={attachment.id}
+                          className="flex items-center gap-2 p-2 bg-gray-50 border rounded-lg cursor-pointer hover:bg-gray-100 max-w-xs"
+                          onClick={() => downloadFile(attachment.file_path, attachment.file_name)}
+                        >
+                          <FileText className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm flex-1 truncate">{attachment.file_name}</span>
+                          <Download className="w-4 h-4 text-gray-500" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </>
-          )}
-        </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
+      </div>
 
-        {/* Send Message Form */}
-        <div className="flex-shrink-0 border-t pt-4 space-y-3 bg-background">
+      {/* Input Form - Fixed at Bottom */}
+      <div className="flex-shrink-0 border-t bg-gray-50 p-4">
+        <div className="space-y-3">
           <Textarea
-            placeholder="Type your message..."
+            placeholder="Type your message to the client..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             rows={2}
@@ -210,11 +213,11 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
               className="flex-1 text-xs"
             />
-            <Paperclip className="w-4 h-4 text-muted-foreground" />
+            <Paperclip className="w-4 h-4 text-gray-500" />
           </div>
           
           {selectedFiles.length > 0 && (
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-gray-600">
               {selectedFiles.length} file(s) selected: {selectedFiles.map(f => f.name).join(", ")}
             </div>
           )}
@@ -229,7 +232,7 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
             {sending ? "Sending..." : "Send Message"}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
