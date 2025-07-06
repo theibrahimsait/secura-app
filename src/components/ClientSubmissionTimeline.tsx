@@ -153,9 +153,9 @@ export const ClientSubmissionTimeline = ({
   };
 
   return (
-    <Card className={`${className} flex flex-col h-full max-h-screen`}>
-      <CardHeader className="flex-shrink-0 pb-2">
-        <CardTitle className="flex items-center gap-2 text-base">
+    <div className={`${className} flex flex-col h-full max-h-screen bg-card border rounded-lg`}>
+      <div className="flex-shrink-0 p-4 pb-2 border-b">
+        <div className="flex items-center gap-2 text-base font-semibold">
           <MessageSquare className="w-5 h-5" />
           Communication: {propertyTitle}
           {unreadCount > 0 && (
@@ -163,11 +163,11 @@ export const ClientSubmissionTimeline = ({
               {unreadCount} new
             </Badge>
           )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col flex-1 min-h-0">
+        </div>
+      </div>
+      <div className="flex flex-col flex-1 min-h-0">
         {/* Timeline */}
-        <div className="flex-1 overflow-y-auto min-h-0 pr-4 space-y-4">
+        <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">
               Loading conversation...
@@ -269,7 +269,7 @@ export const ClientSubmissionTimeline = ({
             {sending ? "Sending..." : "Send Message"}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
