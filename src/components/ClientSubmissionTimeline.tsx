@@ -102,31 +102,45 @@ export const ClientSubmissionTimeline = ({
 
   const downloadFile = async (filePath: string, fileName: string) => {
     try {
-      console.log('🔍 Downloading file:', { filePath, fileName });
+      console.log('🔍 Attempting to download file:', filePath);
+      console.log('🔍 File name:', fileName);
       console.log('🔍 Session token:', clientSupabase.getSessionToken()?.substring(0, 8) + '...');
       
       // Log the path structure for debugging
       const pathParts = filePath.split('/');
       console.log('🔍 Path parts:', pathParts);
-      console.log('🔍 Expected: [submissions, <submission_id>, updates, <filename>]');
+      console.log('🔍 Expected format: [submissions, <submission_id>, updates, <filename>]');
       
-      // Test the storage policy logic
-      if (pathParts.length >= 3) {
-        console.log('🔍 Path analysis:');
-        console.log('  - Bucket should be: submission-updates');
-        console.log('  - Path[1] (submissions):', pathParts[0]);
-        console.log('  - Path[2] (submission_id):', pathParts[1]);
-        console.log('  - Path[3] (updates):', pathParts[2]);
-        console.log('  - Current submission_id:', submissionId);
-        console.log('  - Match?', pathParts[1] === submissionId);
+      // Validate path structure
+      if (pathParts.length !== 4 || pathParts[0] !== 'submissions' || pathParts[2] !== 'updates') {
+        console.error('❌ Invalid path structure:', filePath);
+        toast({
+          title: "Download Failed",
+          description: "Invalid file path structure.",
+          variant: "destructive",
+        });
+        return;
       }
+      
+      // Log path analysis
+      console.log('🔍 Path analysis:');
+      console.log('  - Bucket: submission-updates');
+      console.log('  - Path[0] (should be "submissions"):', pathParts[0]);
+      console.log('  - Path[1] (submission_id):', pathParts[1]);
+      console.log('  - Path[2] (should be "updates"):', pathParts[2]);
+      console.log('  - Path[3] (filename):', pathParts[3]);
+      console.log('  - Current submission_id:', submissionId);
+      console.log('  - Submission ID match?', pathParts[1] === submissionId);
       
       const { data, error } = await clientSupabase.storage
         .from('submission-updates')
         .download(filePath);
 
       console.log('🔍 Storage response:', { data: !!data, error });
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Storage error:', error);
+        throw error;
+      }
 
       const url = URL.createObjectURL(data);
       const a = document.createElement('a');

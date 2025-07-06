@@ -110,12 +110,19 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
           const fileName = `${Date.now()}-${file.name}`;
           const filePath = `submissions/${data.submission_id}/updates/${fileName}`;
           
+          console.log('🔄 Uploading file:', { fileName, filePath });
+          
           // Upload file to storage
           const { data: uploadData, error: uploadError } = await clientSupabase.storage
             .from('submission-updates')
             .upload(filePath, file);
 
+          console.log('📤 Upload result:', { uploadData, uploadError });
           if (uploadError) throw uploadError;
+
+          // Store the constructed path (not uploadData.path) for consistency
+          const storedPath = filePath;
+          console.log('💾 Storing file path in DB:', storedPath);
 
           // Create attachment record
           const { error: attachmentError } = await clientSupabase
@@ -123,7 +130,7 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
             .insert({
               update_id: insertedUpdate.id,
               file_name: file.name,
-              file_path: uploadData.path,
+              file_path: storedPath, // Use our constructed path
               file_size: file.size,
               mime_type: file.type
             });
