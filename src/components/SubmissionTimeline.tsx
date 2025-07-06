@@ -229,7 +229,7 @@ export const SubmissionTimeline = ({
                     <div className={`rounded-lg p-3 text-sm max-w-lg ${
                       update.sender_role === 'admin' 
                         ? 'bg-red-500 text-white ml-4' 
-                        : 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-900'
                     }`}>
                       {update.message}
                     </div>
