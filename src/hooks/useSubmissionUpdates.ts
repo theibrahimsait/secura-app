@@ -10,6 +10,7 @@ export const useSubmissionUpdates = (submissionId: string | null) => {
   const [updates, setUpdates] = useState<SubmissionUpdate[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
 
   const fetchUpdates = useCallback(async () => {
     if (!submissionId) return;
@@ -29,6 +30,15 @@ export const useSubmissionUpdates = (submissionId: string | null) => {
 
       if (updatesError) throw updatesError;
 
+      // Calculate unread count (messages from other party)
+      const myRole = userProfile?.role === 'superadmin' ? 'admin' : userProfile?.role;
+      const unreadMessages = (updatesData || []).filter(update => 
+        !update.is_read && 
+        ((myRole === 'client' && ['admin', 'agent'].includes(update.sender_role)) ||
+         (['admin', 'agent'].includes(myRole!) && update.sender_role === 'client'))
+      );
+      setUnreadCount(unreadMessages.length);
+
       const formattedUpdates: SubmissionUpdate[] = (updatesData || []).map(update => ({
         id: update.id,
         submission_id: update.submission_id,
@@ -38,7 +48,8 @@ export const useSubmissionUpdates = (submissionId: string | null) => {
         message: update.message,
         created_at: update.created_at,
         sender_name: update.users?.full_name || update.clients?.full_name || 'Unknown',
-        attachments: update.submission_update_attachments || []
+        attachments: update.submission_update_attachments || [],
+        is_read: update.is_read
       }));
 
       setUpdates(formattedUpdates);
@@ -52,7 +63,24 @@ export const useSubmissionUpdates = (submissionId: string | null) => {
     } finally {
       setLoading(false);
     }
-  }, [submissionId, toast]);
+  }, [submissionId, toast, userProfile]);
+
+  const markAsRead = useCallback(async () => {
+    if (!submissionId || !userProfile) return;
+
+    try {
+      const userRole = userProfile.role === 'superadmin' ? 'admin' : userProfile.role;
+      await supabase.rpc('mark_submission_updates_as_read', {
+        p_submission_id: submissionId,
+        p_user_role: userRole === 'client' ? 'client' : null
+      });
+      
+      // Refresh to get updated read status
+      await fetchUpdates();
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+    }
+  }, [submissionId, userProfile, fetchUpdates]);
 
   const sendUpdate = useCallback(async (data: CreateUpdateData) => {
     if (!userProfile?.id) return;
@@ -134,7 +162,9 @@ export const useSubmissionUpdates = (submissionId: string | null) => {
     updates,
     loading,
     sending,
+    unreadCount,
     sendUpdate,
+    markAsRead,
     refetchUpdates: fetchUpdates
   };
 };

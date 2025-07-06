@@ -8,6 +8,7 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
   const [updates, setUpdates] = useState<SubmissionUpdate[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
 
   const fetchUpdates = useCallback(async () => {
     if (!submissionId) return;
@@ -27,6 +28,12 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
 
       if (updatesError) throw updatesError;
 
+      // Calculate unread count (messages from agency staff)
+      const unreadMessages = (updatesData || []).filter(update => 
+        !update.is_read && ['admin', 'agent'].includes(update.sender_role)
+      );
+      setUnreadCount(unreadMessages.length);
+
       const formattedUpdates: SubmissionUpdate[] = (updatesData || []).map(update => ({
         id: update.id,
         submission_id: update.submission_id,
@@ -36,7 +43,8 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
         message: update.message,
         created_at: update.created_at,
         sender_name: update.users?.full_name || update.clients?.full_name || 'Unknown',
-        attachments: update.submission_update_attachments || []
+        attachments: update.submission_update_attachments || [],
+        is_read: update.is_read
       }));
 
       setUpdates(formattedUpdates);
@@ -51,6 +59,22 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
       setLoading(false);
     }
   }, [submissionId, toast]);
+
+  const markAsRead = useCallback(async () => {
+    if (!submissionId) return;
+
+    try {
+      await clientSupabase.rpc('mark_submission_updates_as_read', {
+        p_submission_id: submissionId,
+        p_user_role: 'client'
+      });
+      
+      // Refresh to get updated read status
+      await fetchUpdates();
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+    }
+  }, [submissionId, fetchUpdates]);
 
   const sendUpdate = useCallback(async (data: CreateUpdateData) => {
     setSending(true);
@@ -111,7 +135,7 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
     } catch (error) {
       console.error('Error sending update:', error);
       toast({
-        title: "Failed to Send",
+        title: "Failed to Send", 
         description: "Could not send your message. Please try again.",
         variant: "destructive",
       });
@@ -130,7 +154,9 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
     updates,
     loading,
     sending,
+    unreadCount,
     sendUpdate,
+    markAsRead,
     refetchUpdates: fetchUpdates
   };
 };

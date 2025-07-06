@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,10 +23,17 @@ export const ClientSubmissionTimeline = ({
   propertyTitle, 
   className 
 }: ClientSubmissionTimelineProps) => {
-  const { updates, loading, sending, sendUpdate } = useClientSubmissionUpdates(submissionId, clientId);
+  const { updates, loading, sending, unreadCount, sendUpdate, markAsRead } = useClientSubmissionUpdates(submissionId, clientId);
   const { toast } = useToast();
   const [newMessage, setNewMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
+  // Mark messages as read when component mounts or updates are received
+  useEffect(() => {
+    if (unreadCount > 0) {
+      markAsRead();
+    }
+  }, [unreadCount, markAsRead]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -115,6 +122,11 @@ export const ClientSubmissionTimeline = ({
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5" />
           Communication: {propertyTitle}
+          {unreadCount > 0 && (
+            <Badge variant="destructive" className="ml-auto">
+              {unreadCount} new
+            </Badge>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

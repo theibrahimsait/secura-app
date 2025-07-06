@@ -8,6 +8,7 @@ export interface SubmissionUpdate {
   created_at: string;
   sender_name?: string;
   attachments?: SubmissionUpdateAttachment[];
+  is_read?: boolean;
 }
 
 export interface SubmissionUpdateAttachment {

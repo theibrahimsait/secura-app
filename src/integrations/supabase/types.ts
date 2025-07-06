@@ -1075,6 +1075,7 @@ export type Database = {
           client_id: string | null
           created_at: string | null
           id: string
+          is_read: boolean | null
           message: string | null
           sender_id: string | null
           sender_role: string
@@ -1084,6 +1085,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string | null
           id?: string
+          is_read?: boolean | null
           message?: string | null
           sender_id?: string | null
           sender_role: string
@@ -1093,6 +1095,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string | null
           id?: string
+          is_read?: boolean | null
           message?: string | null
           sender_id?: string | null
           sender_role?: string
@@ -1226,6 +1229,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_unread_submission_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          submission_id: string
+          unread_count: number
+          latest_message_at: string
+        }[]
+      }
       is_client_authorized: {
         Args: { target_client_id: string }
         Returns: boolean
@@ -1242,6 +1253,10 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: string
+      }
+      mark_submission_updates_as_read: {
+        Args: { p_submission_id: string; p_user_role?: string }
+        Returns: number
       }
       refresh_jwt_metadata: {
         Args: Record<PropertyKey, never>
