@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Shield, Plus, Users, User, Activity, LogOut, Mail, Bell, FileText, Send, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AgencyNotifications from '@/components/AgencyNotifications';
+import { SubmissionTimeline } from '@/components/SubmissionTimeline';
 
 interface Agent {
   id: string;
@@ -70,9 +71,7 @@ const AgencyDashboard = () => {
   });
   const [selectedSubmission, setSelectedSubmission] = useState<ClientSubmission | null>(null);
   const [showViewDetailsModal, setShowViewDetailsModal] = useState(false);
-  const [showSendUpdateModal, setShowSendUpdateModal] = useState(false);
-  const [taskNote, setTaskNote] = useState('');
-  const [taskUploads, setTaskUploads] = useState<File[]>([]);
+  const [showCommunicationModal, setShowCommunicationModal] = useState(false);
   const [submissionDocuments, setSubmissionDocuments] = useState<Array<{
     id: string;
     file_name: string;
@@ -682,7 +681,7 @@ const AgencyDashboard = () => {
                               variant="outline"
                               onClick={() => {
                                 setSelectedSubmission(submission);
-                                setShowSendUpdateModal(true);
+                                setShowCommunicationModal(true);
                               }}
                             >
                               <MessageSquare className="w-4 h-4 mr-2" />
@@ -1066,90 +1065,25 @@ const AgencyDashboard = () => {
           </div>
         )}
 
-        {/* Send Update Modal */}
-        {showSendUpdateModal && selectedSubmission && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
-              <div className="p-6 border-b">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold">Send Update to Client</h2>
-                  <Button variant="ghost" onClick={() => setShowSendUpdateModal(false)}>✕</Button>
-                </div>
-              </div>
-              <div className="p-6 overflow-y-auto">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Sending update to: <span className="font-medium">{selectedSubmission.client.full_name}</span>
-                    </p>
-                  </div>
-                  <div>
-                    <Label htmlFor="updateNote">Update Note</Label>
-                    <textarea
-                      id="updateNote"
-                      className="w-full p-3 border rounded-lg mt-1"
-                      rows={6}
-                      placeholder="Enter your update note for the client..."
-                      value={taskNote}
-                      onChange={(e) => setTaskNote(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="updateUpload">Attach Documents (Optional)</Label>
-                    <input
-                      id="updateUpload"
-                      type="file"
-                      multiple
-                      className="w-full p-2 border rounded-lg mt-1"
-                      onChange={(e) => setTaskUploads(Array.from(e.target.files || []))}
-                    />
-                    {taskUploads.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-600">Selected files:</p>
-                        <ul className="text-sm text-gray-500">
-                          {taskUploads.map((file, index) => (
-                            <li key={index}>• {file.name}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="p-6 border-t bg-gray-50">
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setShowSendUpdateModal(false)}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    className="bg-secura-teal hover:bg-secura-moss"
-                    onClick={async () => {
-                      if (!taskNote.trim()) {
-                        toast({
-                          title: "Error",
-                          description: "Please enter an update note",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
-                      
-                      // TODO: Implement send update functionality
-                      toast({
-                        title: "Update Sent",
-                        description: "Client has been notified of the update",
-                      });
-                      setShowSendUpdateModal(false);
-                      setTaskNote('');
-                      setTaskUploads([]);
-                    }}
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    Send Update
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Communication Modal */}
+        {showCommunicationModal && selectedSubmission && (
+          <Dialog open={showCommunicationModal} onOpenChange={setShowCommunicationModal}>
+            <DialogContent className="max-w-4xl max-h-[80vh]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  Communication with {selectedSubmission.client.full_name}
+                </DialogTitle>
+                <DialogDescription>
+                  {selectedSubmission.property?.title} - {selectedSubmission.property?.location}
+                </DialogDescription>
+              </DialogHeader>
+              <SubmissionTimeline 
+                submissionId={selectedSubmission.id}
+                className="h-[500px]"
+              />
+            </DialogContent>
+          </Dialog>
         )}
       </main>
     </div>

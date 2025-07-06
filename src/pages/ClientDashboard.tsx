@@ -259,18 +259,18 @@ const ClientDashboard = () => {
     return (
       <div className="flex flex-wrap gap-1">
         {propertySubmissions.map((submission) => (
-          <Badge 
-            key={submission.id}
-            variant={
-              submission.status === 'submitted' ? 'default' :
-              submission.status === 'under_review' ? 'secondary' :
-              submission.status === 'approved' ? 'default' : 'destructive'
-            }
-            className="text-xs cursor-pointer hover:opacity-80"
-            onClick={() => setSelectedSubmission(submission)}
-          >
-            Submitted to {submission.agencies.name}
-          </Badge>
+                           <Badge 
+                             key={submission.id}
+                             variant={
+                               submission.status === 'submitted' ? 'default' :
+                               submission.status === 'under_review' ? 'secondary' :
+                               submission.status === 'approved' ? 'default' : 'destructive'
+                             }
+                             className="text-xs cursor-pointer hover:opacity-80"
+                             onClick={() => setSelectedSubmission(submission)}
+                           >
+                             {submission.agencies.name}
+                           </Badge>
         ))}
       </div>
     );
@@ -670,6 +670,20 @@ const ClientDashboard = () => {
                           <p className="text-xs text-gray-500 mt-1">
                             {new Date(submission.submitted_at).toLocaleDateString()}
                           </p>
+                        </div>
+                        <div className="ml-4">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedSubmission(submission);
+                              setShowSubmissionsView(false); // Close submissions modal when opening chat
+                            }}
+                            className="text-secura-teal border-secura-teal hover:bg-secura-mint"
+                          >
+                            <MessageSquare className="w-4 h-4 mr-1" />
+                            Chat
+                          </Button>
                         </div>
                       </div>
                     </div>
