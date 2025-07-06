@@ -30,14 +30,14 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
 
       // Calculate unread count (messages from agency staff)
       const unreadMessages = (updatesData || []).filter(update => 
-        !update.is_read && ['admin', 'agent'].includes(update.sender_role)
+        !update.is_read && update.sender_role === 'admin'
       );
       setUnreadCount(unreadMessages.length);
 
       const formattedUpdates: SubmissionUpdate[] = (updatesData || []).map(update => ({
         id: update.id,
         submission_id: update.submission_id,
-        sender_role: update.sender_role as 'admin' | 'agent' | 'client',
+        sender_role: update.sender_role as 'admin' | 'client',
         sender_id: update.sender_id,
         client_id: update.client_id,
         message: update.message,

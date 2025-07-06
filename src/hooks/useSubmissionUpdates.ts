@@ -34,15 +34,15 @@ export const useSubmissionUpdates = (submissionId: string | null) => {
       const myRole = userProfile?.role === 'superadmin' ? 'admin' : userProfile?.role;
       const unreadMessages = (updatesData || []).filter(update => 
         !update.is_read && 
-        ((myRole === 'client' && ['admin', 'agent'].includes(update.sender_role)) ||
-         (['admin', 'agent'].includes(myRole!) && update.sender_role === 'client'))
+        ((myRole === 'client' && update.sender_role === 'admin') ||
+         (myRole === 'admin' && update.sender_role === 'client'))
       );
       setUnreadCount(unreadMessages.length);
 
       const formattedUpdates: SubmissionUpdate[] = (updatesData || []).map(update => ({
         id: update.id,
         submission_id: update.submission_id,
-        sender_role: update.sender_role as 'admin' | 'agent' | 'client',
+        sender_role: update.sender_role as 'admin' | 'client',
         sender_id: update.sender_id,
         client_id: update.client_id,
         message: update.message,
@@ -88,7 +88,7 @@ export const useSubmissionUpdates = (submissionId: string | null) => {
       // Create the update record
       const updateData = {
         submission_id: data.submission_id,
-        sender_role: userProfile.role === 'superadmin' ? 'admin' : userProfile.role,
+        sender_role: 'admin', // Only agency_admin can send messages
         sender_id: userProfile.id,
         message: data.message || null,
         client_id: null // Agency staff don't need client_id

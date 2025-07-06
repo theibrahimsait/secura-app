@@ -1,7 +1,7 @@
 export interface SubmissionUpdate {
   id: string;
   submission_id: string;
-  sender_role: 'admin' | 'agent' | 'client';
+  sender_role: 'admin' | 'client';
   sender_id?: string;
   client_id?: string;
   message?: string;
