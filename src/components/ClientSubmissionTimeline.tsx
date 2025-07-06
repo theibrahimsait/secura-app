@@ -153,8 +153,9 @@ export const ClientSubmissionTimeline = ({
   };
 
   return (
-    <div className={`${className} flex flex-col h-full max-h-screen bg-card border rounded-lg`}>
-      <div className="flex-shrink-0 p-4 pb-2 border-b">
+    <div className={`${className} flex flex-col h-full bg-card border rounded-lg overflow-hidden`}>
+      {/* Header */}
+      <div className="flex-shrink-0 p-4 border-b bg-card">
         <div className="flex items-center gap-2 text-base font-semibold">
           <MessageSquare className="w-5 h-5" />
           Communication: {propertyTitle}
@@ -165,110 +166,109 @@ export const ClientSubmissionTimeline = ({
           )}
         </div>
       </div>
-      <div className="flex flex-col flex-1 min-h-0">
-        {/* Timeline */}
-        <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
-          {loading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading conversation...
-            </div>
-          ) : updates.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No messages yet</p>
-              <p className="text-sm">Start the conversation by sending a message below</p>
-            </div>
-          ) : (
-            <>
-              {updates.map((update) => (
-                <div key={update.id} className="flex gap-3">
-                  <Avatar className="w-8 h-8">
-                    <AvatarFallback className={`text-white text-xs ${getSenderColor(update.sender_role)}`}>
-                      {getSenderInitials(update.sender_name || 'UN')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{update.sender_name}</span>
-                      <Badge variant="outline" className="text-xs capitalize">
-                        {update.sender_role === 'client' ? 'You' : update.sender_role}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {formatTimestamp(update.created_at)}
-                      </span>
-                    </div>
-                    
-                    {update.message && (
-                      <div className={`rounded-lg p-3 text-sm ${
-                        update.sender_role === 'client' 
-                          ? 'bg-primary text-primary-foreground ml-4' 
-                          : 'bg-muted'
-                      }`}>
-                        {update.message}
-                      </div>
-                    )}
-                    
-                    {update.attachments && update.attachments.length > 0 && (
-                      <div className="space-y-2">
-                        {update.attachments.map((attachment) => (
-                          <div 
-                            key={attachment.id}
-                            className="flex items-center gap-2 p-2 bg-card border rounded-lg cursor-pointer hover:bg-muted/50"
-                            onClick={() => downloadFile(attachment.file_path, attachment.file_name)}
-                          >
-                            <FileText className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-sm flex-1">{attachment.file_name}</span>
-                            <Download className="w-4 h-4 text-muted-foreground" />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </>
-          )}
-        </div>
-
-        {/* Send Message Form */}
-        <div className="flex-shrink-0 border-t bg-white p-4 space-y-3">
-          <Textarea
-            placeholder="Type your message to the agency..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            rows={2}
-            className="resize-none"
-          />
-          
-          <div className="flex items-center gap-2">
-            <Input
-              id="client-file-input"
-              type="file"
-              multiple
-              onChange={handleFileChange}
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-              className="flex-1 text-xs"
-            />
-            <Paperclip className="w-4 h-4 text-muted-foreground" />
+      
+      {/* Messages Area - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {loading ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Loading conversation...
           </div>
-          
-          {selectedFiles.length > 0 && (
-            <div className="text-sm text-muted-foreground">
-              {selectedFiles.length} file(s) selected: {selectedFiles.map(f => f.name).join(", ")}
-            </div>
-          )}
-          
-          <Button 
-            onClick={handleSendUpdate} 
-            disabled={sending || (!newMessage.trim() && selectedFiles.length === 0)}
-            className="w-full"
-            size="sm"
-          >
-            <Send className="w-4 h-4 mr-2" />
-            {sending ? "Sending..." : "Send Message"}
-          </Button>
+        ) : updates.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No messages yet</p>
+            <p className="text-sm">Start the conversation by sending a message below</p>
+          </div>
+        ) : (
+          <>
+            {updates.map((update) => (
+              <div key={update.id} className="flex gap-3">
+                <Avatar className="w-8 h-8">
+                  <AvatarFallback className={`text-white text-xs ${getSenderColor(update.sender_role)}`}>
+                    {getSenderInitials(update.sender_name || 'UN')}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm">{update.sender_name}</span>
+                    <Badge variant="outline" className="text-xs capitalize">
+                      {update.sender_role === 'client' ? 'You' : update.sender_role}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {formatTimestamp(update.created_at)}
+                    </span>
+                  </div>
+                  
+                  {update.message && (
+                    <div className={`rounded-lg p-3 text-sm ${
+                      update.sender_role === 'client' 
+                        ? 'bg-primary text-primary-foreground ml-4' 
+                        : 'bg-muted'
+                    }`}>
+                      {update.message}
+                    </div>
+                  )}
+                  
+                  {update.attachments && update.attachments.length > 0 && (
+                    <div className="space-y-2">
+                      {update.attachments.map((attachment) => (
+                        <div 
+                          key={attachment.id}
+                          className="flex items-center gap-2 p-2 bg-card border rounded-lg cursor-pointer hover:bg-muted/50"
+                          onClick={() => downloadFile(attachment.file_path, attachment.file_name)}
+                        >
+                          <FileText className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm flex-1">{attachment.file_name}</span>
+                          <Download className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </>
+        )}
+      </div>
+
+      {/* Input Form - Fixed at Bottom */}
+      <div className="flex-shrink-0 border-t bg-card p-4 space-y-3">
+        <Textarea
+          placeholder="Type your message to the agency..."
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          rows={2}
+          className="resize-none"
+        />
+        
+        <div className="flex items-center gap-2">
+          <Input
+            id="client-file-input"
+            type="file"
+            multiple
+            onChange={handleFileChange}
+            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            className="flex-1 text-xs"
+          />
+          <Paperclip className="w-4 h-4 text-muted-foreground" />
         </div>
+        
+        {selectedFiles.length > 0 && (
+          <div className="text-sm text-muted-foreground">
+            {selectedFiles.length} file(s) selected: {selectedFiles.map(f => f.name).join(", ")}
+          </div>
+        )}
+        
+        <Button 
+          onClick={handleSendUpdate} 
+          disabled={sending || (!newMessage.trim() && selectedFiles.length === 0)}
+          className="w-full"
+          size="sm"
+        >
+          <Send className="w-4 h-4 mr-2" />
+          {sending ? "Sending..." : "Send Message"}
+        </Button>
       </div>
     </div>
   );
