@@ -153,21 +153,15 @@ export const ClientSubmissionTimeline = ({
 
   return (
     <div className={`${className} h-full flex flex-col bg-white border rounded-lg shadow-sm`}>
-      {/* Header - Fixed */}
-      <div className="flex-shrink-0 px-4 py-3 border-b bg-gray-50">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-gray-600" />
-          <h3 className="font-semibold text-gray-900">Communication: {propertyTitle}</h3>
-          {unreadCount > 0 && (
-            <Badge variant="destructive" className="ml-auto">
-              {unreadCount} new
-            </Badge>
-          )}
-        </div>
-      </div>
-
       {/* Messages - Scrollable */}
       <div className="flex-1 overflow-y-auto p-4">
+        {unreadCount > 0 && (
+          <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded-md text-center">
+            <Badge variant="destructive" className="text-xs">
+              {unreadCount} new message{unreadCount > 1 ? 's' : ''}
+            </Badge>
+          </div>
+        )}
         {loading ? (
           <div className="flex items-center justify-center h-32">
             <div className="text-center text-gray-500">

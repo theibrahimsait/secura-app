@@ -762,25 +762,23 @@ const ClientDashboard = () => {
       {/* Communication Timeline Modal */}
       {selectedSubmission && clientData && (
         <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
-            <div className="flex flex-col h-full">
-              <DialogHeader className="flex-shrink-0 p-6 pb-0">
-                <DialogTitle className="flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5" />
-                  Communication with {selectedSubmission.agencies.name}
-                </DialogTitle>
-                <DialogDescription>
-                  {selectedSubmission.property_title} - {selectedSubmission.property_location}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex-1 p-6 pt-4 overflow-hidden">
-                <ClientSubmissionTimeline
-                  submissionId={selectedSubmission.id}
-                  clientId={clientData.id}
-                  propertyTitle={selectedSubmission.property_title || 'Property'}
-                  className="h-full"
-                />
-              </div>
+          <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+            <DialogHeader className="flex-shrink-0">
+              <DialogTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Communication with {selectedSubmission.agencies.name}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedSubmission.property_title} - {selectedSubmission.property_location}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 overflow-hidden">
+              <ClientSubmissionTimeline
+                submissionId={selectedSubmission.id}
+                clientId={clientData.id}
+                propertyTitle={selectedSubmission.property_title || 'Property'}
+                className="h-full"
+              />
             </div>
           </DialogContent>
         </Dialog>
