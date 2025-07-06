@@ -58,25 +58,23 @@ class ClientSupabaseClient {
         global: {
           headers: {
             'x-client-session': sessionToken
-          },
-          fetch: (url, options: RequestInit = {}) => {
-            console.log('🌐 Making request to:', url);
-            console.log('📤 Request headers:', { 
-              ...(options.headers as Record<string, string> || {}), 
-              'x-client-session': sessionToken 
-            });
-            return fetch(url, {
-              ...options,
-              headers: {
-                ...(options.headers as Record<string, string> || {}),
-                'x-client-session': sessionToken
-              }
-            });
           }
         }
       });
       
-      // Note: We're using custom session headers, not Supabase auth sessions
+      // Set the session token as auth session (fire and forget)
+      this.authenticatedClient.auth.setSession({
+        access_token: sessionToken,
+        refresh_token: sessionToken // Using same token as refresh for simplicity
+      }).then(({ data, error }) => {
+        if (error) {
+          console.error('❌ Failed to set auth session:', error);
+        } else {
+          console.log('🔐 Supabase JWT set, session user:', data.user);
+        }
+      }).catch(error => {
+        console.error('❌ Failed to set auth session:', error);
+      });
       
       console.log('✅ Authenticated client created successfully');
     }
