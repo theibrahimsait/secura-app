@@ -72,6 +72,7 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
       await fetchUpdates();
     } catch (error) {
       console.error('Error marking messages as read:', error);
+      // Don't show toast error for this as it's automatic
     }
   }, [submissionId, fetchUpdates]);
 

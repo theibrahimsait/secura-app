@@ -28,12 +28,26 @@ export const ClientSubmissionTimeline = ({
   const [newMessage, setNewMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  // Mark messages as read when component mounts or updates are received
+  // Mark messages as read when component mounts or when new unread messages arrive
   useEffect(() => {
     if (unreadCount > 0) {
-      markAsRead();
+      // Add a small delay to ensure the component is fully mounted
+      const timer = setTimeout(() => {
+        markAsRead();
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [unreadCount, markAsRead]);
+
+  // Also mark as read when the component first loads with updates
+  useEffect(() => {
+    if (updates.length > 0 && unreadCount > 0) {
+      const timer = setTimeout(() => {
+        markAsRead();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [updates.length, unreadCount, markAsRead]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
