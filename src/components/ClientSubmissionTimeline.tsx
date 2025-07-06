@@ -161,7 +161,7 @@ export const ClientSubmissionTimeline = ({
       </CardHeader>
       <CardContent className="flex flex-col flex-1 space-y-4 p-4">
         {/* Timeline */}
-        <div className="flex-1 space-y-4 overflow-y-auto max-h-[50vh]">
+        <div className="flex-1 space-y-4 overflow-y-auto max-h-[40vh]">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">
               Loading conversation...
