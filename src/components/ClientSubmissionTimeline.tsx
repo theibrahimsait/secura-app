@@ -102,10 +102,30 @@ export const ClientSubmissionTimeline = ({
 
   const downloadFile = async (filePath: string, fileName: string) => {
     try {
+      console.log('🔍 Downloading file:', { filePath, fileName });
+      console.log('🔍 Session token:', clientSupabase.getSessionToken()?.substring(0, 8) + '...');
+      
+      // Log the path structure for debugging
+      const pathParts = filePath.split('/');
+      console.log('🔍 Path parts:', pathParts);
+      console.log('🔍 Expected: [submissions, <submission_id>, updates, <filename>]');
+      
+      // Test the storage policy logic
+      if (pathParts.length >= 3) {
+        console.log('🔍 Path analysis:');
+        console.log('  - Bucket should be: submission-updates');
+        console.log('  - Path[1] (submissions):', pathParts[0]);
+        console.log('  - Path[2] (submission_id):', pathParts[1]);
+        console.log('  - Path[3] (updates):', pathParts[2]);
+        console.log('  - Current submission_id:', submissionId);
+        console.log('  - Match?', pathParts[1] === submissionId);
+      }
+      
       const { data, error } = await clientSupabase.storage
         .from('submission-updates')
         .download(filePath);
 
+      console.log('🔍 Storage response:', { data: !!data, error });
       if (error) throw error;
 
       const url = URL.createObjectURL(data);
