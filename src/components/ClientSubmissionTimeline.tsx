@@ -153,7 +153,7 @@ export const ClientSubmissionTimeline = ({
   };
 
   return (
-    <Card className={`${className} flex flex-col`}>
+    <Card className={`${className} flex flex-col h-full max-h-[80vh]`}>
       <CardHeader className="flex-shrink-0">
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5" />
@@ -167,7 +167,7 @@ export const ClientSubmissionTimeline = ({
       </CardHeader>
       <CardContent className="flex flex-col flex-1 space-y-4 p-4 min-h-0">
         {/* Timeline */}
-        <div className="flex-1 space-y-4 overflow-y-auto">
+        <div className="flex-1 space-y-4 overflow-y-auto min-h-0">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">
               Loading conversation...
