@@ -1068,8 +1068,8 @@ const AgencyDashboard = () => {
         {/* Communication Modal */}
         {showCommunicationModal && selectedSubmission && (
           <Dialog open={showCommunicationModal} onOpenChange={setShowCommunicationModal}>
-            <DialogContent className="max-w-4xl max-h-[80vh]">
-              <DialogHeader>
+            <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+              <DialogHeader className="flex-shrink-0">
                 <DialogTitle className="flex items-center gap-2">
                   <MessageSquare className="w-5 h-5" />
                   Communication with {selectedSubmission.client.full_name}
@@ -1078,10 +1078,12 @@ const AgencyDashboard = () => {
                   {selectedSubmission.property?.title} - {selectedSubmission.property?.location}
                 </DialogDescription>
               </DialogHeader>
-              <SubmissionTimeline 
-                submissionId={selectedSubmission.id}
-                className="h-[500px]"
-              />
+              <div className="flex-1 overflow-hidden">
+                <SubmissionTimeline 
+                  submissionId={selectedSubmission.id}
+                  className="h-full"
+                />
+              </div>
             </DialogContent>
           </Dialog>
         )}
