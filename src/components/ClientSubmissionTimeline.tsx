@@ -147,7 +147,7 @@ export const ClientSubmissionTimeline = ({
   };
 
   return (
-    <Card className={`${className} flex flex-col h-full max-h-[600px]`}>
+    <Card className={`${className} flex flex-col h-full`}>
       <CardHeader className="flex-shrink-0">
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5" />
