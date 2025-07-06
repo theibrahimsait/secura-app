@@ -28,6 +28,22 @@ export const ClientSubmissionTimeline = ({
   const [newMessage, setNewMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
+  // Debug logging for timeline rendering
+  console.log('🎯 ClientSubmissionTimeline render:', {
+    submissionId,
+    clientId,
+    updatesCount: updates.length,
+    unreadCount,
+    loading,
+    updates: updates.map(u => ({
+      id: u.id,
+      sender_role: u.sender_role,
+      sender_name: u.sender_name,
+      message: u.message?.substring(0, 50) + '...',
+      is_read: u.is_read
+    }))
+  });
+
   // Mark messages as read when component mounts or when new unread messages arrive
   useEffect(() => {
     if (unreadCount > 0) {

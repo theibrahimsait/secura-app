@@ -15,6 +15,8 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
 
     setLoading(true);
     try {
+      console.log('🔍 Client fetching updates for submission:', submissionId);
+      
       const { data: updatesData, error: updatesError } = await clientSupabase
         .from('submission_updates')
         .select(`
@@ -25,6 +27,9 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
         `)
         .eq('submission_id', submissionId)
         .order('created_at', { ascending: true });
+
+      console.log('📥 Raw updates data received:', updatesData);
+      console.log('❌ Updates error (if any):', updatesError);
 
       if (updatesError) throw updatesError;
 
