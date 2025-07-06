@@ -62,19 +62,8 @@ class ClientSupabaseClient {
         }
       });
       
-      // Set the session token as auth session (fire and forget)
-      this.authenticatedClient.auth.setSession({
-        access_token: sessionToken,
-        refresh_token: sessionToken // Using same token as refresh for simplicity
-      }).then(({ data, error }) => {
-        if (error) {
-          console.error('❌ Failed to set auth session:', error);
-        } else {
-          console.log('🔐 Supabase JWT set, session user:', data.user);
-        }
-      }).catch(error => {
-        console.error('❌ Failed to set auth session:', error);
-      });
+      // Note: We don't use auth.setSession() because our session_token is not a JWT
+      // Instead, we rely on the x-client-session header for authentication
       
       console.log('✅ Authenticated client created successfully');
     }
