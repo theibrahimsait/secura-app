@@ -78,6 +78,7 @@ const ClientDashboard = () => {
   const [clientData, setClientData] = useState<ClientData | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [allUpdates, setAllUpdates] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<PropertySubmission[]>([]);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [showSubmissionsView, setShowSubmissionsView] = useState(false);
@@ -180,6 +181,31 @@ const ClientDashboard = () => {
 
       if (tasksData) {
         setTasks(tasksData);
+      }
+
+      // Load all submission updates to show as communications in tasks section
+      const { data: updatesData } = await clientSupabase
+        .from('submission_updates')
+        .select(`
+          id,
+          submission_id,
+          sender_role,
+          message,
+          created_at,
+          users!fk_submission_updates_sender(full_name),
+          property_agency_submissions!inner(
+            id,
+            agencies(name),
+            client_properties(title, location)
+          )
+        `)
+        .eq('sender_role', 'admin')
+        .or('sender_role.eq.agent')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (updatesData) {
+        setAllUpdates(updatesData);
       }
     } catch (error) {
       console.error('Error loading client data:', error);
@@ -572,21 +598,22 @@ const ClientDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <CheckCircle className="w-5 h-5 mr-2" />
-                  Tasks & Updates ({tasks.length})
+                  Tasks & Communications ({tasks.length + allUpdates.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {tasks.length === 0 ? (
+                {tasks.length === 0 && allUpdates.length === 0 ? (
                   <div className="text-center py-8">
                     <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
                       <CheckCircle className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    <p className="text-muted-foreground">No tasks assigned yet</p>
+                    <p className="text-muted-foreground">No tasks or messages yet</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {/* Tasks */}
                     {tasks.map((task) => (
-                      <div key={task.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                      <div key={`task-${task.id}`} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
                         <div className="flex items-start gap-3">
                           {task.status === 'completed' ? (
                             <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
@@ -613,6 +640,43 @@ const ClientDashboard = () => {
                                 Due: {new Date(task.due_date).toLocaleDateString()}
                               </p>
                             )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Agency Communications */}
+                    {allUpdates.map((update) => (
+                      <div key={`update-${update.id}`} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors bg-blue-50/50">
+                        <div className="flex items-start gap-3">
+                          <MessageSquare className="w-5 h-5 text-blue-500 mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-medium text-foreground">Message from {update.property_agency_submissions?.agencies?.name}</h3>
+                              <Badge variant="outline" className="text-xs">
+                                {update.sender_role}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{update.message}</p>
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs text-muted-foreground">
+                                {update.property_agency_submissions?.client_properties?.title}
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const submission = submissions.find(s => s.id === update.submission_id);
+                                  if (submission) setSelectedSubmission(submission);
+                                }}
+                                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                              >
+                                Reply
+                              </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {new Date(update.created_at).toLocaleDateString()}
+                            </p>
                           </div>
                         </div>
                       </div>
