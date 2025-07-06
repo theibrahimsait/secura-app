@@ -17,16 +17,19 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
     try {
       console.log('🔍 Client fetching updates for submission:', submissionId);
       
+      // Get session token
+      const sessionToken = clientSupabase.getSessionToken();
+      if (!sessionToken) {
+        console.error('❌ No session token available');
+        return;
+      }
+
+      // Use the direct function call instead of table query
       const { data: updatesData, error: updatesError } = await clientSupabase
-        .from('submission_updates')
-        .select(`
-          *,
-          users!fk_submission_updates_sender(full_name),
-          clients!fk_submission_updates_client(full_name),
-          submission_update_attachments(*)
-        `)
-        .eq('submission_id', submissionId)
-        .order('created_at', { ascending: true });
+        .rpc('get_client_submission_updates', {
+          p_client_session_token: sessionToken,
+          p_submission_id: submissionId
+        });
 
       console.log('📥 Raw updates data received:', updatesData);
       console.log('❌ Updates error (if any):', updatesError);
@@ -47,8 +50,8 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
         client_id: update.client_id,
         message: update.message,
         created_at: update.created_at,
-        sender_name: update.users?.full_name || update.clients?.full_name || 'Unknown',
-        attachments: update.submission_update_attachments || [],
+        sender_name: update.sender_name || 'Unknown',
+        attachments: update.attachments || [],
         is_read: update.is_read
       }));
 

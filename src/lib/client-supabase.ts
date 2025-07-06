@@ -20,8 +20,8 @@ class ClientSupabaseClient {
     this.client = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
   }
 
-  // Get the session token from localStorage
-  private getSessionToken(): string | null {
+  // Get the session token from localStorage (public method)
+  getSessionToken(): string | null {
     try {
       const clientData = localStorage.getItem('client_data');
       console.log('🔍 Client data from localStorage:', clientData);

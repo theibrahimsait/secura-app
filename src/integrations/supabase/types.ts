@@ -1221,6 +1221,21 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_client_submission_updates: {
+        Args: { p_client_session_token: string; p_submission_id?: string }
+        Returns: {
+          id: string
+          submission_id: string
+          sender_role: string
+          sender_id: string
+          client_id: string
+          message: string
+          created_at: string
+          is_read: boolean
+          sender_name: string
+          attachments: Json
+        }[]
+      }
       get_current_client_id: {
         Args: Record<PropertyKey, never>
         Returns: string
