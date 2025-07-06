@@ -24,12 +24,18 @@ class ClientSupabaseClient {
   private getSessionToken(): string | null {
     try {
       const clientData = localStorage.getItem('client_data');
+      console.log('🔍 Client data from localStorage:', clientData);
+      
       if (clientData) {
         const parsed = JSON.parse(clientData);
-        return parsed.session_token || null;
+        const sessionToken = parsed.session_token || null;
+        console.log('🎯 Extracted session token:', sessionToken ? sessionToken.substring(0, 8) + '...' : 'NULL');
+        return sessionToken;
+      } else {
+        console.log('⚠️ No client_data found in localStorage');
       }
     } catch (error) {
-      console.error('Error parsing client data:', error);
+      console.error('❌ Error parsing client data:', error);
     }
     return null;
   }
@@ -45,7 +51,8 @@ class ClientSupabaseClient {
     
     // If session token changed, recreate authenticated client
     if (sessionToken !== this.currentSessionToken) {
-      console.log('Creating new authenticated client for session');
+      console.log('🔄 Creating new authenticated client for session:', sessionToken.substring(0, 8) + '...');
+      console.log('📋 Headers being set:', { 'x-client-session': sessionToken });
       this.currentSessionToken = sessionToken;
       this.authenticatedClient = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
         global: {
@@ -54,6 +61,7 @@ class ClientSupabaseClient {
           }
         }
       });
+      console.log('✅ Authenticated client created successfully');
     }
     
     return this.authenticatedClient || this.client;
