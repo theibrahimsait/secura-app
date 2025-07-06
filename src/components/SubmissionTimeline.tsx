@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -9,26 +8,42 @@ import { useSubmissionUpdates } from '@/hooks/useSubmissionUpdates';
 import { Send, Paperclip, Download, FileText, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { SubmissionUpdate } from '@/types/submission-updates';
 
 interface SubmissionTimelineProps {
   submissionId: string;
   className?: string;
 }
 
-export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimelineProps) => {
+export const SubmissionTimeline = ({ 
+  submissionId, 
+  className 
+}: SubmissionTimelineProps) => {
   const { updates, loading, sending, unreadCount, sendUpdate, markAsRead } = useSubmissionUpdates(submissionId);
   const { toast } = useToast();
   const [newMessage, setNewMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Mark messages as read when component mounts or updates are received
+  // Mark messages as read when component mounts or when new unread messages arrive
   useEffect(() => {
     if (unreadCount > 0) {
-      markAsRead();
+      // Add a small delay to ensure the component is fully mounted
+      const timer = setTimeout(() => {
+        markAsRead();
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [unreadCount, markAsRead]);
+
+  // Also mark as read when the component first loads with updates
+  useEffect(() => {
+    if (updates.length > 0 && unreadCount > 0) {
+      const timer = setTimeout(() => {
+        markAsRead();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [updates.length, unreadCount, markAsRead]);
 
   // Scroll to bottom when messages update
   useEffect(() => {
@@ -61,17 +76,67 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
     setNewMessage('');
     setSelectedFiles([]);
     // Reset file input
-    const fileInput = document.getElementById('file-input') as HTMLInputElement;
+    const fileInput = document.getElementById('agency-file-input') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   };
 
   const downloadFile = async (filePath: string, fileName: string) => {
     try {
+      console.log('🔍 === AGENCY FILE DOWNLOAD DEBUG ===');
+      console.log('🔍 Raw filePath from DB:', filePath);
+      console.log('🔍 File name:', fileName);
+      
+      // Log the path structure for debugging
+      const pathParts = filePath.split('/');
+      console.log('🔍 Path parts analysis:');
+      console.log('  - Full path:', filePath);
+      console.log('  - Split parts:', pathParts);
+      console.log('  - Parts count:', pathParts.length);
+      console.log('  - [0] (should be "submissions"):', pathParts[0]);
+      console.log('  - [1] (should be submission UUID):', pathParts[1]);
+      console.log('  - [2] (should be "updates"):', pathParts[2]);
+      console.log('  - [3] (should be filename):', pathParts[3]);
+      
+      // Validate path structure
+      if (pathParts.length !== 4 || pathParts[0] !== 'submissions' || pathParts[2] !== 'updates') {
+        console.error('❌ Invalid path structure detected!');
+        console.error('❌ Expected: submissions/<uuid>/updates/<filename>');
+        console.error('❌ Got:', filePath);
+        toast({
+          title: "Download Failed",
+          description: "Invalid file path structure.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Check if submission UUID matches current submission
+      const fileSubmissionId = pathParts[1];
+      console.log('🔍 Submission ID comparison:');
+      console.log('  - From file path:', fileSubmissionId);
+      console.log('  - Current submission:', submissionId);
+      console.log('  - Match:', fileSubmissionId === submissionId);
+      
+      console.log('🔍 Making storage.download() call...');
+      console.log('🔍 Bucket: submission-updates');
+      console.log('🔍 Path being sent to Supabase:', filePath);
+      
       const { data, error } = await supabase.storage
         .from('submission-updates')
         .download(filePath);
 
-      if (error) throw error;
+      console.log('🔍 Storage response received:');
+      console.log('  - Has data:', !!data);
+      console.log('  - Error:', error);
+      
+      if (error) {
+        console.error('❌ Detailed storage error:', {
+          message: error.message,
+          name: error.name,
+          details: error
+        });
+        throw error;
+      }
 
       const url = URL.createObjectURL(data);
       const a = document.createElement('a');
@@ -153,7 +218,7 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium text-sm text-gray-900">{update.sender_name}</span>
                     <Badge variant="outline" className="text-xs">
-                      {update.sender_role === 'client' ? 'Client' : update.sender_role}
+                      {update.sender_role === 'admin' ? 'You' : update.sender_role}
                     </Badge>
                     <span className="text-xs text-gray-500">
                       {formatTimestamp(update.created_at)}
@@ -162,9 +227,9 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
                   
                   {update.message && (
                     <div className={`rounded-lg p-3 text-sm max-w-lg ${
-                      update.sender_role === 'client' 
-                        ? 'bg-blue-500 text-white ml-4' 
-                        : 'bg-gray-100 text-gray-900'
+                      update.sender_role === 'admin' 
+                        ? 'bg-red-500 text-white ml-4' 
+                        : 'bg-blue-500 text-white'
                     }`}>
                       {update.message}
                     </div>
@@ -206,7 +271,7 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
           
           <div className="flex items-center gap-2">
             <Input
-              id="file-input"
+              id="agency-file-input"
               type="file"
               multiple
               onChange={handleFileChange}
