@@ -57,7 +57,10 @@ class ClientSupabaseClient {
       this.authenticatedClient = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
         global: {
           headers: {
-            'x-client-session': sessionToken
+            'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+            'apikey': SUPABASE_PUBLISHABLE_KEY,
+            'x-client-session': sessionToken,
+            'Prefer': `custom.client_session=${sessionToken}`
           }
         }
       });
