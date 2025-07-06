@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -153,12 +152,12 @@ export const ClientSubmissionTimeline = ({
   };
 
   return (
-    <div className={`${className} flex flex-col h-full bg-card border rounded-lg overflow-hidden`}>
-      {/* Header */}
-      <div className="flex-shrink-0 p-4 border-b bg-card">
-        <div className="flex items-center gap-2 text-base font-semibold">
-          <MessageSquare className="w-5 h-5" />
-          Communication: {propertyTitle}
+    <div className={`${className} h-full max-h-[80vh] flex flex-col bg-white border rounded-lg shadow-sm`}>
+      {/* Header - Fixed */}
+      <div className="flex-shrink-0 px-4 py-3 border-b bg-gray-50">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-gray-600" />
+          <h3 className="font-semibold text-gray-900">Communication: {propertyTitle}</h3>
           {unreadCount > 0 && (
             <Badge variant="destructive" className="ml-auto">
               {unreadCount} new
@@ -166,60 +165,63 @@ export const ClientSubmissionTimeline = ({
           )}
         </div>
       </div>
-      
-      {/* Messages Area - Scrollable */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+
+      {/* Messages - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-4">
         {loading ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Loading conversation...
+          <div className="flex items-center justify-center h-32">
+            <div className="text-center text-gray-500">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+              <p>Loading conversation...</p>
+            </div>
           </div>
         ) : updates.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No messages yet</p>
+          <div className="flex flex-col items-center justify-center h-32 text-gray-500">
+            <MessageSquare className="w-12 h-12 mb-4 opacity-50" />
+            <p className="font-medium">No messages yet</p>
             <p className="text-sm">Start the conversation by sending a message below</p>
           </div>
         ) : (
-          <>
+          <div className="space-y-4">
             {updates.map((update) => (
               <div key={update.id} className="flex gap-3">
-                <Avatar className="w-8 h-8">
+                <Avatar className="w-8 h-8 flex-shrink-0">
                   <AvatarFallback className={`text-white text-xs ${getSenderColor(update.sender_role)}`}>
                     {getSenderInitials(update.sender_name || 'UN')}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">{update.sender_name}</span>
-                    <Badge variant="outline" className="text-xs capitalize">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-sm text-gray-900">{update.sender_name}</span>
+                    <Badge variant="outline" className="text-xs">
                       {update.sender_role === 'client' ? 'You' : update.sender_role}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-gray-500">
                       {formatTimestamp(update.created_at)}
                     </span>
                   </div>
                   
                   {update.message && (
-                    <div className={`rounded-lg p-3 text-sm ${
+                    <div className={`rounded-lg p-3 text-sm max-w-lg ${
                       update.sender_role === 'client' 
-                        ? 'bg-primary text-primary-foreground ml-4' 
-                        : 'bg-muted'
+                        ? 'bg-blue-500 text-white ml-4' 
+                        : 'bg-gray-100 text-gray-900'
                     }`}>
                       {update.message}
                     </div>
                   )}
                   
                   {update.attachments && update.attachments.length > 0 && (
-                    <div className="space-y-2">
+                    <div className="mt-2 space-y-2">
                       {update.attachments.map((attachment) => (
                         <div 
                           key={attachment.id}
-                          className="flex items-center gap-2 p-2 bg-card border rounded-lg cursor-pointer hover:bg-muted/50"
+                          className="flex items-center gap-2 p-2 bg-gray-50 border rounded-lg cursor-pointer hover:bg-gray-100 max-w-xs"
                           onClick={() => downloadFile(attachment.file_path, attachment.file_name)}
                         >
-                          <FileText className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm flex-1">{attachment.file_name}</span>
-                          <Download className="w-4 h-4 text-muted-foreground" />
+                          <FileText className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm flex-1 truncate">{attachment.file_name}</span>
+                          <Download className="w-4 h-4 text-gray-500" />
                         </div>
                       ))}
                     </div>
@@ -228,47 +230,49 @@ export const ClientSubmissionTimeline = ({
               </div>
             ))}
             <div ref={messagesEndRef} />
-          </>
+          </div>
         )}
       </div>
 
       {/* Input Form - Fixed at Bottom */}
-      <div className="flex-shrink-0 border-t bg-card p-4 space-y-3">
-        <Textarea
-          placeholder="Type your message to the agency..."
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          rows={2}
-          className="resize-none"
-        />
-        
-        <div className="flex items-center gap-2">
-          <Input
-            id="client-file-input"
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-            className="flex-1 text-xs"
+      <div className="flex-shrink-0 border-t bg-gray-50 p-4">
+        <div className="space-y-3">
+          <Textarea
+            placeholder="Type your message to the agency..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            rows={2}
+            className="resize-none"
           />
-          <Paperclip className="w-4 h-4 text-muted-foreground" />
-        </div>
-        
-        {selectedFiles.length > 0 && (
-          <div className="text-sm text-muted-foreground">
-            {selectedFiles.length} file(s) selected: {selectedFiles.map(f => f.name).join(", ")}
+          
+          <div className="flex items-center gap-2">
+            <Input
+              id="client-file-input"
+              type="file"
+              multiple
+              onChange={handleFileChange}
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+              className="flex-1 text-xs"
+            />
+            <Paperclip className="w-4 h-4 text-gray-500" />
           </div>
-        )}
-        
-        <Button 
-          onClick={handleSendUpdate} 
-          disabled={sending || (!newMessage.trim() && selectedFiles.length === 0)}
-          className="w-full"
-          size="sm"
-        >
-          <Send className="w-4 h-4 mr-2" />
-          {sending ? "Sending..." : "Send Message"}
-        </Button>
+          
+          {selectedFiles.length > 0 && (
+            <div className="text-sm text-gray-600">
+              {selectedFiles.length} file(s) selected: {selectedFiles.map(f => f.name).join(", ")}
+            </div>
+          )}
+          
+          <Button 
+            onClick={handleSendUpdate} 
+            disabled={sending || (!newMessage.trim() && selectedFiles.length === 0)}
+            className="w-full"
+            size="sm"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            {sending ? "Sending..." : "Send Message"}
+          </Button>
+        </div>
       </div>
     </div>
   );
