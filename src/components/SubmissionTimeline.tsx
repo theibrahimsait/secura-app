@@ -111,8 +111,8 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
   };
 
   return (
-    <Card className={className}>
-      <CardHeader>
+    <Card className={`${className} flex flex-col h-full max-h-[600px]`}>
+      <CardHeader className="flex-shrink-0">
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5" />
           Communication Timeline
@@ -123,9 +123,9 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col flex-1 space-y-4 min-h-0">
         {/* Timeline */}
-        <div className="space-y-4 max-h-96 overflow-y-auto">
+        <div className="flex-1 space-y-4 overflow-y-auto pr-2">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">
               Loading conversation...
@@ -183,12 +183,13 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
         </div>
 
         {/* Send Message Form */}
-        <div className="border-t pt-4 space-y-3">
+        <div className="flex-shrink-0 border-t pt-4 space-y-3">
           <Textarea
             placeholder="Type your message..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             rows={2}
+            className="resize-none"
           />
           
           <div className="flex items-center gap-2">

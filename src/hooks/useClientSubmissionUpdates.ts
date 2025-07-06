@@ -83,6 +83,7 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
         submission_id: data.submission_id,
         sender_role: 'client' as const,
         client_id: clientId,
+        sender_id: null, // Clients don't have sender_id
         message: data.message || null
       };
 

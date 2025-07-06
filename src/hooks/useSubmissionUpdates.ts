@@ -90,7 +90,8 @@ export const useSubmissionUpdates = (submissionId: string | null) => {
         submission_id: data.submission_id,
         sender_role: userProfile.role === 'superadmin' ? 'admin' : userProfile.role,
         sender_id: userProfile.id,
-        message: data.message || null
+        message: data.message || null,
+        client_id: null // Agency staff don't need client_id
       };
 
       const { data: insertedUpdate, error: updateError } = await supabase
