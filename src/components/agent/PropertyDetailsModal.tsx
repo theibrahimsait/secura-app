@@ -6,6 +6,7 @@ import { Home, Bed, Bath, Square } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Property } from '@/types/agent';
+import { SubmissionTimeline } from '@/components/SubmissionTimeline';
 
 interface PropertyDetails {
   id: string;
@@ -21,6 +22,16 @@ interface PropertyDetails {
   client_name?: string;
 }
 
+interface PropertySubmission {
+  id: string;
+  property_id: string;
+  client_id: string;
+  agency_id: string;
+  agent_id?: string;
+  status: string;
+  created_at: string;
+}
+
 interface PropertyDetailsModalProps {
   property: Property | null;
   open: boolean;
@@ -30,23 +41,38 @@ interface PropertyDetailsModalProps {
 export const PropertyDetailsModal = ({ property, open, onOpenChange }: PropertyDetailsModalProps) => {
   const { toast } = useToast();
   const [propertyDetails, setPropertyDetails] = useState<PropertyDetails | null>(null);
+  const [submission, setSubmission] = useState<PropertySubmission | null>(null);
   const [loading, setLoading] = useState(false);
 
   const fetchPropertyDetails = async (propertyId: string) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Fetch property details
+      const { data: propertyData, error: propertyError } = await supabase
         .from('client_properties')
         .select('*')
         .eq('id', propertyId)
         .single();
 
-      if (error) throw error;
+      if (propertyError) throw propertyError;
 
       setPropertyDetails({
-        ...data,
+        ...propertyData,
         client_name: property?.client_name || 'N/A'
       });
+
+      // Fetch submission details to get the submission ID for the timeline
+      const { data: submissionData, error: submissionError } = await supabase
+        .from('property_agency_submissions')
+        .select('*')
+        .eq('property_id', propertyId)
+        .single();
+
+      if (submissionError) {
+        console.warn('No submission found for property:', submissionError);
+      } else {
+        setSubmission(submissionData);
+      }
     } catch (error) {
       console.error('Error fetching property details:', error);
       toast({
@@ -67,7 +93,7 @@ export const PropertyDetailsModal = ({ property, open, onOpenChange }: PropertyD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Home className="w-5 h-5" />
@@ -81,98 +107,120 @@ export const PropertyDetailsModal = ({ property, open, onOpenChange }: PropertyD
         {loading ? (
           <div className="py-8 text-center">Loading property details...</div>
         ) : propertyDetails ? (
-          <div className="space-y-6">
-            {/* Basic Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{propertyDetails.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Location</p>
-                    <p className="font-medium">{propertyDetails.location}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Type</p>
-                    <p className="font-medium capitalize">{propertyDetails.property_type}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Client</p>
-                    <p className="font-medium">{propertyDetails.client_name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Status</p>
-                    <Badge variant="outline" className="capitalize">
-                      {propertyDetails.status || 'submitted'}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Property Features */}
-            {(propertyDetails.bedrooms || propertyDetails.bathrooms || propertyDetails.area_sqft) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column - Property Details */}
+            <div className="space-y-6">
+              {/* Basic Info */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Property Features</CardTitle>
+                  <CardTitle className="text-lg">{propertyDetails.title}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-4">
-                    {propertyDetails.bedrooms && (
-                      <div className="flex items-center gap-2">
-                        <Bed className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Bedrooms</span>
-                        <span className="font-medium">{propertyDetails.bedrooms}</span>
-                      </div>
-                    )}
-                    {propertyDetails.bathrooms && (
-                      <div className="flex items-center gap-2">
-                        <Bath className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Bathrooms</span>
-                        <span className="font-medium">{propertyDetails.bathrooms}</span>
-                      </div>
-                    )}
-                    {propertyDetails.area_sqft && (
-                      <div className="flex items-center gap-2">
-                        <Square className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Area</span>
-                        <span className="font-medium">{propertyDetails.area_sqft} sqft</span>
-                      </div>
-                    )}
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Location</p>
+                      <p className="font-medium">{propertyDetails.location}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Type</p>
+                      <p className="font-medium capitalize">{propertyDetails.property_type}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Client</p>
+                      <p className="font-medium">{propertyDetails.client_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Status</p>
+                      <Badge variant="outline" className="capitalize">
+                        {propertyDetails.status || 'submitted'}
+                      </Badge>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-            )}
 
-            {/* Additional Details */}
-            {propertyDetails.details && (
+              {/* Property Features */}
+              {(propertyDetails.bedrooms || propertyDetails.bathrooms || propertyDetails.area_sqft) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Property Features</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-3 gap-4">
+                      {propertyDetails.bedrooms && (
+                        <div className="flex items-center gap-2">
+                          <Bed className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Bedrooms</span>
+                          <span className="font-medium">{propertyDetails.bedrooms}</span>
+                        </div>
+                      )}
+                      {propertyDetails.bathrooms && (
+                        <div className="flex items-center gap-2">
+                          <Bath className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Bathrooms</span>
+                          <span className="font-medium">{propertyDetails.bathrooms}</span>
+                        </div>
+                      )}
+                      {propertyDetails.area_sqft && (
+                        <div className="flex items-center gap-2">
+                          <Square className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Area</span>
+                          <span className="font-medium">{propertyDetails.area_sqft} sqft</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Additional Details */}
+              {propertyDetails.details && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Additional Information</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <pre className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {JSON.stringify(propertyDetails.details, null, 2)}
+                    </pre>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Basic Timeline */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Additional Information</CardTitle>
+                  <CardTitle className="text-lg">Submission Info</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <pre className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {JSON.stringify(propertyDetails.details, null, 2)}
-                  </pre>
+                  <div className="text-sm">
+                    <p className="text-muted-foreground">
+                      Submitted on {new Date(propertyDetails.created_at).toLocaleDateString()} at{' '}
+                      {new Date(propertyDetails.created_at).toLocaleTimeString()}
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
-            )}
+            </div>
 
-            {/* Timeline */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Timeline</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm">
-                  <p className="text-muted-foreground">
-                    Submitted on {new Date(propertyDetails.created_at).toLocaleDateString()} at{' '}
-                    {new Date(propertyDetails.created_at).toLocaleTimeString()}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Right Column - Communication Timeline */}
+            <div>
+              {submission ? (
+                <SubmissionTimeline 
+                  submissionId={submission.id}
+                  className="h-full"
+                />
+              ) : (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>No submission found for this property</p>
+                      <p className="text-sm">Communication timeline not available</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
         ) : (
           <div className="py-8 text-center text-muted-foreground">

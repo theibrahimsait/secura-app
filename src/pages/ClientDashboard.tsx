@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send, Link, Home, Building, Trash2, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send, Link, Home, Building, Trash2, ChevronLeft, ChevronRight, Settings, MessageSquare } from 'lucide-react';
 import PropertySubmissionModal from '@/components/PropertySubmissionModal';
+import { ClientSubmissionTimeline } from '@/components/ClientSubmissionTimeline';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Pagination,
   PaginationContent,
@@ -79,6 +81,7 @@ const ClientDashboard = () => {
   const [submissions, setSubmissions] = useState<PropertySubmission[]>([]);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [showSubmissionsView, setShowSubmissionsView] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState<PropertySubmission | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
   const propertiesPerPage = 5;
@@ -263,13 +266,18 @@ const ClientDashboard = () => {
               submission.status === 'under_review' ? 'secondary' :
               submission.status === 'approved' ? 'default' : 'destructive'
             }
-            className="text-xs"
+            className="text-xs cursor-pointer hover:opacity-80"
+            onClick={() => setSelectedSubmission(submission)}
           >
             Submitted to {submission.agencies.name}
           </Badge>
         ))}
       </div>
     );
+  };
+
+  const handleOpenCommunication = (submission: PropertySubmission) => {
+    setSelectedSubmission(submission);
   };
 
   // Calculate pagination
@@ -671,6 +679,28 @@ const ClientDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Communication Timeline Modal */}
+      {selectedSubmission && clientData && (
+        <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Communication with {selectedSubmission.agencies.name}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedSubmission.property_title} - {selectedSubmission.property_location}
+              </DialogDescription>
+            </DialogHeader>
+            <ClientSubmissionTimeline
+              submissionId={selectedSubmission.id}
+              clientId={clientData.id}
+              propertyTitle={selectedSubmission.property_title || 'Property'}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

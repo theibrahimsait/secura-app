@@ -1032,6 +1032,96 @@ export type Database = {
           },
         ]
       }
+      submission_update_attachments: {
+        Row: {
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          mime_type: string
+          update_id: string
+          uploaded_at: string | null
+        }
+        Insert: {
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          mime_type: string
+          update_id: string
+          uploaded_at?: string | null
+        }
+        Update: {
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          update_id?: string
+          uploaded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_update_attachments_update"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "submission_updates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submission_updates: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          id: string
+          message: string | null
+          sender_id: string | null
+          sender_role: string
+          submission_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          sender_id?: string | null
+          sender_role: string
+          submission_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          sender_id?: string | null
+          sender_role?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_submission_updates_client"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_submission_updates_sender"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_submission_updates_submission"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "property_agency_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       test: {
         Row: {
           created_at: string
