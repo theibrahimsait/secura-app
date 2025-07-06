@@ -93,7 +93,7 @@ export const PropertyDetailsModal = ({ property, open, onOpenChange }: PropertyD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-[90vw] max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-5xl w-[95vw] h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Home className="w-5 h-5" />
@@ -108,9 +108,9 @@ export const PropertyDetailsModal = ({ property, open, onOpenChange }: PropertyD
           <div className="py-8 text-center">Loading property details...</div>
         ) : propertyDetails ? (
           <div className="flex-1 overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
             {/* Left Column - Property Details */}
-            <div className="space-y-4 overflow-y-auto pr-2">
+            <div className="space-y-4 overflow-y-auto max-h-full pr-2">
               {/* Basic Info */}
               <Card>
                 <CardHeader>
@@ -205,11 +205,11 @@ export const PropertyDetailsModal = ({ property, open, onOpenChange }: PropertyD
             </div>
 
             {/* Right Column - Communication Timeline */}
-            <div className="flex flex-col h-full min-h-0">
+            <div className="flex flex-col h-full">
               {submission ? (
                 <SubmissionTimeline 
                   submissionId={submission.id}
-                  className="flex-1 min-h-0"
+                  className="h-full"
                 />
               ) : (
                 <Card>

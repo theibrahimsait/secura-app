@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,6 +21,7 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
   const { toast } = useToast();
   const [newMessage, setNewMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Mark messages as read when component mounts or updates are received
   useEffect(() => {
@@ -28,6 +29,11 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
       markAsRead();
     }
   }, [unreadCount, markAsRead]);
+
+  // Scroll to bottom when messages update
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [updates]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -111,7 +117,7 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
   };
 
   return (
-    <Card className={`${className} flex flex-col h-full`}>
+    <Card className={`${className} flex flex-col`}>
       <CardHeader className="flex-shrink-0">
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5" />
@@ -123,9 +129,9 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col flex-1 space-y-4 p-4">
+      <CardContent className="flex flex-col flex-1 space-y-4 p-4 min-h-0">
         {/* Timeline */}
-        <div className="flex-1 space-y-4 overflow-y-auto max-h-[40vh]">
+        <div className="flex-1 space-y-4 overflow-y-auto">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">
               Loading conversation...
@@ -137,48 +143,51 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
               <p className="text-sm">Start the conversation by sending a message below</p>
             </div>
           ) : (
-            updates.map((update) => (
-              <div key={update.id} className="flex gap-3">
-                <Avatar className="w-8 h-8">
-                  <AvatarFallback className={`text-white text-xs ${getSenderColor(update.sender_role)}`}>
-                    {getSenderInitials(update.sender_name || 'UN')}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">{update.sender_name}</span>
-                    <Badge variant="outline" className="text-xs capitalize">
-                      {update.sender_role}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {formatTimestamp(update.created_at)}
-                    </span>
+            <>
+              {updates.map((update) => (
+                <div key={update.id} className="flex gap-3">
+                  <Avatar className="w-8 h-8">
+                    <AvatarFallback className={`text-white text-xs ${getSenderColor(update.sender_role)}`}>
+                      {getSenderInitials(update.sender_name || 'UN')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm">{update.sender_name}</span>
+                      <Badge variant="outline" className="text-xs capitalize">
+                        {update.sender_role}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {formatTimestamp(update.created_at)}
+                      </span>
+                    </div>
+                    
+                    {update.message && (
+                      <div className="bg-muted rounded-lg p-3 text-sm">
+                        {update.message}
+                      </div>
+                    )}
+                    
+                    {update.attachments && update.attachments.length > 0 && (
+                      <div className="space-y-2">
+                        {update.attachments.map((attachment) => (
+                          <div 
+                            key={attachment.id}
+                            className="flex items-center gap-2 p-2 bg-card border rounded-lg cursor-pointer hover:bg-muted/50"
+                            onClick={() => downloadFile(attachment.file_path, attachment.file_name)}
+                          >
+                            <FileText className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm flex-1">{attachment.file_name}</span>
+                            <Download className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  
-                  {update.message && (
-                    <div className="bg-muted rounded-lg p-3 text-sm">
-                      {update.message}
-                    </div>
-                  )}
-                  
-                  {update.attachments && update.attachments.length > 0 && (
-                    <div className="space-y-2">
-                      {update.attachments.map((attachment) => (
-                        <div 
-                          key={attachment.id}
-                          className="flex items-center gap-2 p-2 bg-card border rounded-lg cursor-pointer hover:bg-muted/50"
-                          onClick={() => downloadFile(attachment.file_path, attachment.file_name)}
-                        >
-                          <FileText className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm flex-1">{attachment.file_name}</span>
-                          <Download className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
-              </div>
-            ))
+              ))}
+              <div ref={messagesEndRef} />
+            </>
           )}
         </div>
 
