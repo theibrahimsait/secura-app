@@ -65,8 +65,7 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
 
     try {
       await clientSupabase.rpc('mark_submission_updates_as_read', {
-        p_submission_id: submissionId,
-        p_user_role: 'client'
+        p_submission_id: submissionId
       });
       
       // Refresh to get updated read status
@@ -103,7 +102,7 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
           
           // Upload file to storage
           const { data: uploadData, error: uploadError } = await clientSupabase.storage
-            .from('property-documents')
+            .from('submission-updates')
             .upload(filePath, file);
 
           if (uploadError) throw uploadError;

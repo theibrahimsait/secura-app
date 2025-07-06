@@ -68,7 +68,7 @@ export const ClientSubmissionTimeline = ({
   const downloadFile = async (filePath: string, fileName: string) => {
     try {
       const { data, error } = await clientSupabase.storage
-        .from('property-documents')
+        .from('submission-updates')
         .download(filePath);
 
       if (error) throw error;

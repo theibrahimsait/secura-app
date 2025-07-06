@@ -62,7 +62,7 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
   const downloadFile = async (filePath: string, fileName: string) => {
     try {
       const { data, error } = await supabase.storage
-        .from('property-documents')
+        .from('submission-updates')
         .download(filePath);
 
       if (error) throw error;

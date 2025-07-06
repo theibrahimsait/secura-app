@@ -69,10 +69,8 @@ export const useSubmissionUpdates = (submissionId: string | null) => {
     if (!submissionId || !userProfile) return;
 
     try {
-      const userRole = userProfile.role === 'superadmin' ? 'admin' : userProfile.role;
       await supabase.rpc('mark_submission_updates_as_read', {
-        p_submission_id: submissionId,
-        p_user_role: userRole === 'client' ? 'client' : null
+        p_submission_id: submissionId
       });
       
       // Refresh to get updated read status
@@ -111,7 +109,7 @@ export const useSubmissionUpdates = (submissionId: string | null) => {
           
           // Upload file to storage
           const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('property-documents')
+            .from('submission-updates')
             .upload(filePath, file);
 
           if (uploadError) throw uploadError;

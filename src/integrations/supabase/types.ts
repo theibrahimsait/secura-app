@@ -1234,7 +1234,6 @@ export type Database = {
         Returns: {
           submission_id: string
           unread_count: number
-          latest_message_at: string
         }[]
       }
       is_client_authorized: {
@@ -1255,8 +1254,8 @@ export type Database = {
         Returns: string
       }
       mark_submission_updates_as_read: {
-        Args: { p_submission_id: string; p_user_role?: string }
-        Returns: number
+        Args: { p_submission_id: string }
+        Returns: undefined
       }
       refresh_jwt_metadata: {
         Args: Record<PropertyKey, never>
