@@ -117,9 +117,9 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
   };
 
   return (
-    <Card className={`${className} flex flex-col h-full max-h-[80vh]`}>
-      <CardHeader className="flex-shrink-0">
-        <CardTitle className="flex items-center gap-2">
+    <Card className={`${className} flex flex-col h-full`}>
+      <CardHeader className="flex-shrink-0 pb-2">
+        <CardTitle className="flex items-center gap-2 text-base">
           <MessageSquare className="w-5 h-5" />
           Communication Timeline
           {unreadCount > 0 && (
@@ -129,9 +129,9 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col flex-1 space-y-4 p-4 min-h-0">
+      <CardContent className="flex flex-col flex-1 p-4 pt-0 min-h-0 space-y-3">
         {/* Timeline */}
-        <div className="flex-1 space-y-4 overflow-y-auto min-h-0">
+        <div className="flex-1 space-y-4 overflow-y-auto min-h-0 pr-2">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">
               Loading conversation...
@@ -192,7 +192,7 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
         </div>
 
         {/* Send Message Form */}
-        <div className="flex-shrink-0 border-t pt-4 space-y-3">
+        <div className="flex-shrink-0 border-t pt-4 space-y-3 bg-background">
           <Textarea
             placeholder="Type your message..."
             value={newMessage}
@@ -208,14 +208,14 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
               multiple
               onChange={handleFileChange}
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-              className="flex-1"
+              className="flex-1 text-xs"
             />
             <Paperclip className="w-4 h-4 text-muted-foreground" />
           </div>
           
           {selectedFiles.length > 0 && (
             <div className="text-sm text-muted-foreground">
-              {selectedFiles.length} file(s) selected: {selectedFiles.map(f => f.name).join(', ')}
+              {selectedFiles.length} file(s) selected: {selectedFiles.map(f => f.name).join(", ")}
             </div>
           )}
           
@@ -223,9 +223,10 @@ export const SubmissionTimeline = ({ submissionId, className }: SubmissionTimeli
             onClick={handleSendUpdate} 
             disabled={sending || (!newMessage.trim() && selectedFiles.length === 0)}
             className="w-full"
+            size="sm"
           >
             <Send className="w-4 h-4 mr-2" />
-            {sending ? 'Sending...' : 'Send Message'}
+            {sending ? "Sending..." : "Send Message"}
           </Button>
         </div>
       </CardContent>
