@@ -152,7 +152,7 @@ export const ClientSubmissionTimeline = ({
   };
 
   return (
-    <div className={`${className} h-full max-h-[80vh] flex flex-col bg-white border rounded-lg shadow-sm`}>
+    <div className={`${className} h-full flex flex-col bg-white border rounded-lg shadow-sm`}>
       {/* Header - Fixed */}
       <div className="flex-shrink-0 px-4 py-3 border-b bg-gray-50">
         <div className="flex items-center gap-2">
