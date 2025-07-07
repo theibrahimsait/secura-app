@@ -518,7 +518,7 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ clientData, onSucce
 
   return (
     <FloatingPanelRoot>
-      <FloatingPanelTrigger title="Add New Property" className="glass-card hover:glass-medium border-secura-teal/30 text-foreground w-full">
+      <FloatingPanelTrigger title="Add New Property" className="w-full bg-secura-lime text-secura-teal hover:bg-secura-lime/90 hover:shadow-glow active:scale-95 font-medium h-12 text-base border-0">
         <Plus className="w-4 h-4 mr-2" />
         Add New Property
       </FloatingPanelTrigger>

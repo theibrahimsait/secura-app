@@ -208,6 +208,8 @@ export function FloatingPanelContent({
               top: "50%",
               transform: "translate(-50%, -50%)",
               transformOrigin: "center",
+              position: "fixed",
+              zIndex: 9999,
             }}
             initial="hidden"
             animate="visible"
