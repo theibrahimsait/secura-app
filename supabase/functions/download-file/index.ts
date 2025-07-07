@@ -192,8 +192,11 @@ serve(async (req) => {
 
     console.log('✅ File downloaded successfully:', { fileName, contentType, size: fileData.size });
 
+    // Convert blob to array buffer for proper transfer
+    const arrayBuffer = await fileData.arrayBuffer();
+    
     // Return the file with proper headers
-    return new Response(fileData, {
+    return new Response(arrayBuffer, {
       headers: {
         ...corsHeaders,
         'Content-Type': contentType,

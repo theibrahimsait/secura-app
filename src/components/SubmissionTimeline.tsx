@@ -89,25 +89,26 @@ export const SubmissionTimeline = ({
       console.log('🔍 File path:', filePath);
       console.log('🔍 File name:', fileName);
 
-      // Call the download edge function
-      const { data, error } = await supabase.functions.invoke('download-file', {
-        body: {
+      // Call the download edge function with response type blob
+      const response = await fetch(`https://yugzvvgctlhfcdmmwaxj.supabase.co/functions/v1/download-file`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           filePath,
           userType: 'agency'
-        }
+        })
       });
 
-      if (error) {
-        console.error('❌ Edge function error:', error);
-        throw new Error(error.message || 'Download failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Download failed');
       }
 
-      if (!data) {
-        throw new Error('No file data received');
-      }
-
-      // The edge function returns the file as a blob
-      const blob = new Blob([data]);
+      // Get the file as a blob
+      const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
