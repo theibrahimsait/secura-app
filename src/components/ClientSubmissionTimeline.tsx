@@ -8,6 +8,7 @@ import { useClientSubmissionUpdates } from '@/hooks/useClientSubmissionUpdates';
 import { logSubmissionAction } from '@/lib/audit-logger';
 import { Send, Paperclip, Download, FileText, MessageSquare } from 'lucide-react';
 import { clientSupabase } from '@/lib/client-supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface ClientSubmissionTimelineProps {
@@ -103,7 +104,7 @@ export const ClientSubmissionTimeline = ({
 
   const downloadFile = async (filePath: string, fileName: string) => {
     try {
-      console.log('🔍 === SECURE FILE DOWNLOAD ===');
+      console.log('🔍 === CLIENT FILE DOWNLOAD ===');
       console.log('🔍 File path:', filePath);
       console.log('🔍 File name:', fileName);
       
@@ -112,31 +113,26 @@ export const ClientSubmissionTimeline = ({
         throw new Error('No session token available');
       }
 
-      // Get secure download URL from server
-      const { data: downloadUrl, error } = await clientSupabase
-        .rpc('get_client_file_download_url', {
-          p_client_session_token: sessionToken,
-          p_file_path: filePath
-        });
+      // Call the download edge function
+      const { data, error } = await supabase.functions.invoke('download-file', {
+        body: {
+          filePath,
+          sessionToken,
+          userType: 'client'
+        }
+      });
 
       if (error) {
-        console.error('❌ Error getting download URL:', error);
-        throw error;
+        console.error('❌ Edge function error:', error);
+        throw new Error(error.message || 'Download failed');
       }
 
-      if (!downloadUrl) {
-        throw new Error('Access denied or file not found');
+      if (!data) {
+        throw new Error('No file data received');
       }
 
-      console.log('✅ Secure download URL obtained');
-
-      // Download file using the secure URL
-      const response = await fetch(downloadUrl);
-      if (!response.ok) {
-        throw new Error(`Download failed: ${response.status}`);
-      }
-
-      const blob = await response.blob();
+      // The edge function returns the file as a blob
+      const blob = new Blob([data]);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
