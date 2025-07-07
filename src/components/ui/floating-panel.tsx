@@ -197,9 +197,11 @@ export function FloatingPanelContent({
           />
           <motion.div
             ref={contentRef}
-            layoutId={`floating-panel-${uniqueId}`}
+            // Remove layoutId to prevent positioning conflicts
+            // layoutId={`floating-panel-${uniqueId}`}
             className={cn(
               "fixed z-50 overflow-hidden border border-zinc-950/10 bg-white shadow-lg outline-none dark:border-zinc-50/10 dark:bg-zinc-800",
+              "!left-1/2 !top-1/2 !transform !-translate-x-1/2 !-translate-y-1/2",
               className
             )}
             style={{
@@ -210,6 +212,7 @@ export function FloatingPanelContent({
               transformOrigin: "center",
               position: "fixed",
               zIndex: 9999,
+              margin: 0,
             }}
             initial="hidden"
             animate="visible"
