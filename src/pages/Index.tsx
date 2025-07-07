@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SignInPage, Testimonial } from '@/components/ui/sign-in';
+import { AuroraBackground } from '@/components/ui/aurora-background';
+import { GradientText } from '@/components/ui/gradient-text';
 const sampleTestimonials: Testimonial[] = [
   {
     avatarSrc: "https://randomuser.me/api/portraits/women/57.jpg",
@@ -43,22 +45,31 @@ const Index = () => {
   }
 
   return (
-    <div className="bg-white text-foreground">
-      <SignInPage
-        title={
-          <span className="font-light text-foreground tracking-tighter">
-            Welcome to <span className="font-semibold">Secura</span>
-          </span>
-        }
-        description="Secure document sharing for UAE real estate"
-        heroImageSrc="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=2160&q=80"
-        testimonials={sampleTestimonials}
-        onSignIn={handleSignIn}
-        onGoogleSignIn={handleGoogleSignIn}
-        onResetPassword={handleResetPassword}
-        onCreateAccount={handleCreateAccount}
-      />
-    </div>
+    <AuroraBackground className="bg-white">
+      <div className="relative z-10 w-full">
+        <SignInPage
+          title={
+            <span className="font-light text-foreground tracking-tighter">
+              Welcome to <GradientText className="font-semibold">Secura</GradientText>
+            </span>
+          }
+          description="Secure document sharing for UAE real estate"
+          heroImageSrc="https://yugzvvgctlhfcdmmwaxj.supabase.co/storage/v1/object/public/images/IMG_4350.JPG"
+          testimonials={sampleTestimonials}
+          onSignIn={handleSignIn}
+          onResetPassword={handleResetPassword}
+          onCreateAccount={handleCreateAccount}
+        />
+      </div>
+      {/* Secura Logo */}
+      <div className="absolute top-8 left-8 z-20">
+        <img 
+          src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" 
+          alt="Secura" 
+          className="h-8 w-auto"
+        />
+      </div>
+    </AuroraBackground>
   );
 };
 export default Index;

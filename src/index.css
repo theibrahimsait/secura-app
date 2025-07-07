@@ -38,6 +38,14 @@
     --secura-moss: 130 40% 38%;
     --secura-mint: 86 85% 88%;
     --secura-lime: 74 78% 64%;
+
+    /* Gradient Colors using Secura palette */
+    --color-1: 140 69% 11%; /* Secura Teal */
+    --color-2: 74 78% 64%; /* Secura Lime */ 
+    --color-3: 130 40% 38%; /* Secura Moss */
+    --color-4: 86 85% 88%; /* Secura Mint */
+    --color-5: 140 69% 11%; /* Secura Teal */
+    --brand: 74 78% 64%; /* Secura Lime */
   }
 
   .dark {
