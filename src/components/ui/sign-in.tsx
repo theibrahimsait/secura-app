@@ -50,7 +50,7 @@ const TestimonialCard = ({
     <img src={testimonial.avatarSrc} className="h-10 w-10 object-cover rounded-2xl" alt="avatar" />
     <div className="text-sm leading-snug">
       <p className="flex items-center gap-1 font-medium">{testimonial.name}</p>
-      <p className="text-muted-foreground">{testimonial.handle}</p>
+      <p className="text-foreground/90">{testimonial.handle}</p>
       <p className="mt-1 text-foreground/80">{testimonial.text}</p>
     </div>
   </div>;

@@ -8,14 +8,14 @@ import { useToast } from '@/hooks/use-toast';
 const sampleTestimonials: Testimonial[] = [
   {
     avatarSrc: "https://randomuser.me/api/portraits/women/57.jpg",
-    name: "Sarah Chen",
-    handle: "@sarahdigital",
+    name: "Cezalyn AMG",
+    handle: "Admin Manager - Throne Properties",
     text: "Secura has transformed how we handle client documents. Clean, secure, and reliable."
   },
   {
     avatarSrc: "https://randomuser.me/api/portraits/men/64.jpg",
-    name: "Marcus Johnson",
-    handle: "@marcustech",
+    name: "Vignesh Menon",
+    handle: "Owner - Sai Real Estate",
     text: "Finally, a compliant way to collect documents from clients. Our agency loves it."
   },
   {
