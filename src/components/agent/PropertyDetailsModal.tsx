@@ -6,7 +6,6 @@ import { Home, Bed, Bath, Square } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Property } from '@/types/agent';
-import { SubmissionTimeline } from '@/components/SubmissionTimeline';
 
 interface PropertyDetails {
   id: string;
@@ -22,15 +21,6 @@ interface PropertyDetails {
   client_name?: string;
 }
 
-interface PropertySubmission {
-  id: string;
-  property_id: string;
-  client_id: string;
-  agency_id: string;
-  agent_id?: string;
-  status: string;
-  created_at: string;
-}
 
 interface PropertyDetailsModalProps {
   property: Property | null;
@@ -41,7 +31,6 @@ interface PropertyDetailsModalProps {
 export const PropertyDetailsModal = ({ property, open, onOpenChange }: PropertyDetailsModalProps) => {
   const { toast } = useToast();
   const [propertyDetails, setPropertyDetails] = useState<PropertyDetails | null>(null);
-  const [submission, setSubmission] = useState<PropertySubmission | null>(null);
   const [loading, setLoading] = useState(false);
 
   const fetchPropertyDetails = async (propertyId: string) => {
@@ -60,19 +49,6 @@ export const PropertyDetailsModal = ({ property, open, onOpenChange }: PropertyD
         ...propertyData,
         client_name: property?.client_name || 'N/A'
       });
-
-      // Fetch submission details to get the submission ID for the timeline
-      const { data: submissionData, error: submissionError } = await supabase
-        .from('property_agency_submissions')
-        .select('*')
-        .eq('property_id', propertyId)
-        .single();
-
-      if (submissionError) {
-        console.warn('No submission found for property:', submissionError);
-      } else {
-        setSubmission(submissionData);
-      }
     } catch (error) {
       console.error('Error fetching property details:', error);
       toast({
@@ -107,10 +83,8 @@ export const PropertyDetailsModal = ({ property, open, onOpenChange }: PropertyD
         {loading ? (
           <div className="py-8 text-center">Loading property details...</div>
         ) : propertyDetails ? (
-          <div className="flex-1 overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
-            {/* Left Column - Property Details */}
-            <div className="space-y-4 overflow-y-auto max-h-full pr-2">
+          <div className="flex-1 overflow-y-auto">
+            <div className="space-y-4 max-w-4xl mx-auto p-4">
               {/* Basic Info */}
               <Card>
                 <CardHeader>
@@ -203,26 +177,6 @@ export const PropertyDetailsModal = ({ property, open, onOpenChange }: PropertyD
                 </CardContent>
               </Card>
             </div>
-
-            {/* Right Column - Communication Timeline */}
-            <div className="flex flex-col h-full">
-              {submission ? (
-                <SubmissionTimeline 
-                  submissionId={submission.id}
-                  className="h-full"
-                />
-              ) : (
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>No submission found for this property</p>
-                      <p className="text-sm">Communication timeline not available</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </div>
           </div>
         ) : (
           <div className="py-8 text-center text-muted-foreground">
