@@ -1032,6 +1032,44 @@ export type Database = {
           },
         ]
       }
+      submission_audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_type: string
+          created_at: string | null
+          file_name: string | null
+          id: string
+          submission_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_type: string
+          created_at?: string | null
+          file_name?: string | null
+          id?: string
+          submission_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_type?: string
+          created_at?: string | null
+          file_name?: string | null
+          id?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submission_audit_logs_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "property_agency_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       submission_update_attachments: {
         Row: {
           file_name: string

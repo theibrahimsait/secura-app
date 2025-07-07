@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send, Link, Home, Building, Trash2, ChevronLeft, ChevronRight, Settings, MessageSquare, Mail } from 'lucide-react';
+import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send, Link, Home, Building, Trash2, ChevronLeft, ChevronRight, Settings, MessageSquare, Mail, History } from 'lucide-react';
 import PropertySubmissionModal from '@/components/PropertySubmissionModal';
 import { ClientSubmissionTimeline } from '@/components/ClientSubmissionTimeline';
+import { SubmissionAuditTrail } from '@/components/SubmissionAuditTrail';
+import { logSubmissionAction } from '@/lib/audit-logger';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Pagination,
@@ -83,6 +85,7 @@ const ClientDashboard = () => {
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [showSubmissionsView, setShowSubmissionsView] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<PropertySubmission | null>(null);
+  const [selectedAuditSubmission, setSelectedAuditSubmission] = useState<PropertySubmission | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
   const propertiesPerPage = 5;
@@ -663,6 +666,15 @@ const ClientDashboard = () => {
                               <MessageSquare className="w-4 h-4 mr-1" />
                               Chat
                             </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setSelectedAuditSubmission(submission)}
+                              className="text-secura-moss border-secura-moss hover:bg-secura-mint ml-2"
+                            >
+                              <History className="w-4 h-4 mr-1" />
+                              Audit
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -768,6 +780,16 @@ const ClientDashboard = () => {
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Submission Audit Trail Modal */}
+      {selectedAuditSubmission && (
+        <SubmissionAuditTrail
+          submissionId={selectedAuditSubmission.id}
+          isOpen={!!selectedAuditSubmission}
+          onClose={() => setSelectedAuditSubmission(null)}
+          propertyTitle={selectedAuditSubmission.property_title || 'Property'}
+        />
       )}
     </div>
   );

@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { clientSupabase } from '@/lib/client-supabase';
+import { logSubmissionAction } from '@/lib/audit-logger';
 import { type AgencyContext } from '@/hooks/useAgencyContext';
 import { Send, Building2 } from 'lucide-react';
 
@@ -126,9 +127,10 @@ const PropertySubmissionModal = ({
         status: 'submitted'
       }));
 
-      const { error: submissionError } = await clientSupabase
+      const { data: submissionData, error: submissionError } = await clientSupabase
         .from('property_agency_submissions')
-        .insert(submissionRecords);
+        .insert(submissionRecords)
+        .select('id, property_id');
 
       if (submissionError) throw submissionError;
 
@@ -141,6 +143,18 @@ const PropertySubmissionModal = ({
         .in('id', selectedProperties);
 
       if (updateError) throw updateError;
+
+      // Log audit events for each submitted property
+      if (submissionData) {
+        for (const submission of submissionData) {
+          await logSubmissionAction({
+            submissionId: submission.id,
+            actorType: 'client',
+            actorId: clientData.id,
+            action: 'submitted'
+          });
+        }
+      }
 
       toast({
         title: "Properties Submitted Successfully",
