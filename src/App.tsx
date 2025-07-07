@@ -41,7 +41,7 @@ const App = () => (
             <Route path="/client/login" element={<ClientLogin />} />
             <Route path="/client/onboarding" element={<ClientOnboarding />} />
             <Route path="/client/dashboard" element={<ClientDashboard />} />
-            
+            <Route path="/client/add-property" element={<AddProperty />} />
             <Route path="/client/settings" element={<ClientSettings />} />
             
             {/* Superadmin Routes (Isolated) */}

@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send, Link, Home, Building, Trash2, ChevronLeft, ChevronRight, Settings, MessageSquare, Mail, History } from 'lucide-react';
 import PropertySubmissionModal from '@/components/PropertySubmissionModal';
-import AddPropertyModal from '@/components/AddPropertyModal';
 import { ClientSubmissionTimeline } from '@/components/ClientSubmissionTimeline';
 import { SubmissionAuditTrail } from '@/components/SubmissionAuditTrail';
 import { logSubmissionAction } from '@/lib/audit-logger';
@@ -239,8 +238,6 @@ const ClientDashboard = () => {
   };
 
   const handleAddProperty = () => {
-    // This function is no longer needed since we use the modal
-    // but keeping it for compatibility with mobile component
     navigate('/client/add-property');
   };
 
@@ -350,7 +347,7 @@ const ClientDashboard = () => {
         <ClientDashboardMobile
           properties={properties}
           submissions={submissions}
-          clientData={clientData}
+          onAddProperty={handleAddProperty}
           onSubmitToAgency={agencyContext?.agencyName ? () => setShowSubmissionModal(true) : undefined}
           onOpenSubmission={(submission) => setSelectedSubmission(submission)}
           onOpenAudit={(submission) => setSelectedAuditSubmission(submission)}
@@ -411,7 +408,7 @@ const ClientDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 glass-card border-b-0 rounded-none">
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -421,7 +418,7 @@ const ClientDashboard = () => {
                 className="h-8 w-auto"
               />
               <div className="hidden sm:block">
-                <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
+                <h1 className="text-xl font-semibold">Dashboard</h1>
                 <p className="text-sm text-muted-foreground">
                   Welcome back, {clientData.full_name || 'Client'}
                 </p>
@@ -429,7 +426,7 @@ const ClientDashboard = () => {
             </div>
             <div className="flex items-center space-x-2">
               <Button
-                variant="glass"
+                variant="ghost"
                 size="sm"
                 onClick={() => navigate('/client/settings')}
                 className="flex items-center gap-2"
@@ -438,7 +435,7 @@ const ClientDashboard = () => {
                 <span className="hidden sm:inline">Settings</span>
               </Button>
               <Button
-                variant="glass"
+                variant="ghost"
                 size="sm"
                 onClick={handleLogout}
                 className="flex items-center gap-2"
@@ -538,16 +535,20 @@ const ClientDashboard = () => {
                 <CardDescription>Manage your portfolio</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <AddPropertyModal
-                  clientData={clientData}
-                  onSuccess={loadClientData}
-                />
+                <Button 
+                  onClick={handleAddProperty}
+                  className="w-full bg-secura-teal hover:bg-secura-moss text-white"
+                  size="lg"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add New Property
+                </Button>
                 
                 <Button
                   onClick={() => navigate('/client/settings')}
-                  variant="glass"
+                  variant="outline"
+                  className="w-full border-secura-teal text-secura-teal hover:bg-secura-mint"
                   size="lg"
-                  className="w-full"
                 >
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
@@ -556,9 +557,9 @@ const ClientDashboard = () => {
                 {agencyContext?.agencyName && (
                   <Button
                     onClick={() => setShowSubmissionModal(true)}
-                    variant="default"
+                    variant="outline"
+                    className="w-full border-secura-teal text-secura-teal hover:bg-secura-mint"
                     size="lg"
-                    className="w-full"
                   >
                     <Send className="w-4 h-4 mr-2" />
                     Submit to {agencyContext.agencyName}

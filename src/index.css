@@ -6,61 +6,33 @@
 
 @layer base {
   :root {
-    /* Base glassmorphism backgrounds */
-    --background: 240 30% 98%;
-    --foreground: 240 10% 15%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 15%;
+    --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 15%;
-    
-    /* Primary deep green system */
-    --primary: 140 69% 11%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
     --primary-foreground: 0 0% 98%;
-    --primary-glow: 140 69% 20%;
-    
-    /* Secondary glass surfaces */
-    --secondary: 240 30% 95%;
-    --secondary-foreground: 240 10% 15%;
-    
-    /* Glass surface variants */
-    --glass-light: 0 0% 100%;
-    --glass-medium: 240 30% 96%;
-    --glass-dark: 240 30% 92%;
-    
-    /* Muted glassmorphism tones */
-    --muted: 240 30% 94%;
-    --muted-foreground: 240 8% 45%;
-    --accent: 240 30% 92%;
-    --accent-foreground: 240 10% 15%;
-    
-    /* System colors */
-    --destructive: 0 84% 60%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 38 92% 10%;
-    --success: 140 69% 20%;
-    --success-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --radius: 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
     
-    /* Borders and inputs with glass aesthetic */
-    --border: 240 30% 88%;
-    --input: 240 30% 90%;
-    --ring: 140 69% 11%;
-    
-    /* Enhanced radius system */
-    --radius: 0.75rem;
-    --radius-sm: 0.5rem;
-    --radius-lg: 1rem;
-    --radius-xl: 1.25rem;
-    
-    /* Chart colors */
-    --chart-1: 140 69% 20%;
-    --chart-2: 74 78% 64%;
-    --chart-3: 130 40% 38%;
-    --chart-4: 86 85% 65%;
-    --chart-5: 200 60% 50%;
-    
-    /* Secura Brand Colors - Enhanced */
+    /* Secura Brand Colors */
     --secura-black: 0 0% 0%;
     --secura-teal: 140 69% 11%;
     --secura-moss: 130 40% 38%;
@@ -77,30 +49,30 @@
   }
 
   .dark {
-    --background: 240 10% 5%;
-    --foreground: 0 0% 95%;
-    --card: 240 10% 8%;
-    --card-foreground: 0 0% 95%;
-    --popover: 240 10% 8%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 74 78% 64%;
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
     --primary-foreground: 0 0% 9%;
-    --secondary: 240 8% 15%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 240 8% 12%;
-    --muted-foreground: 240 5% 65%;
-    --accent: 240 8% 15%;
-    --accent-foreground: 0 0% 95%;
-    --destructive: 0 62% 50%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 8% 18%;
-    --input: 240 8% 18%;
-    --ring: 74 78% 64%;
-    --chart-1: 140 69% 30%;
-    --chart-2: 74 78% 54%;
-    --chart-3: 130 40% 48%;
-    --chart-4: 86 85% 75%;
-    --chart-5: 200 60% 60%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
@@ -114,46 +86,6 @@
 }
 
 @layer utilities {
-  /* Glassmorphism utilities */
-  .glass-light {
-    background: hsl(var(--glass-light) / 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--border) / 0.2);
-  }
-  
-  .glass-medium {
-    background: hsl(var(--glass-medium) / 0.6);
-    backdrop-filter: blur(16px);
-    border: 1px solid hsl(var(--border) / 0.3);
-  }
-  
-  .glass-dark {
-    background: hsl(var(--glass-dark) / 0.4);
-    backdrop-filter: blur(20px);
-    border: 1px solid hsl(var(--border) / 0.4);
-  }
-  
-  .glass-card {
-    background: hsl(var(--card) / 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--border) / 0.2);
-    box-shadow: 0 8px 32px hsl(var(--primary) / 0.1);
-  }
-  
-  .glass-input {
-    background: hsl(var(--background) / 0.6);
-    backdrop-filter: blur(8px);
-    border: 1px solid hsl(var(--border) / 0.3);
-    transition: all 0.3s ease;
-  }
-  
-  .glass-input:focus {
-    background: hsl(var(--background) / 0.8);
-    border-color: hsl(var(--secura-teal) / 0.7);
-    box-shadow: 0 0 0 3px hsl(var(--secura-lime) / 0.1);
-  }
-
-  /* Secura gradients enhanced */
   .secura-gradient {
     background: linear-gradient(135deg, hsl(var(--secura-teal)) 0%, hsl(var(--secura-moss)) 100%);
   }
@@ -162,19 +94,11 @@
     background: linear-gradient(135deg, hsl(var(--secura-mint)) 0%, hsl(var(--secura-lime)) 100%);
   }
   
-  .secura-glass-gradient {
-    background: linear-gradient(135deg, 
-      hsl(var(--secura-teal) / 0.1) 0%, 
-      hsl(var(--secura-lime) / 0.1) 100%);
-    backdrop-filter: blur(16px);
-  }
-  
   .agency-connection-glow {
     background: linear-gradient(135deg, hsl(var(--secura-mint)) 0%, hsl(var(--secura-lime)) 100%);
     animation: pulse-glow 2s ease-in-out infinite;
   }
   
-  /* Enhanced animations */
   .animate-fade-in {
     animation: fadeIn 0.6s ease-in-out;
   }
@@ -182,12 +106,7 @@
   .animate-slide-up {
     animation: slideUp 0.8s ease-out;
   }
-  
-  .animate-glass-float {
-    animation: glassFloat 6s ease-in-out infinite;
-  }
 
-  /* Enhanced keyframes */
   @keyframes fadeSlideIn {
     to {
       opacity: 1;
@@ -225,17 +144,6 @@
     to { 
       opacity: 1; 
       transform: translateY(0); 
-    }
-  }
-  
-  @keyframes glassFloat {
-    0%, 100% { 
-      transform: translateY(0px) scale(1);
-      filter: blur(0px);
-    }
-    50% { 
-      transform: translateY(-10px) scale(1.02);
-      filter: blur(1px);
     }
   }
   

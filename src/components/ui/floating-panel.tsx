@@ -165,17 +165,7 @@ export function FloatingPanelContent({
         contentRef.current &&
         !contentRef.current.contains(event.target as Node)
       ) {
-        // Check if the click is on a dropdown or select element
-        const target = event.target as Element;
-        const isDropdownClick = target.closest('[role="listbox"]') || 
-                               target.closest('[data-radix-select-content]') || 
-                               target.closest('[data-radix-popper-content-wrapper]') ||
-                               target.closest('select') ||
-                               target.closest('.select-content');
-        
-        if (!isDropdownClick) {
-          closeFloatingPanel()
-        }
+        closeFloatingPanel()
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
@@ -203,17 +193,13 @@ export function FloatingPanelContent({
             initial={{ backdropFilter: "blur(0px)" }}
             animate={{ backdropFilter: "blur(4px)" }}
             exit={{ backdropFilter: "blur(0px)" }}
-            className="fixed inset-0 z-40 overflow-hidden"
-            style={{ touchAction: 'none' }}
+            className="fixed inset-0 z-40"
           />
           <motion.div
             ref={contentRef}
-            // Remove layoutId to prevent positioning conflicts
-            // layoutId={`floating-panel-${uniqueId}`}
+            layoutId={`floating-panel-${uniqueId}`}
             className={cn(
               "fixed z-50 overflow-hidden border border-zinc-950/10 bg-white shadow-lg outline-none dark:border-zinc-50/10 dark:bg-zinc-800",
-              "!left-1/2 !top-1/2 !transform !-translate-x-1/2 !-translate-y-1/2",
-              "max-h-[90vh] overflow-y-auto",
               className
             )}
             style={{
@@ -222,9 +208,6 @@ export function FloatingPanelContent({
               top: "50%",
               transform: "translate(-50%, -50%)",
               transformOrigin: "center",
-              position: "fixed",
-              zIndex: 9999,
-              margin: 0,
             }}
             initial="hidden"
             animate="visible"
