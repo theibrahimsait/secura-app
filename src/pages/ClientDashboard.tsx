@@ -398,60 +398,60 @@ const ClientDashboard = () => {
       )}
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="container mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-secura-mint rounded-full">
-                  <Home className="w-5 h-5 text-secura-teal" />
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="p-1.5 sm:p-2 bg-secura-mint rounded-full">
+                  <Home className="w-4 h-4 sm:w-5 sm:h-5 text-secura-teal" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{properties.length}</p>
-                  <p className="text-sm text-muted-foreground">Properties</p>
+                  <p className="text-lg sm:text-2xl font-bold">{properties.length}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Properties</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-secura-mint rounded-full">
-                  <Mail className="w-5 h-5 text-secura-moss" />
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="p-1.5 sm:p-2 bg-secura-mint rounded-full">
+                  <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-secura-moss" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{totalUnreadCount}</p>
-                  <p className="text-sm text-muted-foreground">Messages</p>
+                  <p className="text-lg sm:text-2xl font-bold">{totalUnreadCount}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Messages</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-secura-mint rounded-full">
-                  <CheckCircle className="w-5 h-5 text-secura-teal" />
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="p-1.5 sm:p-2 bg-secura-mint rounded-full">
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-secura-teal" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{submissions.length}</p>
-                  <p className="text-sm text-muted-foreground cursor-pointer hover:text-secura-teal" onClick={() => setShowSubmissionsView(true)}>Submissions</p>
+                  <p className="text-lg sm:text-2xl font-bold">{submissions.length}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground cursor-pointer hover:text-secura-teal" onClick={() => setShowSubmissionsView(true)}>Submissions</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-secura-mint rounded-full">
-                  <Building className="w-5 h-5 text-secura-teal" />
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="p-1.5 sm:p-2 bg-secura-mint rounded-full">
+                  <Building className="w-4 h-4 sm:w-5 sm:h-5 text-secura-teal" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{new Set(submissions.map(s => s.agency_id)).size}</p>
-                  <p className="text-sm text-muted-foreground">Agencies</p>
+                  <p className="text-lg sm:text-2xl font-bold">{new Set(submissions.map(s => s.agency_id)).size}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Agencies</p>
                 </div>
               </div>
             </CardContent>
