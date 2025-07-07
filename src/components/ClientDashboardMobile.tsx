@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, CheckCircle, Clock, AlertCircle, Send, Link, Settings, User, History } from 'lucide-react';
+import { Plus, FileText, CheckCircle, Clock, AlertCircle, Send, Link, Settings, User, History, MessageSquare } from 'lucide-react';
 import { useAgencyContext, type AgencyContext } from '@/hooks/useAgencyContext';
 
 interface Property {
@@ -248,6 +248,7 @@ const ClientDashboardMobile = ({ properties, submissions = [], onAddProperty, on
                             onClick={() => onOpenSubmission(submission)}
                             className="text-secura-teal border-secura-teal hover:bg-secura-mint h-8 px-3 text-xs"
                           >
+                            <MessageSquare className="w-3 h-3 mr-1" />
                             Chat
                           </Button>
                         )}
@@ -256,9 +257,9 @@ const ClientDashboardMobile = ({ properties, submissions = [], onAddProperty, on
                             size="sm"
                             variant="outline"
                             onClick={() => onOpenAudit(submission)}
-                            className="text-secura-moss border-secura-moss hover:bg-secura-mint h-8 px-2 text-xs"
+                            className="text-secura-moss border-secura-moss hover:bg-secura-mint h-8 px-3 text-xs"
                           >
-                            <History className="w-3 h-3" />
+                            Audit
                           </Button>
                         )}
                       </div>
