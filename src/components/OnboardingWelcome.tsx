@@ -206,7 +206,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                 {/* Buttons */}
                 <div className="w-full max-w-sm">
                   <motion.div
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-3"
                     animate={{
                       justifyContent: isExpanded ? 'center' : 'space-between'
                     }}
