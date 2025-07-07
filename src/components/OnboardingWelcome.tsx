@@ -79,36 +79,36 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
         />
       </div>
 
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-8">
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
+          className="w-full max-w-sm"
         >
           {/* Glassmorphic card matching landing page style */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
-            <div className="text-center mb-8">
-              <h1 className="text-4xl md:text-5xl font-light leading-tight mb-2">
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white/20">
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-light leading-tight mb-2">
                 Welcome to <GradientText className="font-semibold">Secura</GradientText>
               </h1>
-              <p className="text-muted-foreground font-light">
+              <p className="text-muted-foreground font-light text-sm">
                 Your trusted platform for secure property management</p>
               {agency && (
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="mt-4 p-4 bg-secura-lime/20 backdrop-blur-sm rounded-xl border border-secura-lime/30"
+                  className="mt-3 p-3 bg-secura-lime/20 backdrop-blur-sm rounded-xl border border-secura-lime/30"
                 >
-                  <p className="text-secura-teal font-medium">
+                  <p className="text-secura-teal font-medium text-sm">
                     You've been invited by {agent?.full_name} from {agency.name}
                   </p>
                 </motion.div>
               )}
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Feature content */}
-              <div className="mb-8">
+              <div className="mb-4">
                 <AnimatePresence mode="wait">
                   {!isTermsStep ? (
                     <motion.div
@@ -119,14 +119,14 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                       transition={{ duration: 0.3 }}
                       className="text-center"
                     >
-                      <div className="p-8 rounded-3xl bg-white/60 backdrop-blur-md border border-white/30 shadow-lg mb-6">
+                      <div className="p-4 rounded-2xl bg-white/40 backdrop-blur-sm border border-white/20 mb-4">
                         {React.createElement(features[currentStep - 1].icon, {
-                          className: "w-16 h-16 mx-auto mb-6 text-secura-teal"
+                          className: "w-10 h-10 mx-auto mb-3 text-secura-teal"
                         })}
-                        <h3 className="text-xl font-semibold mb-4 text-foreground">
+                        <h3 className="text-lg font-medium mb-2 text-foreground">
                           {features[currentStep - 1].title}
                         </h3>
-                        <p className="text-muted-foreground leading-relaxed">
+                        <p className="text-muted-foreground text-sm leading-relaxed">
                           {features[currentStep - 1].description}
                         </p>
                       </div>
@@ -140,9 +140,9 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                       transition={{ duration: 0.3 }}
                       className="text-center"
                     >
-                      <div className="p-8 rounded-3xl bg-white/60 backdrop-blur-md border border-white/30 shadow-lg mb-6">
-                        <CheckCircle className="w-16 h-16 mx-auto mb-6 text-secura-teal" />
-                        <h3 className="text-xl font-semibold mb-6 text-foreground">
+                      <div className="p-4 rounded-2xl bg-white/40 backdrop-blur-sm border border-white/20 mb-4">
+                        <CheckCircle className="w-10 h-10 mx-auto mb-3 text-secura-teal" />
+                        <h3 className="text-lg font-medium mb-4 text-foreground">
                           Terms & Conditions
                         </h3>
                         <div className="flex items-start space-x-3">
@@ -172,7 +172,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
               </div>
 
               {/* Progress Indicator */}
-              <div className="flex flex-col items-center justify-center gap-8">
+              <div className="flex flex-col items-center justify-center gap-4">
                 {/* Progress bar */}
                 <div className="flex items-center gap-2 relative">
                   {[1, 2, 3].map((dot, index) => (
@@ -204,9 +204,9 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                 </div>
 
                 {/* Buttons */}
-                <div className="w-full max-w-sm">
+                <div className="w-full">
                   <motion.div
-                    className="flex items-center gap-3"
+                    className="flex items-center gap-2"
                     animate={{
                       justifyContent: isExpanded ? 'center' : 'space-between'
                     }}
@@ -214,7 +214,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                     {!isExpanded && (
                       <motion.button
                         initial={{ opacity: 0, width: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, width: "80px", scale: 1 }}
+                        animate={{ opacity: 1, width: "60px", scale: 1 }}
                         transition={{
                           type: "spring",
                           stiffness: 400,
@@ -225,7 +225,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                           opacity: { duration: 0.2 }
                         }}
                         onClick={handleBack}
-                        className="px-6 py-3 text-gray-700 bg-gray-100 font-semibold rounded-full hover:bg-gray-50 transition-colors text-sm"
+                        className="px-4 py-2 text-gray-700 bg-gray-100 font-medium rounded-full hover:bg-gray-50 transition-colors text-sm"
                       >
                         Back
                       </motion.button>
@@ -237,7 +237,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                         flex: isExpanded ? 1 : 'none',
                       }}
                       className={cn(
-                        "px-8 py-3 rounded-full font-semibold transition-all text-sm",
+                        "px-6 py-2 rounded-full font-medium transition-all text-sm",
                         canContinue 
                           ? "bg-blue-500 hover:bg-blue-600 text-white" 
                           : "bg-gray-400 cursor-not-allowed text-white",
