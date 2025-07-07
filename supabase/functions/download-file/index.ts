@@ -54,12 +54,18 @@ serve(async (req) => {
       }
 
       // Get client ID from session
-      const { data: sessionData } = await supabase
+      const { data: sessionData, error: sessionError } = await supabase
         .from('client_sessions')
         .select('client_id')
         .eq('session_token', sessionToken)
         .gt('expires_at', new Date().toISOString())
         .single();
+
+      console.log('🔍 Session validation:', { 
+        sessionToken: sessionToken?.substring(0, 8) + '...', 
+        sessionData, 
+        sessionError 
+      });
 
       if (!sessionData) {
         return new Response(
@@ -71,12 +77,19 @@ serve(async (req) => {
       clientId = sessionData.client_id;
 
       // Check if client has access to this submission
-      const { data: submissionData } = await supabase
+      const { data: submissionData, error: submissionError } = await supabase
         .from('property_agency_submissions')
         .select('id')
         .eq('id', submissionId)
         .eq('client_id', clientId)
         .single();
+
+      console.log('🔍 Submission access check:', { 
+        submissionId, 
+        clientId, 
+        submissionData, 
+        submissionError 
+      });
 
       hasAccess = !!submissionData;
       console.log('🔐 Client access check:', { clientId, submissionId, hasAccess });
