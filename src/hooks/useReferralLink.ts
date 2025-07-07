@@ -43,7 +43,7 @@ export const useReferralLink = (agencyName: string) => {
             agent_id: userProfile.id,
             agency_id: userProfile.agency_id,
             slug: uniqueSlug,
-            url: `/client/login?ref=`
+            url: `/client/login?ref=${uniqueSlug}`
           })
           .select('id')
           .single();
