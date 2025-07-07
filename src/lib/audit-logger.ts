@@ -1,4 +1,5 @@
 import { clientSupabase } from './client-supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface AuditLogParams {
   submissionId: string;
@@ -8,6 +9,7 @@ export interface AuditLogParams {
   fileName?: string;
 }
 
+// For client context
 export const logSubmissionAction = async ({
   submissionId,
   actorType,
@@ -31,6 +33,33 @@ export const logSubmissionAction = async ({
     }
   } catch (err) {
     console.error('Error logging audit action:', err);
+  }
+};
+
+// For agency admin context
+export const logAgencySubmissionAction = async ({
+  submissionId,
+  actorType,
+  actorId,
+  action,
+  fileName
+}: AuditLogParams) => {
+  try {
+    const { error } = await supabase
+      .from('submission_audit_logs')
+      .insert({
+        submission_id: submissionId,
+        actor_type: actorType,
+        actor_id: actorId,
+        action,
+        file_name: fileName
+      });
+
+    if (error) {
+      console.error('Failed to log agency audit action:', error);
+    }
+  } catch (err) {
+    console.error('Error logging agency audit action:', err);
   }
 };
 

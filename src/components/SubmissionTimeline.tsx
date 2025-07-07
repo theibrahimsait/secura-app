@@ -5,9 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useSubmissionUpdates } from '@/hooks/useSubmissionUpdates';
+import { logAgencySubmissionAction } from '@/lib/audit-logger';
 import { Send, Paperclip, Download, FileText, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SubmissionTimelineProps {
   submissionId: string;
@@ -20,6 +22,7 @@ export const SubmissionTimeline = ({
 }: SubmissionTimelineProps) => {
   const { updates, loading, sending, unreadCount, sendUpdate, markAsRead } = useSubmissionUpdates(submissionId);
   const { toast } = useToast();
+  const { userProfile } = useAuth();
   const [newMessage, setNewMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -146,6 +149,17 @@ export const SubmissionTimeline = ({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+
+      // Log audit action for file download
+      if (userProfile?.id) {
+        await logAgencySubmissionAction({
+          submissionId: submissionId,
+          actorType: 'agency_admin',
+          actorId: userProfile.id,
+          action: 'downloaded_file',
+          fileName: fileName
+        });
+      }
     } catch (error) {
       console.error('Error downloading file:', error);
       toast({

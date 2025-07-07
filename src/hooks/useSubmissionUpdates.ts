@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { logAgencySubmissionAction } from '@/lib/audit-logger';
 import { SubmissionUpdate, CreateUpdateData, SubmissionUpdateAttachment } from '@/types/submission-updates';
 
 export const useSubmissionUpdates = (submissionId: string | null) => {
@@ -127,9 +128,28 @@ export const useSubmissionUpdates = (submissionId: string | null) => {
             });
 
           if (attachmentError) throw attachmentError;
+
+          // Log audit action for file upload
+          await logAgencySubmissionAction({
+            submissionId: data.submission_id,
+            actorType: 'agency_admin',
+            actorId: userProfile.id,
+            action: 'file_uploaded',
+            fileName: file.name
+          });
         });
 
         await Promise.all(attachmentPromises);
+      }
+
+      // Log audit action for message sent
+      if (data.message) {
+        await logAgencySubmissionAction({
+          submissionId: data.submission_id,
+          actorType: 'agency_admin',
+          actorId: userProfile.id,
+          action: 'message_sent'
+        });
       }
 
       toast({
