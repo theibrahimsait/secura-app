@@ -203,9 +203,10 @@ export function FloatingPanelContent({
             )}
             style={{
               borderRadius: 12,
-              left: triggerRect ? triggerRect.left : "50%",
-              top: triggerRect ? triggerRect.bottom + 8 : "50%",
-              transformOrigin: "top left",
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+              transformOrigin: "center",
             }}
             initial="hidden"
             animate="visible"

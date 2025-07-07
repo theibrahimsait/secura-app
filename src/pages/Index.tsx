@@ -45,15 +45,6 @@ const Index = () => {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
-    if (!email || !password) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter both email and password.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
     
     try {
