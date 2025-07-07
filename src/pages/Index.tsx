@@ -114,7 +114,6 @@ const Index = () => {
           heroImageSrc="https://yugzvvgctlhfcdmmwaxj.supabase.co/storage/v1/object/public/images/IMG_4350.JPG"
           testimonials={sampleTestimonials}
           onSignIn={handleSignIn}
-          onGoogleSignIn={handleGoogleSignIn}
           onResetPassword={handleResetPassword}
           onCreateAccount={handleCreateAccount}
           loading={loading}
