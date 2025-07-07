@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, CheckCircle, Clock, AlertCircle, Send, Link } from 'lucide-react';
+import { Plus, FileText, CheckCircle, Clock, AlertCircle, Send, Link, Settings, User } from 'lucide-react';
 import { useAgencyContext, type AgencyContext } from '@/hooks/useAgencyContext';
 
 interface Property {
@@ -27,16 +27,36 @@ interface Task {
   action_required?: string;
 }
 
+interface PropertySubmission {
+  id: string;
+  property_id: string;
+  agency_id: string;
+  agent_id: string | null;
+  status: string;
+  submitted_at: string;
+  agencies: {
+    name: string;
+  };
+  users?: {
+    full_name: string;
+  } | null;
+  property_title?: string;
+  property_location?: string;
+}
+
 interface ClientDashboardMobileProps {
   properties: Property[];
   tasks: Task[];
+  submissions?: PropertySubmission[];
   onAddProperty: () => void;
   onSubmitToAgency?: () => void;
+  onOpenSubmission?: (submission: PropertySubmission) => void;
 }
 
-const ClientDashboardMobile = ({ properties, tasks, onAddProperty, onSubmitToAgency }: ClientDashboardMobileProps) => {
+const ClientDashboardMobile = ({ properties, tasks, submissions = [], onAddProperty, onSubmitToAgency, onOpenSubmission }: ClientDashboardMobileProps) => {
   // Use the new session-safe agency context hook
   const { agencyContext } = useAgencyContext();
+  
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -53,178 +73,251 @@ const ClientDashboardMobile = ({ properties, tasks, onAddProperty, onSubmitToAge
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'submitted':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'under_review':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
       case 'approved':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-50 text-green-700 border-green-200';
       case 'rejected':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-50 text-red-700 border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            <img 
+              src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" 
+              alt="Secura" 
+              className="h-8 w-auto"
+            />
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm">
+                <Settings className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" size="sm">
+                <User className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Agency Connection Banner */}
       {agencyContext && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-3">
-          <div className="flex items-center">
-            <Link className="w-4 h-4 text-blue-600 mr-2" />
-            <span className="text-blue-800 font-medium text-sm">
-              Connected to: {agencyContext.agencyName}
+        <div className="bg-gradient-to-r from-secura-mint to-secura-lime/20 border-b border-secura-lime/30 px-4 py-3">
+          <div className="flex items-center justify-center text-center">
+            <Link className="w-4 h-4 text-secura-teal mr-2 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-secura-teal">
+                Connected to {agencyContext.agencyName}
+              </p>
               {agencyContext.agentName && (
-                <span className="text-blue-600"> • {agencyContext.agentName}</span>
+                <p className="text-xs text-secura-moss">{agencyContext.agentName}</p>
               )}
-            </span>
+            </div>
           </div>
         </div>
       )}
 
-      <div className="p-4 space-y-4">
-        {/* Header */}
-        <div className="bg-white rounded-lg p-4 shadow-sm">
-          <h1 className="text-xl font-bold text-secura-black mb-2">My Dashboard</h1>
-          <p className="text-sm text-gray-600">Manage your properties and track progress</p>
+      <div className="px-4 pb-20">
+        {/* Quick Actions */}
+        <div className="py-4">
+          <div className="space-y-3">
+            <Button 
+              onClick={onAddProperty}
+              className="w-full bg-secura-teal hover:bg-secura-moss text-white h-12 text-base font-medium"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Add New Property
+            </Button>
+            
+            {agencyContext?.agencyName && onSubmitToAgency && (
+              <Button
+                onClick={onSubmitToAgency}
+                variant="outline"
+                className="w-full border-secura-teal text-secura-teal hover:bg-secura-mint h-12 text-base font-medium"
+              >
+                <Send className="w-5 h-5 mr-2" />
+                Submit to {agencyContext.agencyName}
+              </Button>
+            )}
+          </div>
         </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Button 
-            onClick={onAddProperty}
-            className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Property
-          </Button>
+        {/* Properties Section */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+              <FileText className="w-5 h-5 mr-2 text-secura-teal" />
+              My Properties
+            </h2>
+            <span className="text-sm text-gray-500">({properties.length})</span>
+          </div>
           
-          {/* Agency submission button if referral context exists */}
-          {agencyContext?.agencyName && onSubmitToAgency && (
-            <Button
-              onClick={onSubmitToAgency}
-              variant="outline"
-              className="w-full border-secura-lime text-secura-teal hover:bg-secura-lime/10"
-            >
-              <Send className="w-4 h-4 mr-2" />
-              Submit to {agencyContext.agencyName}
-            </Button>
-          )}
-          
-          {/* Debug button - shows current context */}
-          <Button 
-            onClick={() => {
-              console.log("🎯 Mobile Agency Context:", agencyContext);
-              console.log("🎯 Session Storage:", {
-                agency_ref: sessionStorage.getItem('agency_ref'),
-                agency_context: sessionStorage.getItem('agency_referral_context')
-              });
-              alert(`Agency Context: ${JSON.stringify(agencyContext, null, 2)}\nSession Storage: ${JSON.stringify({
-                agency_ref: sessionStorage.getItem('agency_ref'),
-                agency_context: sessionStorage.getItem('agency_referral_context')
-              }, null, 2)}`);
-            }} 
-            variant="outline"
-            className="w-full text-xs"
-          >
-            🧪 Debug: Show Context
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Properties Section */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center">
-            <FileText className="w-5 h-5 mr-2" />
-            My Properties ({properties.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
           {properties.length === 0 ? (
-            <div className="text-center py-6 text-gray-500">
+            <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
               <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-sm">No properties added yet</p>
-              <p className="text-xs text-gray-400 mt-1">Tap "Add New Property" to get started</p>
+              <p className="text-sm text-gray-500 mb-1">No properties added yet</p>
+              <p className="text-xs text-gray-400">Tap "Add New Property" to get started</p>
             </div>
           ) : (
-            properties.map((property) => (
-              <div key={property.id} className="border rounded-lg p-3 bg-white">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm text-gray-900 truncate">{property.title}</h3>
-                    <p className="text-xs text-gray-500 truncate">{property.location}</p>
-                  </div>
-                  <Badge className={`text-xs ml-2 ${getStatusColor(property.status)}`}>
-                    {property.status.replace('_', ' ')}
-                  </Badge>
-                </div>
-                
-                <div className="flex justify-between items-center text-xs text-gray-500">
-                  <span className="capitalize">{property.property_type}</span>
-                  <span>{new Date(property.created_at).toLocaleDateString()}</span>
-                </div>
-                
-                {(property.bedrooms || property.bathrooms || property.area_sqft) && (
-                  <div className="flex gap-4 mt-2 text-xs text-gray-600">
-                    {property.bedrooms && <span>{property.bedrooms} bed</span>}
-                    {property.bathrooms && <span>{property.bathrooms} bath</span>}
-                    {property.area_sqft && <span>{property.area_sqft} sqft</span>}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Tasks Section */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center">
-            <CheckCircle className="w-5 h-5 mr-2" />
-            Tasks & Updates ({tasks.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {tasks.length === 0 ? (
-            <div className="text-center py-6 text-gray-500">
-              <CheckCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-sm">No tasks yet</p>
-              <p className="text-xs text-gray-400 mt-1">Tasks will appear here when assigned</p>
-            </div>
-          ) : (
-            tasks.map((task) => (
-              <div key={task.id} className="border rounded-lg p-3 bg-white">
-                <div className="flex items-start gap-3">
-                  {getStatusIcon(task.status)}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm text-gray-900">{task.title}</h3>
-                    {task.description && (
-                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">{task.description}</p>
-                    )}
-                    {task.action_required && (
-                      <div className="mt-2 p-2 bg-orange-50 rounded border border-orange-200">
-                        <p className="text-xs text-orange-800 font-medium">Action Required:</p>
-                        <p className="text-xs text-orange-700">{task.action_required}</p>
+            <div className="space-y-3">
+              {properties.map((property) => (
+                <div key={property.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1 min-w-0 pr-3">
+                        <h3 className="font-medium text-gray-900 text-base leading-tight mb-1">
+                          {property.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 leading-tight">
+                          {property.location}
+                        </p>
+                      </div>
+                      <Badge className={`text-xs px-2 py-1 font-medium border ${getStatusColor(property.status)} flex-shrink-0`}>
+                        {property.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
+                      <span className="capitalize font-medium">{property.property_type}</span>
+                      <span>{new Date(property.created_at).toLocaleDateString()}</span>
+                    </div>
+                    
+                    {(property.bedrooms || property.bathrooms || property.area_sqft) && (
+                      <div className="flex gap-4 text-xs text-gray-600 bg-gray-50 rounded px-3 py-2">
+                        {property.bedrooms && <span className="font-medium">{property.bedrooms} bed</span>}
+                        {property.bathrooms && <span className="font-medium">{property.bathrooms} bath</span>}
+                        {property.area_sqft && <span className="font-medium">{property.area_sqft} sqft</span>}
                       </div>
                     )}
-                    {task.due_date && (
-                      <p className="text-xs text-gray-500 mt-2">
-                        Due: {new Date(task.due_date).toLocaleDateString()}
-                      </p>
-                    )}
                   </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Tasks Section */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+              <CheckCircle className="w-5 h-5 mr-2 text-secura-teal" />
+              Tasks & Updates
+            </h2>
+            <span className="text-sm text-gray-500">({tasks.length})</span>
+          </div>
+          
+          {tasks.length === 0 ? (
+            <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
+              <CheckCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p className="text-sm text-gray-500 mb-1">No tasks yet</p>
+              <p className="text-xs text-gray-400">Tasks will appear here when assigned</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {tasks.map((task) => (
+                <div key={task.id} className="bg-white rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      {getStatusIcon(task.status)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-gray-900 text-sm mb-1">{task.title}</h3>
+                      {task.description && (
+                        <p className="text-xs text-gray-600 mb-2 leading-relaxed">{task.description}</p>
+                      )}
+                      {task.action_required && (
+                        <div className="mt-2 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                          <p className="text-xs text-orange-800 font-medium mb-1">Action Required:</p>
+                          <p className="text-xs text-orange-700 leading-relaxed">{task.action_required}</p>
+                        </div>
+                      )}
+                      {task.due_date && (
+                        <p className="text-xs text-gray-500 mt-2 font-medium">
+                          Due: {new Date(task.due_date).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Submissions Section */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+              <Send className="w-5 h-5 mr-2 text-secura-teal" />
+              My Submissions
+            </h2>
+            <span className="text-sm text-gray-500">({submissions.length})</span>
+          </div>
+          
+          {submissions.length === 0 ? (
+            <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
+              <Send className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p className="text-sm text-gray-500 mb-1">No submissions yet</p>
+              <p className="text-xs text-gray-400">Submit properties to agencies to get started</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {submissions.map((submission) => (
+                <div key={submission.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1 min-w-0 pr-3">
+                        <h3 className="font-medium text-gray-900 text-base leading-tight mb-1">
+                          {submission.property_title}
+                        </h3>
+                        <p className="text-sm text-gray-600 leading-tight mb-2">
+                          {submission.property_location}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {submission.agencies.name}
+                          </Badge>
+                          {submission.users && (
+                            <Badge variant="secondary" className="text-xs">
+                              {submission.users.full_name}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <Badge className={`text-xs px-2 py-1 font-medium border ${getStatusColor(submission.status)} flex-shrink-0`}>
+                        {submission.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-xs text-gray-500 font-medium">
+                        {new Date(submission.submitted_at).toLocaleDateString()}
+                      </span>
+                      {onOpenSubmission && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onOpenSubmission(submission)}
+                          className="text-secura-teal border-secura-teal hover:bg-secura-mint h-8 px-3 text-xs"
+                        >
+                          Chat
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -21,6 +21,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useIsMobile } from '@/hooks/use-mobile';
+import ClientDashboardMobile from '@/components/ClientDashboardMobile';
 
 interface ClientData {
   id: string;
@@ -93,6 +95,7 @@ const ClientDashboard = () => {
 
   // Use the new session-safe agency context hook
   const { agencyContext, loading: agencyLoading } = useAgencyContext();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadClientData();
@@ -335,6 +338,69 @@ const ClientDashboard = () => {
 
   if (!clientData) {
     return null;
+  }
+
+  // Return mobile version for mobile devices
+  if (isMobile) {
+    return (
+      <>
+        <ClientDashboardMobile
+          properties={properties}
+          tasks={tasks}
+          submissions={submissions}
+          onAddProperty={handleAddProperty}
+          onSubmitToAgency={agencyContext?.agencyName ? () => setShowSubmissionModal(true) : undefined}
+          onOpenSubmission={(submission) => setSelectedSubmission(submission)}
+        />
+
+        {/* Property Submission Modal */}
+        {agencyContext && clientData && (
+          <PropertySubmissionModal
+            isOpen={showSubmissionModal}
+            onClose={() => setShowSubmissionModal(false)}
+            properties={properties}
+            clientData={clientData}
+            agentAgencyInfo={agencyContext}
+            onSubmissionComplete={handleSubmissionComplete}
+          />
+        )}
+
+        {/* Communication Timeline Modal */}
+        {selectedSubmission && clientData && (
+          <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
+            <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+              <DialogHeader className="flex-shrink-0">
+                <DialogTitle className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  Communication with {selectedSubmission.agencies.name}
+                </DialogTitle>
+                <DialogDescription>
+                  {selectedSubmission.property_title} - {selectedSubmission.property_location}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex-1 overflow-hidden">
+                <ClientSubmissionTimeline
+                  submissionId={selectedSubmission.id}
+                  clientId={clientData.id}
+                  propertyTitle={selectedSubmission.property_title || 'Property'}
+                  className="h-full"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Submission Audit Trail Modal */}
+        {selectedAuditSubmission && (
+          <SubmissionAuditTrail
+            submissionId={selectedAuditSubmission.id}
+            isOpen={!!selectedAuditSubmission}
+            onClose={() => setSelectedAuditSubmission(null)}
+            propertyTitle={selectedAuditSubmission.property_title || 'Property'}
+          />
+        )}
+      </>
+    );
   }
 
   return (
