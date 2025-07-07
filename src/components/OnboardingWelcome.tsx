@@ -172,7 +172,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
               </div>
 
               {/* Progress Indicator */}
-              <div className="flex flex-col items-center justify-center gap-3">
+              <div className="flex flex-col items-center justify-center gap-6">
                 {/* Progress bar */}
                 <div className="flex items-center gap-1 relative">
                   {[1, 2, 3].map((dot, index) => (
