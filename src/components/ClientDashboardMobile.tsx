@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, FileText, CheckCircle, Clock, AlertCircle, Send, Link, Settings, LogOut, History, MessageSquare } from 'lucide-react';
 import { useAgencyContext, type AgencyContext } from '@/hooks/useAgencyContext';
+import AddPropertyModal from '@/components/AddPropertyModal';
 
 interface Property {
   id: string;
@@ -47,7 +48,7 @@ interface PropertySubmission {
 interface ClientDashboardMobileProps {
   properties: Property[];
   submissions?: PropertySubmission[];
-  onAddProperty: () => void;
+  clientData: { id: string; full_name: string | null; email: string | null; phone: string; agent_id: string | null; agency_id: string | null; };
   onSubmitToAgency?: () => void;
   onOpenSubmission?: (submission: PropertySubmission) => void;
   onOpenAudit?: (submission: PropertySubmission) => void;
@@ -55,7 +56,7 @@ interface ClientDashboardMobileProps {
   onOpenSettings?: () => void;
 }
 
-const ClientDashboardMobile = ({ properties, submissions = [], onAddProperty, onSubmitToAgency, onOpenSubmission, onOpenAudit, onLogout, onOpenSettings }: ClientDashboardMobileProps) => {
+const ClientDashboardMobile = ({ properties, submissions = [], clientData, onSubmitToAgency, onOpenSubmission, onOpenAudit, onLogout, onOpenSettings }: ClientDashboardMobileProps) => {
   // Use the new session-safe agency context hook
   const { agencyContext } = useAgencyContext();
   
@@ -118,13 +119,10 @@ const ClientDashboardMobile = ({ properties, submissions = [], onAddProperty, on
         {/* Quick Actions */}
         <div className="py-4">
           <div className="space-y-3">
-            <Button 
-              onClick={onAddProperty}
-              className="w-full bg-secura-teal hover:bg-secura-moss text-white h-12 text-base font-medium"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Add New Property
-            </Button>
+            <AddPropertyModal
+              clientData={clientData}
+              onSuccess={() => window.location.reload()}
+            />
             
             {agencyContext?.agencyName && onSubmitToAgency && (
               <Button

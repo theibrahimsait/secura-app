@@ -350,7 +350,7 @@ const ClientDashboard = () => {
         <ClientDashboardMobile
           properties={properties}
           submissions={submissions}
-          onAddProperty={handleAddProperty}
+          clientData={clientData}
           onSubmitToAgency={agencyContext?.agencyName ? () => setShowSubmissionModal(true) : undefined}
           onOpenSubmission={(submission) => setSelectedSubmission(submission)}
           onOpenAudit={(submission) => setSelectedAuditSubmission(submission)}
