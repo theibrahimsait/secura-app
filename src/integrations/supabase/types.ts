@@ -1256,6 +1256,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_agency_file_download_url: {
+        Args: { p_file_path: string }
+        Returns: string
+      }
       get_client_file_download_url: {
         Args: { p_client_session_token: string; p_file_path: string }
         Returns: string
