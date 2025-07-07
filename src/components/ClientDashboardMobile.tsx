@@ -246,10 +246,9 @@ const ClientDashboardMobile = ({ properties, submissions = [], onAddProperty, on
                             size="sm"
                             variant="outline"
                             onClick={() => onOpenSubmission(submission)}
-                            className="text-secura-teal border-secura-teal hover:bg-secura-mint h-8 px-3 text-xs"
+                            className="text-secura-teal border-secura-teal hover:bg-secura-mint h-8 px-2 text-xs"
                           >
-                            <MessageSquare className="w-3 h-3 mr-1" />
-                            Chat
+                            <MessageSquare className="w-3 h-3" />
                           </Button>
                         )}
                         {onOpenAudit && (
@@ -259,6 +258,7 @@ const ClientDashboardMobile = ({ properties, submissions = [], onAddProperty, on
                             onClick={() => onOpenAudit(submission)}
                             className="text-secura-moss border-secura-moss hover:bg-secura-mint h-8 px-3 text-xs"
                           >
+                            <History className="w-3 h-3 mr-1" />
                             Audit
                           </Button>
                         )}
