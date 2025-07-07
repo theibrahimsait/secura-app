@@ -408,7 +408,7 @@ const ClientDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+      <header className="sticky top-0 z-50 glass-card border-b-0 rounded-none">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -418,7 +418,7 @@ const ClientDashboard = () => {
                 className="h-8 w-auto"
               />
               <div className="hidden sm:block">
-                <h1 className="text-xl font-semibold">Dashboard</h1>
+                <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
                 <p className="text-sm text-muted-foreground">
                   Welcome back, {clientData.full_name || 'Client'}
                 </p>
@@ -426,7 +426,7 @@ const ClientDashboard = () => {
             </div>
             <div className="flex items-center space-x-2">
               <Button
-                variant="ghost"
+                variant="glass"
                 size="sm"
                 onClick={() => navigate('/client/settings')}
                 className="flex items-center gap-2"
@@ -435,7 +435,7 @@ const ClientDashboard = () => {
                 <span className="hidden sm:inline">Settings</span>
               </Button>
               <Button
-                variant="ghost"
+                variant="glass"
                 size="sm"
                 onClick={handleLogout}
                 className="flex items-center gap-2"
@@ -537,8 +537,9 @@ const ClientDashboard = () => {
               <CardContent className="space-y-3">
                 <Button 
                   onClick={handleAddProperty}
-                  className="w-full bg-secura-teal hover:bg-secura-moss text-white"
+                  variant="lime"
                   size="lg"
+                  className="w-full"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add New Property
@@ -546,9 +547,9 @@ const ClientDashboard = () => {
                 
                 <Button
                   onClick={() => navigate('/client/settings')}
-                  variant="outline"
-                  className="w-full border-secura-teal text-secura-teal hover:bg-secura-mint"
+                  variant="glass"
                   size="lg"
+                  className="w-full"
                 >
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
@@ -557,9 +558,9 @@ const ClientDashboard = () => {
                 {agencyContext?.agencyName && (
                   <Button
                     onClick={() => setShowSubmissionModal(true)}
-                    variant="outline"
-                    className="w-full border-secura-teal text-secura-teal hover:bg-secura-mint"
+                    variant="default"
                     size="lg"
+                    className="w-full"
                   >
                     <Send className="w-4 h-4 mr-2" />
                     Submit to {agencyContext.agencyName}

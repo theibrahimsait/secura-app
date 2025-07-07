@@ -39,31 +39,31 @@ const AgentDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <header className="glass-card border-b-0 rounded-none sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
               <img 
                 src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" 
                 alt="Secura" 
                 className="h-8 w-auto"
               />
               <div>
-                <h1 className="text-2xl font-bold text-secura-black">Agent Dashboard</h1>
+                <h1 className="text-2xl font-semibold text-foreground">Agent Dashboard</h1>
                 <p className="text-sm text-muted-foreground">Manage your clients and properties</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
               <div className="text-right">
-                <p className="text-sm font-medium text-secura-black">{userProfile?.full_name}</p>
+                <p className="text-sm font-medium text-foreground">{userProfile?.full_name}</p>
                 <p className="text-xs text-muted-foreground">{agencyName || 'Real Estate Agent'}</p>
               </div>
               <Button
                 onClick={signOut}
-                variant="outline"
-                className="border-secura-moss text-secura-black hover:bg-secura-moss/10"
+                variant="glass"
+                className="hover:shadow-glass"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign Out
