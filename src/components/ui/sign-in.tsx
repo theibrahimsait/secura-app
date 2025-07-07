@@ -27,6 +27,7 @@ interface SignInPageProps {
   onGoogleSignIn?: () => void;
   onResetPassword?: () => void;
   onCreateAccount?: () => void;
+  loading?: boolean;
 }
 
 // --- SUB-COMPONENTS ---
@@ -63,7 +64,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   onSignIn,
   onGoogleSignIn,
   onResetPassword,
-  onCreateAccount
+  onCreateAccount,
+  loading = false
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   return <div className="min-h-screen flex flex-col lg:flex-row font-geist bg-transparent">
@@ -71,7 +73,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       <section className="flex-1 flex items-center justify-center p-8 bg-transparent">
         <div className="w-full max-w-md bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
           <div className="flex flex-col gap-6">
-            <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">{title}</h1>
+            <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight text-left">{title}</h1>
             <p className="animate-element animate-delay-200 text-muted-foreground">{description}</p>
 
             <form className="space-y-5" onSubmit={onSignIn}>
@@ -105,8 +107,15 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               }} className="hover:underline text-secura-teal transition-colors">Reset password</a>
               </div>
 
-              <button type="submit" className="animate-element animate-delay-600 w-full rounded-2xl py-4 font-medium transition-colors bg-lime-400 hover:bg-lime-300 text-zinc-950">
-                Sign In
+              <button type="submit" disabled={loading} className="animate-element animate-delay-600 w-full rounded-2xl py-4 font-medium transition-colors bg-lime-400 hover:bg-lime-300 text-zinc-950 disabled:opacity-50 disabled:cursor-not-allowed">
+                {loading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-zinc-950"></div>
+                    <span>Signing in...</span>
+                  </div>
+                ) : (
+                  'Sign In'
+                )}
               </button>
             </form>
 

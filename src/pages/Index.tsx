@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SignInPage, Testimonial } from '@/components/ui/sign-in';
 import { AuroraBackground } from '@/components/ui/aurora-background';
 import { GradientText } from '@/components/ui/gradient-text';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 const sampleTestimonials: Testimonial[] = [
   {
     avatarSrc: "https://randomuser.me/api/portraits/women/57.jpg",
@@ -26,18 +28,73 @@ const sampleTestimonials: Testimonial[] = [
 
 const Index = () => {
   const navigate = useNavigate();
+  const { signIn, isAuthenticated, isAgencyAdmin, isAgent } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
-  const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
+  // Redirect if already authenticated
+  if (isAuthenticated) {
+    if (isAgencyAdmin) navigate('/agency/dashboard');
+    else if (isAgent) navigate('/agent/dashboard');
+  }
+
+  const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    navigate('/login');
+    
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    if (!email || !password) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both email and password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const { error } = await signIn(email, password);
+
+      if (error) {
+        toast({
+          title: "Login Failed",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Login Successful",
+          description: "Redirecting to your dashboard...",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Login Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleSignIn = () => {
-    navigate('/login');
+    // Google signin functionality would go here
+    toast({
+      title: "Google Sign In",
+      description: "Google authentication coming soon.",
+    });
   };
   
   const handleResetPassword = () => {
-    navigate('/login');
+    toast({
+      title: "Password Reset",
+      description: "Password reset functionality coming soon.",
+    });
   }
 
   const handleCreateAccount = () => {
@@ -49,7 +106,7 @@ const Index = () => {
       <div className="relative z-10 w-full">
         <SignInPage
           title={
-            <span className="font-light text-foreground tracking-tighter whitespace-nowrap">
+            <span className="font-light text-foreground tracking-tighter whitespace-nowrap text-left">
               Welcome to <GradientText className="font-semibold">Secura</GradientText>
             </span>
           }
@@ -57,8 +114,10 @@ const Index = () => {
           heroImageSrc="https://yugzvvgctlhfcdmmwaxj.supabase.co/storage/v1/object/public/images/IMG_4350.JPG"
           testimonials={sampleTestimonials}
           onSignIn={handleSignIn}
+          onGoogleSignIn={handleGoogleSignIn}
           onResetPassword={handleResetPassword}
           onCreateAccount={handleCreateAccount}
+          loading={loading}
         />
       </div>
       {/* Secura Logo */}
