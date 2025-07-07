@@ -351,6 +351,8 @@ const ClientDashboard = () => {
           onSubmitToAgency={agencyContext?.agencyName ? () => setShowSubmissionModal(true) : undefined}
           onOpenSubmission={(submission) => setSelectedSubmission(submission)}
           onOpenAudit={(submission) => setSelectedAuditSubmission(submission)}
+          onLogout={handleLogout}
+          onOpenSettings={() => navigate('/client/settings')}
         />
 
         {/* Property Submission Modal */}

@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, CheckCircle, Clock, AlertCircle, Send, Link, Settings, User, History, MessageSquare } from 'lucide-react';
+import { Plus, FileText, CheckCircle, Clock, AlertCircle, Send, Link, Settings, LogOut, History, MessageSquare } from 'lucide-react';
 import { useAgencyContext, type AgencyContext } from '@/hooks/useAgencyContext';
 
 interface Property {
@@ -51,9 +51,11 @@ interface ClientDashboardMobileProps {
   onSubmitToAgency?: () => void;
   onOpenSubmission?: (submission: PropertySubmission) => void;
   onOpenAudit?: (submission: PropertySubmission) => void;
+  onLogout?: () => void;
+  onOpenSettings?: () => void;
 }
 
-const ClientDashboardMobile = ({ properties, submissions = [], onAddProperty, onSubmitToAgency, onOpenSubmission, onOpenAudit }: ClientDashboardMobileProps) => {
+const ClientDashboardMobile = ({ properties, submissions = [], onAddProperty, onSubmitToAgency, onOpenSubmission, onOpenAudit, onLogout, onOpenSettings }: ClientDashboardMobileProps) => {
   // Use the new session-safe agency context hook
   const { agencyContext } = useAgencyContext();
   
@@ -84,11 +86,11 @@ const ClientDashboardMobile = ({ properties, submissions = [], onAddProperty, on
               className="h-8 w-auto"
             />
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={onOpenSettings}>
                 <Settings className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="sm">
-                <User className="w-5 h-5" />
+              <Button variant="ghost" size="sm" onClick={onLogout}>
+                <LogOut className="w-5 h-5" />
               </Button>
             </div>
           </div>
