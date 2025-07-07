@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { clientSupabase } from '@/lib/client-supabase';
 import { useToast } from '@/hooks/use-toast';
+import { logSubmissionAction } from '@/lib/audit-logger';
 import { SubmissionUpdate, CreateUpdateData } from '@/types/submission-updates';
 
 export const useClientSubmissionUpdates = (submissionId: string | null, clientId: string) => {
@@ -136,6 +137,15 @@ export const useClientSubmissionUpdates = (submissionId: string | null, clientId
             });
 
           if (attachmentError) throw attachmentError;
+
+          // Log audit action for client file upload
+          await logSubmissionAction({
+            submissionId: data.submission_id,
+            actorType: 'client',
+            actorId: clientId,
+            action: 'file_uploaded',
+            fileName: file.name
+          });
         });
 
         await Promise.all(attachmentPromises);

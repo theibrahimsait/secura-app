@@ -142,16 +142,6 @@ export const useSubmissionUpdates = (submissionId: string | null) => {
         await Promise.all(attachmentPromises);
       }
 
-      // Log audit action for message sent
-      if (data.message) {
-        await logAgencySubmissionAction({
-          submissionId: data.submission_id,
-          actorType: 'agency_admin',
-          actorId: userProfile.id,
-          action: 'message_sent'
-        });
-      }
-
       toast({
         title: "Update Sent",
         description: "Your message has been sent successfully.",

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useClientSubmissionUpdates } from '@/hooks/useClientSubmissionUpdates';
+import { logSubmissionAction } from '@/lib/audit-logger';
 import { Send, Paperclip, Download, FileText, MessageSquare } from 'lucide-react';
 import { clientSupabase } from '@/lib/client-supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -169,6 +170,15 @@ export const ClientSubmissionTimeline = ({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+
+      // Log audit action for client file download
+      await logSubmissionAction({
+        submissionId: submissionId,
+        actorType: 'client',
+        actorId: clientId,
+        action: 'downloaded_file',
+        fileName: fileName
+      });
     } catch (error) {
       console.error('Error downloading file:', error);
       toast({
