@@ -88,7 +88,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
           {/* Glassmorphic card matching landing page style */}
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
             <div className="text-center mb-8">
-              <h1 className="text-4xl md:text-5xl font-light leading-tight text-left mb-2">
+              <h1 className="text-4xl md:text-5xl font-light leading-tight mb-2">
                 Welcome to <GradientText className="font-semibold">Secura</GradientText>
               </h1>
               <p className="text-muted-foreground font-light">
@@ -119,14 +119,14 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                       transition={{ duration: 0.3 }}
                       className="text-center"
                     >
-                      <div className="p-6 rounded-2xl bg-foreground/5 backdrop-blur-sm border border-border mb-6">
+                      <div className="p-8 rounded-3xl bg-white/60 backdrop-blur-md border border-white/30 shadow-lg mb-6">
                         {React.createElement(features[currentStep - 1].icon, {
-                          className: "w-12 h-12 mx-auto mb-4 text-secura-teal"
+                          className: "w-16 h-16 mx-auto mb-6 text-secura-teal"
                         })}
-                        <h3 className="text-lg font-medium mb-3 text-foreground">
+                        <h3 className="text-xl font-semibold mb-4 text-foreground">
                           {features[currentStep - 1].title}
                         </h3>
-                        <p className="text-muted-foreground text-sm leading-relaxed">
+                        <p className="text-muted-foreground leading-relaxed">
                           {features[currentStep - 1].description}
                         </p>
                       </div>
@@ -140,12 +140,12 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                       transition={{ duration: 0.3 }}
                       className="text-center"
                     >
-                      <div className="p-6 rounded-2xl bg-foreground/5 backdrop-blur-sm border border-border mb-6">
-                        <CheckCircle className="w-12 h-12 mx-auto mb-4 text-secura-teal" />
-                        <h3 className="text-lg font-medium mb-6 text-foreground">
+                      <div className="p-8 rounded-3xl bg-white/60 backdrop-blur-md border border-white/30 shadow-lg mb-6">
+                        <CheckCircle className="w-16 h-16 mx-auto mb-6 text-secura-teal" />
+                        <h3 className="text-xl font-semibold mb-6 text-foreground">
                           Terms & Conditions
                         </h3>
-                        <div className="flex items-start space-x-3 max-w-md mx-auto">
+                        <div className="flex items-start space-x-3">
                           <Checkbox 
                             id="terms" 
                             checked={termsAccepted}
@@ -172,26 +172,26 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
               </div>
 
               {/* Progress Indicator */}
-              <div className="flex flex-col items-center justify-center gap-6">
-                {/* Progress dots */}
-                <div className="flex items-center gap-6 relative">
-                  {[1, 2, 3].map((dot) => (
+              <div className="flex flex-col items-center justify-center gap-8">
+                {/* Progress bar */}
+                <div className="flex items-center gap-2 relative">
+                  {[1, 2, 3].map((dot, index) => (
                     <div
                       key={dot}
                       className={cn(
-                        "w-2 h-2 rounded-full relative z-10 transition-colors",
-                        dot <= currentStep ? "bg-secura-teal" : "bg-gray-300"
+                        "w-3 h-3 rounded-full relative z-10 transition-colors",
+                        dot <= currentStep ? "bg-white" : "bg-gray-300"
                       )}
                     />
                   ))}
 
-                  {/* Progress overlay */}
+                  {/* Green progress overlay */}
                   <motion.div
-                    initial={{ width: '8px' }}
+                    initial={{ width: '12px' }}
                     animate={{
-                      width: currentStep === 1 ? '8px' : currentStep === 2 ? '32px' : '56px',
+                      width: currentStep === 1 ? '12px' : currentStep === 2 ? '32px' : '52px',
                     }}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-2 bg-secura-lime rounded-full"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-6 bg-green-500 rounded-full -z-10"
                     transition={{
                       type: "spring",
                       stiffness: 300,
@@ -204,7 +204,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                 </div>
 
                 {/* Buttons */}
-                <div className="w-full">
+                <div className="w-full max-w-sm">
                   <motion.div
                     className="flex items-center gap-3"
                     animate={{
@@ -214,7 +214,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                     {!isExpanded && (
                       <motion.button
                         initial={{ opacity: 0, width: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, width: "auto", scale: 1 }}
+                        animate={{ opacity: 1, width: "80px", scale: 1 }}
                         transition={{
                           type: "spring",
                           stiffness: 400,
@@ -225,7 +225,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                           opacity: { duration: 0.2 }
                         }}
                         onClick={handleBack}
-                        className="px-4 py-3 text-foreground bg-secondary border border-border font-medium rounded-full hover:bg-accent transition-colors text-sm"
+                        className="px-6 py-3 text-gray-700 bg-gray-100 font-semibold rounded-full hover:bg-gray-50 transition-colors text-sm"
                       >
                         Back
                       </motion.button>
@@ -237,11 +237,11 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                         flex: isExpanded ? 1 : 'none',
                       }}
                       className={cn(
-                        "px-6 py-3 rounded-full font-medium transition-all text-sm",
+                        "px-8 py-3 rounded-full font-semibold transition-all text-sm",
                         canContinue 
-                          ? "bg-lime-400 hover:bg-lime-300 text-zinc-950" 
+                          ? "bg-blue-500 hover:bg-blue-600 text-white" 
                           : "bg-gray-400 cursor-not-allowed text-white",
-                        isExpanded ? "w-full" : "w-auto"
+                        isExpanded ? "w-full" : "flex-1"
                       )}
                     >
                       <div className="flex items-center justify-center gap-2">
@@ -260,7 +260,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                             <CircleCheck size={16} />
                           </motion.div>
                         )}
-                        {currentStep === 3 ? 'Get Started' : 'Continue'}
+                        {currentStep === 3 ? 'Finish' : 'Continue'}
                       </div>
                     </motion.button>
                   </motion.div>
