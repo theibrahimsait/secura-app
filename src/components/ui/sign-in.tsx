@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Mail } from 'lucide-react';
+import { FloatingPanelRoot, FloatingPanelTrigger, FloatingPanelContent, FloatingPanelBody, FloatingPanelFooter, FloatingPanelButton } from '@/components/ui/floating-panel';
 
 // --- HELPER COMPONENTS (ICONS) ---
 
@@ -101,10 +102,37 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   <input type="checkbox" name="rememberMe" className="custom-checkbox" />
                   <span className="text-foreground/90">Keep me signed in</span>
                 </label>
-                <a href="#" onClick={e => {
-                e.preventDefault();
-                onResetPassword?.();
-              }} className="hover:underline text-secura-teal transition-colors">Reset password</a>
+                <FloatingPanelRoot>
+                  <FloatingPanelTrigger
+                    title="Reset Password"
+                    className="bg-transparent border-none p-0 h-auto hover:underline text-secura-teal transition-colors text-sm font-normal"
+                  >
+                    Reset password
+                  </FloatingPanelTrigger>
+                  <FloatingPanelContent className="w-80">
+                    <FloatingPanelBody>
+                      <div className="flex items-center gap-3 mb-4">
+                        <Mail className="w-5 h-5 text-secura-teal" />
+                        <h3 className="font-semibold text-foreground">Password Reset Request</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Due to security reasons, for any password reset requests please send an email from your registered admin email to:
+                      </p>
+                      <div className="bg-secura-teal/10 rounded-lg p-3 mb-4">
+                        <p className="text-sm font-medium text-secura-teal">support@secura.me</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Make sure to send the request from your registered email address for verification purposes.
+                      </p>
+                    </FloatingPanelBody>
+                    <FloatingPanelFooter>
+                      <div></div>
+                      <FloatingPanelButton className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-medium px-6 py-2 rounded-lg">
+                        Done
+                      </FloatingPanelButton>
+                    </FloatingPanelFooter>
+                  </FloatingPanelContent>
+                </FloatingPanelRoot>
               </div>
 
               <button type="submit" disabled={loading} className="animate-element animate-delay-600 w-full rounded-2xl py-4 font-medium transition-colors bg-lime-400 hover:bg-lime-300 text-zinc-950 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -130,10 +158,38 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               </button>}
 
             <p className="animate-element animate-delay-900 text-center text-sm text-muted-foreground bg-transparent">
-              New to our platform? <a href="#" onClick={e => {
-              e.preventDefault();
-              onCreateAccount?.();
-            }} className="text-secura-teal hover:underline transition-colors">Create Account</a>
+              New to our platform? 
+              <FloatingPanelRoot>
+                <FloatingPanelTrigger
+                  title="Create Account"
+                  className="bg-transparent border-none p-0 h-auto hover:underline text-secura-teal transition-colors text-sm font-normal ml-1"
+                >
+                  Create Account
+                </FloatingPanelTrigger>
+                <FloatingPanelContent className="w-80">
+                  <FloatingPanelBody>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Mail className="w-5 h-5 text-secura-teal" />
+                      <h3 className="font-semibold text-foreground">New Agency Registration</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      To register your agency on Secura, please contact us at:
+                    </p>
+                    <div className="bg-secura-teal/10 rounded-lg p-3 mb-4">
+                      <p className="text-sm font-medium text-secura-teal">hi@secura.me</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Our team will guide you through the onboarding process and set up your agency account.
+                    </p>
+                  </FloatingPanelBody>
+                  <FloatingPanelFooter>
+                    <div></div>
+                    <FloatingPanelButton className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal font-medium px-6 py-2 rounded-lg">
+                      Done
+                    </FloatingPanelButton>
+                  </FloatingPanelFooter>
+                </FloatingPanelContent>
+              </FloatingPanelRoot>
             </p>
           </div>
         </div>
