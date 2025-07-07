@@ -89,11 +89,13 @@ export const SubmissionTimeline = ({
       console.log('🔍 File path:', filePath);
       console.log('🔍 File name:', fileName);
 
+      console.log('🚀 Starting file download:', { filePath, fileName });
+      
       // Call the download edge function with response type blob
       const response = await fetch(`https://yugzvvgctlhfcdmmwaxj.supabase.co/functions/v1/download-file`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1Z3p2dmdjdGxoZmNkbW13YXhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1Nzg0MjUsImV4cCI6MjA2NjE1NDQyNX0.VFiQYl32DVznDs0vEei6Ez7F_9OjAn74NdrAM1WQaG4`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -102,13 +104,27 @@ export const SubmissionTimeline = ({
         })
       });
 
+      console.log('📡 Response status:', response.status, response.statusText);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Download failed');
+        const responseText = await response.text();
+        console.error('❌ Download request failed:', { 
+          status: response.status, 
+          statusText: response.statusText,
+          body: responseText 
+        });
+        
+        try {
+          const errorData = JSON.parse(responseText);
+          throw new Error(errorData.error || 'Download failed');
+        } catch {
+          throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+        }
       }
 
       // Get the file as a blob
       const blob = await response.blob();
+      console.log('📦 File blob received:', { size: blob.size, type: blob.type });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
