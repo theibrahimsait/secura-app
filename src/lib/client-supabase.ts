@@ -89,7 +89,60 @@ class ClientSupabaseClient {
   }
 
   get storage() {
-    return this.client.storage;
+    const sessionToken = this.getSessionToken();
+    
+    if (!sessionToken) {
+      return this.client.storage;
+    }
+    
+    // Create a wrapper that adds custom headers to storage requests
+    const originalStorage = this.client.storage;
+    const storageWrapper = {
+      from: (bucketName: string) => {
+        const bucket = originalStorage.from(bucketName);
+        
+        // Override download method to include session headers
+        const originalDownload = bucket.download.bind(bucket);
+        bucket.download = async (path: string, options?: any) => {
+          console.log('🔄 Storage download with session headers:', {
+            bucket: bucketName,
+            path,
+            sessionToken: sessionToken.substring(0, 8) + '...'
+          });
+          
+          // Call download with custom headers
+          const result = await fetch(
+            `${SUPABASE_URL}/storage/v1/object/${bucketName}/${path}`,
+            {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+                'apikey': SUPABASE_PUBLISHABLE_KEY,
+                'x-client-session': sessionToken,
+                'x-client-info': 'supabase-js-web/2.50.0'
+              }
+            }
+          );
+          
+          if (!result.ok) {
+            const errorText = await result.text();
+            console.error('❌ Storage download error:', {
+              status: result.status,
+              statusText: result.statusText,
+              body: errorText
+            });
+            throw new Error(`Storage download failed: ${result.status} ${result.statusText}`);
+          }
+          
+          const blob = await result.blob();
+          return { data: blob, error: null };
+        };
+        
+        return bucket;
+      }
+    };
+    
+    return storageWrapper as any;
   }
 
   get realtime() {
