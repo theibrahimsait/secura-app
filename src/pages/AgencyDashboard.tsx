@@ -13,6 +13,7 @@ import { Shield, Plus, Users, User, Activity, LogOut, Mail, Bell, FileText, Send
 import { useToast } from '@/hooks/use-toast';
 import AgencyNotifications from '@/components/AgencyNotifications';
 import { SubmissionTimeline } from '@/components/SubmissionTimeline';
+import { logAgencySubmissionAction } from '@/lib/audit-logger';
 
 interface Agent {
   id: string;
@@ -126,6 +127,17 @@ const AgencyDashboard = () => {
         }
       });
 
+      // Log to submission audit trail
+      if (userProfile?.id && selectedSubmission?.id) {
+        await logAgencySubmissionAction({
+          submissionId: selectedSubmission.id,
+          actorType: 'agency_admin',
+          actorId: userProfile.id,
+          action: 'viewed_file',
+          fileName: document.file_name
+        });
+      }
+
     } catch (error) {
       console.error('Error viewing document:', error);
       setViewingDocument({
@@ -213,6 +225,17 @@ const AgencyDashboard = () => {
           action: 'download_document'
         }
       });
+
+      // Log to submission audit trail
+      if (userProfile?.id && selectedSubmission?.id) {
+        await logAgencySubmissionAction({
+          submissionId: selectedSubmission.id,
+          actorType: 'agency_admin',
+          actorId: userProfile.id,
+          action: 'downloaded_file',
+          fileName: document.file_name
+        });
+      }
 
       toast({
         title: "Success",
