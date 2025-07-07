@@ -135,7 +135,7 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ clientData, onSucce
       }
     }
 
-    if (step === 2) {
+    if (step === 3) {
       if (!titleDeedFile) {
         toast({
           title: "Title Deed Required",
@@ -146,9 +146,9 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ clientData, onSucce
       }
     }
 
-    if (step < 3) {
+    if (step < 4) {
       setStep(step + 1);
-      setIsExpanded(false);
+      if (step === 1) setIsExpanded(false);
     } else {
       handleSubmit();
     }
@@ -216,9 +216,9 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ clientData, onSucce
           description: `${title} has been added to your portfolio`,
         });
       }
-
-      onSuccess();
       
+      onSuccess();
+
       // Reset form
       setStep(1);
       setIsExpanded(true);
@@ -251,50 +251,53 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ clientData, onSucce
     switch (step) {
       case 1:
         return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <Label htmlFor="title" className="text-sm font-medium text-foreground">Property Title *</Label>
-                <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g., Modern 3BR Apartment in Downtown"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="location" className="text-sm font-medium text-foreground">Location *</Label>
-                <Input
-                  id="location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g., Dubai Marina, Dubai"
-                  className="mt-1"
-                />
-              </div>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="title" className="text-sm font-medium text-foreground">Property Title *</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g., Modern 3BR Apartment in Downtown"
+                className="mt-1"
+              />
             </div>
+            <div>
+              <Label htmlFor="location" className="text-sm font-medium text-foreground">Location *</Label>
+              <Input
+                id="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g., Dubai Marina, Dubai"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="property-type" className="text-sm font-medium text-foreground">Property Type *</Label>
+              <Select value={propertyType} onValueChange={(value: PropertyType) => setPropertyType(value)}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select property type" />
+                </SelectTrigger>
+                <SelectContent className="z-[10000] bg-background border shadow-lg">
+                  <SelectItem value="apartment">Apartment</SelectItem>
+                  <SelectItem value="villa">Villa</SelectItem>
+                  <SelectItem value="townhouse">Townhouse</SelectItem>
+                  <SelectItem value="penthouse">Penthouse</SelectItem>
+                  <SelectItem value="studio">Studio</SelectItem>
+                  <SelectItem value="office">Office</SelectItem>
+                  <SelectItem value="retail">Retail</SelectItem>
+                  <SelectItem value="warehouse">Warehouse</SelectItem>
+                  <SelectItem value="land">Land</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
 
+      case 2:
+        return (
+          <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="property-type" className="text-sm font-medium text-foreground">Property Type *</Label>
-                <Select value={propertyType} onValueChange={(value: PropertyType) => setPropertyType(value)}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select property type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="apartment">Apartment</SelectItem>
-                    <SelectItem value="villa">Villa</SelectItem>
-                    <SelectItem value="townhouse">Townhouse</SelectItem>
-                    <SelectItem value="penthouse">Penthouse</SelectItem>
-                    <SelectItem value="studio">Studio</SelectItem>
-                    <SelectItem value="office">Office</SelectItem>
-                    <SelectItem value="retail">Retail</SelectItem>
-                    <SelectItem value="warehouse">Warehouse</SelectItem>
-                    <SelectItem value="land">Land</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               <div>
                 <Label htmlFor="area" className="text-sm font-medium text-foreground">Area (sqft)</Label>
                 <Input
@@ -306,16 +309,13 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ clientData, onSucce
                   className="mt-1"
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="bedrooms" className="text-sm font-medium text-foreground">Bedrooms</Label>
                 <Select value={bedrooms} onValueChange={setBedrooms}>
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select bedrooms" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[10000] bg-background border shadow-lg">
                     <SelectItem value="0">Studio</SelectItem>
                     <SelectItem value="1">1 Bedroom</SelectItem>
                     <SelectItem value="2">2 Bedrooms</SelectItem>
@@ -325,23 +325,22 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ clientData, onSucce
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label htmlFor="bathrooms" className="text-sm font-medium text-foreground">Bathrooms</Label>
-                <Select value={bathrooms} onValueChange={setBathrooms}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select bathrooms" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 Bathroom</SelectItem>
-                    <SelectItem value="2">2 Bathrooms</SelectItem>
-                    <SelectItem value="3">3 Bathrooms</SelectItem>
-                    <SelectItem value="4">4 Bathrooms</SelectItem>
-                    <SelectItem value="5">5+ Bathrooms</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
-
+            <div>
+              <Label htmlFor="bathrooms" className="text-sm font-medium text-foreground">Bathrooms</Label>
+              <Select value={bathrooms} onValueChange={setBathrooms}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select bathrooms" />
+                </SelectTrigger>
+                <SelectContent className="z-[10000] bg-background border shadow-lg">
+                  <SelectItem value="1">1 Bathroom</SelectItem>
+                  <SelectItem value="2">2 Bathrooms</SelectItem>
+                  <SelectItem value="3">3 Bathrooms</SelectItem>
+                  <SelectItem value="4">4 Bathrooms</SelectItem>
+                  <SelectItem value="5">5+ Bathrooms</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label htmlFor="description" className="text-sm font-medium text-foreground">Additional Details</Label>
               <Textarea
@@ -356,20 +355,20 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ clientData, onSucce
           </div>
         );
 
-      case 2:
+      case 3:
         return (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <FileText className="w-8 h-8 mx-auto mb-2 text-secura-teal" />
-              <h3 className="text-lg font-semibold text-foreground">Property Documents</h3>
-              <p className="text-sm text-muted-foreground">Upload required and optional documents</p>
+          <div className="space-y-4">
+            <div className="text-center mb-4">
+              <FileText className="w-6 h-6 mx-auto mb-2 text-secura-teal" />
+              <h3 className="text-base font-semibold text-foreground">Property Documents</h3>
+              <p className="text-xs text-muted-foreground">Upload required and optional documents</p>
             </div>
 
             {/* Title Deed - Mandatory */}
-            <div className="p-4 glass-card border-2 border-destructive/20">
-              <div className="flex items-center mb-3">
-                <FileCheck className="w-5 h-5 text-destructive mr-2" />
-                <Label htmlFor="title-deed" className="text-destructive font-medium">
+            <div className="p-3 glass-card border-2 border-destructive/20">
+              <div className="flex items-center mb-2">
+                <FileCheck className="w-4 h-4 text-destructive mr-2" />
+                <Label htmlFor="title-deed" className="text-destructive font-medium text-sm">
                   Title Deed * (Required)
                 </Label>
               </div>
@@ -378,88 +377,36 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ clientData, onSucce
                 type="file"
                 onChange={(e) => handleFileChange(e, 'title_deed')}
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                className="mb-2"
+                className="mb-2 text-xs"
               />
               {titleDeedFile && (
-                <div className="flex items-center text-sm text-secura-teal glass-light p-2 rounded">
-                  <Upload className="w-4 h-4 mr-2" />
+                <div className="flex items-center text-xs text-secura-teal glass-light p-2 rounded">
+                  <Upload className="w-3 h-3 mr-1" />
                   <span className="font-medium">{titleDeedFile.name}</span>
-                  <span className="ml-2 text-muted-foreground">
-                    ({(titleDeedFile.size / 1024 / 1024).toFixed(2)} MB)
-                  </span>
                 </div>
               )}
             </div>
 
-            {/* Optional Documents */}
-            <div className="grid grid-cols-1 gap-4">
-              {/* Power of Attorney */}
-              <div className="p-3 glass-light rounded-lg">
-                <div className="flex items-center mb-2">
-                  <Shield className="w-4 h-4 text-secura-teal mr-2" />
-                  <Label htmlFor="poa" className="text-foreground text-sm">Power of Attorney</Label>
-                </div>
+            {/* Optional Documents - Compact */}
+            <div className="space-y-2">
+              <div className="p-2 glass-light rounded">
+                <Label htmlFor="poa" className="text-foreground text-xs flex items-center mb-1">
+                  <Shield className="w-3 h-3 text-secura-teal mr-1" />
+                  Power of Attorney
+                </Label>
                 <Input
                   id="poa"
                   type="file"
                   onChange={(e) => handleFileChange(e, 'power_of_attorney')}
                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  className="text-xs"
+                  className="text-xs h-8"
                 />
-                {poaFile && (
-                  <div className="flex items-center text-xs text-secura-teal mt-1">
-                    <Upload className="w-3 h-3 mr-1" />
-                    <span>{poaFile.name}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* NOC */}
-              <div className="p-3 glass-light rounded-lg">
-                <div className="flex items-center mb-2">
-                  <FileText className="w-4 h-4 text-secura-teal mr-2" />
-                  <Label htmlFor="noc" className="text-foreground text-sm">NOC</Label>
-                </div>
-                <Input
-                  id="noc"
-                  type="file"
-                  onChange={(e) => handleFileChange(e, 'noc')}
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  className="text-xs"
-                />
-                {nocFile && (
-                  <div className="flex items-center text-xs text-secura-teal mt-1">
-                    <Upload className="w-3 h-3 mr-1" />
-                    <span>{nocFile.name}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Ejari */}
-              <div className="p-3 glass-light rounded-lg">
-                <div className="flex items-center mb-2">
-                  <Home className="w-4 h-4 text-secura-teal mr-2" />
-                  <Label htmlFor="ejari" className="text-foreground text-sm">Ejari</Label>
-                </div>
-                <Input
-                  id="ejari"
-                  type="file"
-                  onChange={(e) => handleFileChange(e, 'ejari')}
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  className="text-xs"
-                />
-                {ejariFile && (
-                  <div className="flex items-center text-xs text-secura-teal mt-1">
-                    <Upload className="w-3 h-3 mr-1" />
-                    <span>{ejariFile.name}</span>
-                  </div>
-                )}
               </div>
             </div>
           </div>
         );
 
-      case 3:
+      case 4:
         return (
           <div className="space-y-6 text-center">
             <div className="mx-auto w-16 h-16 bg-secura-lime/20 rounded-full flex items-center justify-center mb-4">
@@ -523,7 +470,7 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ clientData, onSucce
         Add New Property
       </FloatingPanelTrigger>
       
-      <FloatingPanelContent className="w-full max-w-2xl glass-card border-secura-teal/20">
+      <FloatingPanelContent className="w-full max-w-lg glass-card border-secura-teal/20">
         <FloatingPanelHeader className="border-b border-border/30 pb-4">
           <div className="text-center">
             <h2 className="text-xl font-semibold text-foreground">Add New Property</h2>
@@ -533,9 +480,9 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ clientData, onSucce
 
         <FloatingPanelBody className="px-6 py-6">
           {/* Progress Indicator */}
-          <div className="flex flex-col items-center justify-center gap-8 mb-8">
+          <div className="flex flex-col items-center justify-center gap-6 mb-6">
             <div className="flex items-center gap-6 relative">
-              {[1, 2, 3].map((dot) => (
+              {[1, 2, 3, 4].map((dot) => (
                 <div
                   key={dot}
                   className={cn(
@@ -548,7 +495,7 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ clientData, onSucce
               <motion.div
                 initial={{ width: '12px', height: "24px", x: 0 }}
                 animate={{
-                  width: step === 1 ? '24px' : step === 2 ? '60px' : '96px',
+                  width: step === 1 ? '24px' : step === 2 ? '60px' : step === 3 ? '96px' : '132px',
                   x: 0
                 }}
                 className="absolute -left-[8px] -top-[8px] -translate-y-1/2 h-3 bg-secura-teal rounded-full"
@@ -613,7 +560,7 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ clientData, onSucce
               )}
               <Button
                 onClick={handleContinue}
-                variant={step === 3 ? "lime" : "default"}
+                variant={step === 4 ? "lime" : "default"}
                 disabled={loading}
                 className="min-w-[120px]"
               >
@@ -621,8 +568,8 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ clientData, onSucce
                   "Processing..."
                 ) : (
                   <div className="flex items-center justify-center gap-2">
-                    {step === 3 && <CircleCheck className="w-4 h-4" />}
-                    {step === 3 ? 'Submit Property' : 'Continue'}
+                    {step === 4 && <CircleCheck className="w-4 h-4" />}
+                    {step === 4 ? 'Submit Property' : 'Continue'}
                   </div>
                 )}
               </Button>
