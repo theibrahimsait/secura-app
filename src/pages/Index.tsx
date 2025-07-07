@@ -49,7 +49,7 @@ const Index = () => {
       <div className="relative z-10 w-full">
         <SignInPage
           title={
-            <span className="font-light text-foreground tracking-tighter">
+            <span className="font-light text-foreground tracking-tighter whitespace-nowrap">
               Welcome to <GradientText className="font-semibold">Secura</GradientText>
             </span>
           }
