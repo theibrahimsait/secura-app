@@ -138,6 +138,56 @@ class ClientSupabaseClient {
           return { data: blob, error: null };
         };
         
+        // Override upload method to include session headers
+        const originalUpload = bucket.upload.bind(bucket);
+        bucket.upload = async (path: string, file: any, options?: any) => {
+          console.log('🔄 Storage upload with session headers:', {
+            bucket: bucketName,
+            path,
+            sessionToken: sessionToken.substring(0, 8) + '...',
+            fileSize: file.size
+          });
+          
+          // Create FormData for file upload
+          const formData = new FormData();
+          formData.append('', file);
+          
+          // Call upload with custom headers
+          const result = await fetch(
+            `${SUPABASE_URL}/storage/v1/object/${bucketName}/${path}`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+                'apikey': SUPABASE_PUBLISHABLE_KEY,
+                'x-client-session': sessionToken,
+                'x-client-info': 'supabase-js-web/2.50.0'
+              },
+              body: formData
+            }
+          );
+          
+          if (!result.ok) {
+            const errorText = await result.text();
+            console.error('❌ Storage upload error:', {
+              status: result.status,
+              statusText: result.statusText,
+              body: errorText
+            });
+            return { 
+              data: null, 
+              error: { 
+                message: `Upload failed: ${result.status} ${result.statusText}`,
+                __isStorageError: true,
+                name: 'StorageError'
+              } as any
+            };
+          }
+          
+          const data = await result.json();
+          return { data, error: null };
+        };
+        
         return bucket;
       }
     };
