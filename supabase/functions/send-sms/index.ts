@@ -57,8 +57,26 @@ const sendVerificationCode = async (phone: string) => {
 
   if (!response.ok) {
     const error = await response.text();
-    console.error('Twilio Verify error:', error);
-    throw new Error(`Verification sending failed: ${response.status}`);
+    console.error('Twilio Verify error:', {
+      status: response.status,
+      statusText: response.statusText,
+      error: error,
+      phone: phone.slice(-4)
+    });
+    
+    // Parse Twilio error for specific messages
+    let errorMessage = `Verification sending failed: ${response.status}`;
+    try {
+      const errorData = JSON.parse(error);
+      if (errorData.message) {
+        errorMessage = errorData.message;
+        console.error('Twilio specific error:', errorData);
+      }
+    } catch (e) {
+      // Error parsing JSON, use generic message
+    }
+    
+    throw new Error(errorMessage);
   }
 
   return await response.json();
@@ -96,8 +114,26 @@ const verifyCode = async (phone: string, code: string) => {
 
   if (!response.ok) {
     const error = await response.text();
-    console.error('Twilio Verify check error:', error);
-    throw new Error(`Verification check failed: ${response.status}`);
+    console.error('Twilio Verify check error:', {
+      status: response.status,
+      statusText: response.statusText,
+      error: error,
+      phone: phone.slice(-4)
+    });
+    
+    // Parse Twilio error for specific messages
+    let errorMessage = `Verification check failed: ${response.status}`;
+    try {
+      const errorData = JSON.parse(error);
+      if (errorData.message) {
+        errorMessage = errorData.message;
+        console.error('Twilio verification error:', errorData);
+      }
+    } catch (e) {
+      // Error parsing JSON, use generic message
+    }
+    
+    throw new Error(errorMessage);
   }
 
   return await response.json();
