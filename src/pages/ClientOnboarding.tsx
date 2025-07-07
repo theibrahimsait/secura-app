@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { clientSupabase } from '@/lib/client-supabase';
 import { useToast } from '@/hooks/use-toast';
 import OnboardingWelcome from '@/components/OnboardingWelcome';
 import OnboardingProfile from '@/components/OnboardingProfile';
@@ -170,8 +171,8 @@ const ClientOnboarding = () => {
         for (const doc of documents) {
           const fileName = `${clientData.id}/${Date.now()}_${doc.name}`;
           
-          // Upload file to Supabase Storage
-          const { error: uploadError } = await supabase.storage
+          // Upload file to Supabase Storage using client session
+          const { error: uploadError } = await clientSupabase.storage
             .from('property-documents')
             .upload(fileName, doc);
 
@@ -180,8 +181,8 @@ const ClientOnboarding = () => {
             throw new Error(`Failed to upload ${doc.name}: ${uploadError.message}`);
           }
 
-          // Store document record in database
-          const { error: docError } = await supabase
+          // Store document record in database using client session
+          const { error: docError } = await clientSupabase
             .from('client_documents')
             .insert({
               client_id: clientData.id,
@@ -195,7 +196,7 @@ const ClientOnboarding = () => {
           if (docError) {
             console.error('Database error:', docError);
             // Try to clean up the uploaded file
-            await supabase.storage.from('property-documents').remove([fileName]);
+            await clientSupabase.storage.from('property-documents').remove([fileName]);
             throw docError;
           }
         }
