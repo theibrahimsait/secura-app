@@ -204,14 +204,17 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                 </div>
 
                 {/* Buttons */}
-                <div className="w-full">
+                <div className="w-full max-w-sm">
                   <motion.div
-                    className="flex items-center gap-2 justify-center"
+                    className="flex items-center gap-2"
+                    animate={{
+                      justifyContent: isExpanded ? 'center' : 'space-between'
+                    }}
                   >
                     {!isExpanded && (
                       <motion.button
                         initial={{ opacity: 0, width: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, width: "auto", scale: 1 }}
+                        animate={{ opacity: 1, width: "64px", scale: 1 }}
                         transition={{
                           type: "spring",
                           stiffness: 400,
@@ -222,7 +225,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                           opacity: { duration: 0.2 }
                         }}
                         onClick={handleBack}
-                        className="px-4 py-2 text-gray-600 bg-gray-200 font-medium rounded-full hover:bg-gray-300 transition-colors text-sm"
+                        className="px-4 py-2 text-gray-600 bg-gray-200 font-medium rounded-full hover:bg-gray-300 transition-colors text-sm flex items-center justify-center"
                       >
                         Back
                       </motion.button>
@@ -230,8 +233,19 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                     <motion.button
                       onClick={handleContinue}
                       disabled={!canContinue}
+                      animate={{
+                        width: isExpanded ? "200px" : "140px",
+                      }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 15,
+                        mass: 0.8,
+                        bounce: 0.25,
+                        duration: 0.6
+                      }}
                       className={cn(
-                        "px-8 py-2 rounded-full font-medium transition-all text-sm",
+                        "px-8 py-2 rounded-full font-medium transition-all text-sm flex items-center justify-center",
                         canContinue 
                           ? "bg-blue-500 hover:bg-blue-600 text-white" 
                           : "bg-gray-400 cursor-not-allowed text-white"
