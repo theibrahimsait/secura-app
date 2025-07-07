@@ -67,10 +67,10 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row font-geist">
+    <div className="min-h-screen flex flex-col lg:flex-row font-geist bg-transparent">
       {/* Left column: sign-in form */}
-      <section className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
+      <section className="flex-1 flex items-center justify-center p-8 bg-transparent">
+        <div className="w-full max-w-md bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
           <div className="flex flex-col gap-6">
             <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">{title}</h1>
             <p className="animate-element animate-delay-200 text-muted-foreground">{description}</p>
@@ -108,9 +108,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               </button>
             </form>
 
-            <div className="animate-element animate-delay-700 relative flex items-center justify-center">
+            <div className="animate-element animate-delay-700 relative flex items-center justify-center bg-transparent">
               <span className="w-full border-t border-border"></span>
-              <span className="px-4 text-sm text-muted-foreground bg-background absolute">Or</span>
+              <span className="px-4 text-sm text-muted-foreground bg-white/80 absolute rounded">Or</span>
             </div>
 
             {onGoogleSignIn && (
@@ -120,7 +120,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               </button>
             )}
 
-            <p className="animate-element animate-delay-900 text-center text-sm text-muted-foreground">
+            <p className="animate-element animate-delay-900 text-center text-sm text-muted-foreground bg-transparent">
               New to our platform? <a href="#" onClick={(e) => { e.preventDefault(); onCreateAccount?.(); }} className="text-secura-teal hover:underline transition-colors">Create Account</a>
             </p>
           </div>
