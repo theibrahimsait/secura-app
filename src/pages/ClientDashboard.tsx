@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send, Link, Home, Building, Trash2, ChevronLeft, ChevronRight, Settings, MessageSquare, Mail, History } from 'lucide-react';
 import PropertySubmissionModal from '@/components/PropertySubmissionModal';
+import AddPropertyModal from '@/components/AddPropertyModal';
 import { ClientSubmissionTimeline } from '@/components/ClientSubmissionTimeline';
 import { SubmissionAuditTrail } from '@/components/SubmissionAuditTrail';
 import { logSubmissionAction } from '@/lib/audit-logger';
@@ -238,6 +239,8 @@ const ClientDashboard = () => {
   };
 
   const handleAddProperty = () => {
+    // This function is no longer needed since we use the modal
+    // but keeping it for compatibility with mobile component
     navigate('/client/add-property');
   };
 
@@ -535,15 +538,10 @@ const ClientDashboard = () => {
                 <CardDescription>Manage your portfolio</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button 
-                  onClick={handleAddProperty}
-                  variant="lime"
-                  size="lg"
-                  className="w-full"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add New Property
-                </Button>
+                <AddPropertyModal
+                  clientData={clientData}
+                  onSuccess={loadClientData}
+                />
                 
                 <Button
                   onClick={() => navigate('/client/settings')}
