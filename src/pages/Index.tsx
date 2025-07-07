@@ -45,7 +45,7 @@ const Index = () => {
   }
 
   return (
-    <AuroraBackground className="bg-white">
+    <AuroraBackground className="min-h-screen">
       <div className="relative z-10 w-full">
         <SignInPage
           title={
