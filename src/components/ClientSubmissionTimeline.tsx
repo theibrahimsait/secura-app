@@ -103,66 +103,41 @@ export const ClientSubmissionTimeline = ({
 
   const downloadFile = async (filePath: string, fileName: string) => {
     try {
-      console.log('🔍 === FILE DOWNLOAD DEBUG ===');
-      console.log('🔍 Raw filePath from DB:', filePath);
+      console.log('🔍 === SECURE FILE DOWNLOAD ===');
+      console.log('🔍 File path:', filePath);
       console.log('🔍 File name:', fileName);
-      console.log('🔍 Session token:', clientSupabase.getSessionToken()?.substring(0, 8) + '...');
-      console.log('🔍 Current submission ID:', submissionId);
-      console.log('🔍 Client ID:', clientId);
       
-      // Log the path structure for debugging
-      const pathParts = filePath.split('/');
-      console.log('🔍 Path parts analysis:');
-      console.log('  - Full path:', filePath);
-      console.log('  - Split parts:', pathParts);
-      console.log('  - Parts count:', pathParts.length);
-      console.log('  - [0] (should be "submissions"):', pathParts[0]);
-      console.log('  - [1] (should be submission UUID):', pathParts[1]);
-      console.log('  - [2] (should be "updates"):', pathParts[2]);
-      console.log('  - [3] (should be filename):', pathParts[3]);
-      
-      // Validate path structure
-      if (pathParts.length !== 4 || pathParts[0] !== 'submissions' || pathParts[2] !== 'updates') {
-        console.error('❌ Invalid path structure detected!');
-        console.error('❌ Expected: submissions/<uuid>/updates/<filename>');
-        console.error('❌ Got:', filePath);
-        toast({
-          title: "Download Failed",
-          description: "Invalid file path structure.",
-          variant: "destructive",
-        });
-        return;
+      const sessionToken = clientSupabase.getSessionToken();
+      if (!sessionToken) {
+        throw new Error('No session token available');
       }
-      
-      // Check if submission UUID matches current submission
-      const fileSubmissionId = pathParts[1];
-      console.log('🔍 Submission ID comparison:');
-      console.log('  - From file path:', fileSubmissionId);
-      console.log('  - Current submission:', submissionId);
-      console.log('  - Match:', fileSubmissionId === submissionId);
-      
-      console.log('🔍 Making storage.download() call...');
-      console.log('🔍 Bucket: submission-updates');
-      console.log('🔍 Path being sent to Supabase:', filePath);
-      
-      const { data, error } = await clientSupabase.storage
-        .from('submission-updates')
-        .download(filePath);
 
-      console.log('🔍 Storage response received:');
-      console.log('  - Has data:', !!data);
-      console.log('  - Error:', error);
-      
-      if (error) {
-        console.error('❌ Detailed storage error:', {
-          message: error.message,
-          name: error.name,
-          details: error
+      // Get secure download URL from server
+      const { data: downloadUrl, error } = await clientSupabase
+        .rpc('get_client_file_download_url', {
+          p_client_session_token: sessionToken,
+          p_file_path: filePath
         });
+
+      if (error) {
+        console.error('❌ Error getting download URL:', error);
         throw error;
       }
 
-      const url = URL.createObjectURL(data);
+      if (!downloadUrl) {
+        throw new Error('Access denied or file not found');
+      }
+
+      console.log('✅ Secure download URL obtained');
+
+      // Download file using the secure URL
+      const response = await fetch(downloadUrl);
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = fileName;
@@ -170,6 +145,8 @@ export const ClientSubmissionTimeline = ({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+
+      console.log('✅ File downloaded successfully');
 
       // Log audit action for client file download
       await logSubmissionAction({
@@ -180,10 +157,10 @@ export const ClientSubmissionTimeline = ({
         fileName: fileName
       });
     } catch (error) {
-      console.error('Error downloading file:', error);
+      console.error('❌ Download error:', error);
       toast({
         title: "Download Failed",
-        description: "Could not download the file.",
+        description: error instanceof Error ? error.message : "Could not download the file.",
         variant: "destructive",
       });
     }
