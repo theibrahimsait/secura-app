@@ -162,7 +162,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               <FloatingPanelRoot>
                 <FloatingPanelTrigger
                   title="Create Account"
-                  className="bg-transparent border-none p-0 h-auto hover:underline text-secura-teal transition-colors text-sm font-normal ml-1"
+                  className="bg-transparent border-none p-0 h-auto hover:underline text-secura-teal transition-colors text-sm font-normal ml-1 inline"
                 >
                   Create Account
                 </FloatingPanelTrigger>
