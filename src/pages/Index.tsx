@@ -45,6 +45,10 @@ const Index = () => {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
+    if (!email || !password) {
+      return; // Don't submit if fields are empty
+    }
+
     setLoading(true);
     
     try {
