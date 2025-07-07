@@ -172,26 +172,26 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
               </div>
 
               {/* Progress Indicator */}
-              <div className="flex flex-col items-center justify-center gap-4">
+              <div className="flex flex-col items-center justify-center gap-3">
                 {/* Progress bar */}
-                <div className="flex items-center gap-2 relative">
+                <div className="flex items-center gap-1 relative">
                   {[1, 2, 3].map((dot, index) => (
                     <div
                       key={dot}
                       className={cn(
-                        "w-3 h-3 rounded-full relative z-10 transition-colors",
-                        dot <= currentStep ? "bg-white" : "bg-gray-300"
+                        "w-2 h-2 rounded-full relative z-10 transition-colors",
+                        dot <= currentStep ? "bg-white" : "bg-gray-400"
                       )}
                     />
                   ))}
 
                   {/* Green progress overlay */}
                   <motion.div
-                    initial={{ width: '12px' }}
+                    initial={{ width: '8px' }}
                     animate={{
-                      width: currentStep === 1 ? '12px' : currentStep === 2 ? '32px' : '52px',
+                      width: currentStep === 1 ? '8px' : currentStep === 2 ? '20px' : '32px',
                     }}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-6 bg-green-500 rounded-full -z-10"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-4 bg-green-500 rounded-full -z-10"
                     transition={{
                       type: "spring",
                       stiffness: 300,
@@ -206,15 +206,12 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                 {/* Buttons */}
                 <div className="w-full">
                   <motion.div
-                    className="flex items-center gap-2"
-                    animate={{
-                      justifyContent: isExpanded ? 'center' : 'space-between'
-                    }}
+                    className="flex items-center gap-2 justify-center"
                   >
                     {!isExpanded && (
                       <motion.button
                         initial={{ opacity: 0, width: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, width: "60px", scale: 1 }}
+                        animate={{ opacity: 1, width: "auto", scale: 1 }}
                         transition={{
                           type: "spring",
                           stiffness: 400,
@@ -225,7 +222,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                           opacity: { duration: 0.2 }
                         }}
                         onClick={handleBack}
-                        className="px-4 py-2 text-gray-700 bg-gray-100 font-medium rounded-full hover:bg-gray-50 transition-colors text-sm"
+                        className="px-4 py-2 text-gray-600 bg-gray-200 font-medium rounded-full hover:bg-gray-300 transition-colors text-sm"
                       >
                         Back
                       </motion.button>
@@ -233,15 +230,11 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                     <motion.button
                       onClick={handleContinue}
                       disabled={!canContinue}
-                      animate={{
-                        flex: isExpanded ? 1 : 'none',
-                      }}
                       className={cn(
-                        "px-6 py-2 rounded-full font-medium transition-all text-sm",
+                        "px-8 py-2 rounded-full font-medium transition-all text-sm",
                         canContinue 
                           ? "bg-blue-500 hover:bg-blue-600 text-white" 
-                          : "bg-gray-400 cursor-not-allowed text-white",
-                        isExpanded ? "w-full" : "flex-1"
+                          : "bg-gray-400 cursor-not-allowed text-white"
                       )}
                     >
                       <div className="flex items-center justify-center gap-2">
