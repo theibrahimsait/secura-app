@@ -454,9 +454,35 @@ const ClientLogin = () => {
                 )}
               </Button>
 
-              <div className="flex items-center justify-center text-sm text-muted-foreground mt-4">
-                <Shield className="w-4 h-4 mr-1" />
-                Your information is secure and encrypted
+              <div className="flex flex-col items-center justify-center text-sm text-muted-foreground mt-4 space-y-3">
+                <div className="flex items-center">
+                  <Shield className="w-4 h-4 mr-1" />
+                  Your information is secure and encrypted
+                </div>
+                
+                {/* Certification logos */}
+                <div className="flex items-center justify-center space-x-3 opacity-40">
+                  <img 
+                    src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/AES-256%20compliance.svg" 
+                    alt="AES-256 Compliance" 
+                    className="h-6 w-auto grayscale"
+                  />
+                  <img 
+                    src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/HIPAA%20Security.svg" 
+                    alt="HIPAA Security" 
+                    className="h-6 w-auto grayscale"
+                  />
+                  <img 
+                    src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/SOC%202%20Type%202%20Security.svg" 
+                    alt="SOC 2 Type 2 Security" 
+                    className="h-6 w-auto grayscale"
+                  />
+                  <img 
+                    src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/TLS_compliant.svg" 
+                    alt="TLS Compliant" 
+                    className="h-6 w-auto grayscale"
+                  />
+                </div>
               </div>
             </form>
           ) : (
