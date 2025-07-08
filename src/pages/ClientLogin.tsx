@@ -455,9 +455,9 @@ const ClientLogin = () => {
               </Button>
 
               <div className="flex flex-col items-center justify-center text-sm text-muted-foreground mt-4 space-y-3">
-                <div className="flex items-center">
+                <div className="flex items-center justify-center">
                   <Shield className="w-4 h-4 mr-1" />
-                  Your information is secure and encrypted
+                  Your data is secure and encrypted
                 </div>
                 
                 {/* Certification logos */}
@@ -468,14 +468,14 @@ const ClientLogin = () => {
                     className="h-6 w-auto grayscale"
                   />
                   <img 
-                    src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/HIPAA%20Security.svg" 
-                    alt="HIPAA Security" 
-                    className="h-6 w-auto"
+                    src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/HIPAA_compliance.svg" 
+                    alt="HIPAA Compliance" 
+                    className="h-6 w-auto grayscale"
                   />
                   <img 
-                    src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/SOC%202%20Type%202%20Security.svg" 
-                    alt="SOC 2 Type 2 Security" 
-                    className="h-6 w-auto"
+                    src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/SOC2compliance.svg" 
+                    alt="SOC 2 Compliance" 
+                    className="h-6 w-auto grayscale"
                   />
                   <img 
                     src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/TLS_compliant.svg" 
