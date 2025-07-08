@@ -73,7 +73,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
       {/* Secura Logo - positioned like landing page */}
       <div className="absolute top-8 left-8 z-20">
         <img 
-          src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" 
+          src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images//secfav.png" 
           alt="Secura" 
           className="h-8 w-auto"
         />
@@ -247,7 +247,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
                       className={cn(
                         "px-8 py-2 rounded-full font-medium transition-all text-sm flex items-center justify-center",
                         canContinue 
-                          ? "bg-blue-500 hover:bg-blue-600 text-white" 
+                          ? "bg-secura-lime hover:bg-secura-lime/90 text-secura-teal" 
                           : "bg-gray-400 cursor-not-allowed text-white"
                       )}
                     >
