@@ -461,7 +461,7 @@ const ClientLogin = () => {
                 </div>
                 
                 {/* Certification logos */}
-                <div className="flex items-center justify-center space-x-3 opacity-40">
+                <div className="flex items-center justify-center gap-3 opacity-40">
                   <img 
                     src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/AES-256%20compliance.svg" 
                     alt="AES-256 Compliance" 
