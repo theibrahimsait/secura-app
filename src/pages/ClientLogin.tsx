@@ -470,12 +470,12 @@ const ClientLogin = () => {
                   <img 
                     src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/HIPAA_compliance.svg" 
                     alt="HIPAA Compliance" 
-                    className="h-7 w-auto grayscale"
+                    className="h-8 w-auto grayscale"
                   />
                   <img 
                     src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/SOC2compliance.svg" 
                     alt="SOC 2 Compliance" 
-                    className="h-7 w-auto grayscale"
+                    className="h-8 w-auto grayscale"
                   />
                   <img 
                     src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/TLS_compliant.svg" 
