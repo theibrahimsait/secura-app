@@ -202,7 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
           `;
 
         await resend.emails.send({
-          from: "Secura <noreply@secura.me>",
+          from: "Secura <noreply@login.secura.me>",
           to: [email],
           subject: emailSubject,
           html: emailContent,
