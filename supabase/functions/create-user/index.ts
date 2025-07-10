@@ -150,7 +150,7 @@ const handler = async (req: Request): Promise<Response> => {
 
               <p><strong>Important:</strong> Please note that due to security reasons we cannot let users pick their own password, so please take note of this password.</p>
 
-              <p>You can access your dashboard at: <a href="${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.secura.app') || 'your-app-url'}/login">Login Here</a></p>
+              <p>You can access your dashboard at: <a href="https://login.secura.me">Login Here</a></p>
 
               <p>If you have any questions, please don't hesitate to contact our support team.</p>
 
@@ -172,7 +172,7 @@ const handler = async (req: Request): Promise<Response> => {
 
               <p><strong>Important:</strong> Please note that due to security reasons we cannot let users pick their own password, so please take note of this password.</p>
 
-              <p>You can access your dashboard at: <a href="${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.secura.app') || 'your-app-url'}/login">Login Here</a></p>
+              <p>You can access your dashboard at: <a href="https://login.secura.me">Login Here</a></p>
 
               <p>If you have any questions, please don't hesitate to contact our support team.</p>
 
@@ -193,7 +193,7 @@ const handler = async (req: Request): Promise<Response> => {
 
               <p><strong>Important:</strong> Please note that due to security reasons we cannot let users pick their own password, so please take note of this password.</p>
 
-              <p>You can access your dashboard at: <a href="${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.secura.app') || 'your-app-url'}/login">Login Here</a></p>
+              <p>You can access your dashboard at: <a href="https://login.secura.me">Login Here</a></p>
 
               <p>If you have any questions, please don't hesitate to contact our support team.</p>
 
