@@ -60,7 +60,7 @@ export const AgentReferralLink = ({ referralLink }: AgentReferralLinkProps) => {
           ) : (
             <>
               <Copy className="w-4 h-4 mr-1" />
-              Copy Magic Link
+              Copy
             </>
           )}
         </Button>
