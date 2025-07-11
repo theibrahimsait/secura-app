@@ -129,8 +129,7 @@ const ClientDashboardMobile = ({ properties, submissions = [], onAddProperty, on
             {agencyContext?.agencyName && onSubmitToAgency && (
               <Button
                 onClick={onSubmitToAgency}
-                variant="outline"
-                className="w-full border-secura-teal text-secura-teal hover:bg-secura-mint h-12 text-base font-medium"
+                className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal shadow-lg hover:shadow-xl transition-all duration-300 border border-secura-lime/20 hover:shadow-secura-lime/20 h-12 text-base font-medium"
               >
                 <Send className="w-5 h-5 mr-2" />
                 Submit to {agencyContext.agencyName}
