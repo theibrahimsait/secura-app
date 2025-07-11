@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Shield, Plus, Users, User, Activity, LogOut, Mail, Bell, FileText, Send, MessageSquare } from 'lucide-react';
+import { Shield, Plus, Users, User, Activity, LogOut, Mail, Bell, FileText, Send, MessageSquare, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AgencyNotifications from '@/components/AgencyNotifications';
 import { SubmissionTimeline } from '@/components/SubmissionTimeline';
@@ -65,6 +65,7 @@ const AgencyDashboard = () => {
   const [showDebug, setShowDebug] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [agencyName, setAgencyName] = useState<string>('');
+  const [highlightedPropertyId, setHighlightedPropertyId] = useState<string | null>(null);
   const [form, setForm] = useState<CreateAgentForm>({
     fullName: '',
     email: '',
@@ -247,6 +248,32 @@ const AgencyDashboard = () => {
       toast({
         title: "Error",
         description: "Failed to download document. Please try again or contact support if the issue persists.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMarkAsProcessed = async (submissionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('property_agency_submissions')
+        .update({ status: 'processed' })
+        .eq('id', submissionId);
+
+      if (error) throw error;
+
+      // Refresh submissions to show updated status
+      await fetchSubmissions();
+
+      toast({
+        title: "Success",
+        description: "Submission marked as processed",
+      });
+    } catch (error) {
+      console.error('Error updating submission status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update submission status",
         variant: "destructive",
       });
     }
@@ -505,6 +532,25 @@ const AgencyDashboard = () => {
     }
   }, [userProfile]);
 
+  // Handle URL parameters for tab switching and highlighting
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    const highlight = urlParams.get('highlight');
+    
+    if (tab) {
+      setActiveTab(tab);
+    }
+    
+    if (highlight) {
+      setHighlightedPropertyId(highlight);
+      // Clear highlight after 2 seconds
+      setTimeout(() => {
+        setHighlightedPropertyId(null);
+      }, 2000);
+    }
+  }, []);
+
   useEffect(() => {
     setLoading(false);
   }, [agents, submissions]);
@@ -679,7 +725,14 @@ const AgencyDashboard = () => {
                   </TableHeader>
                   <TableBody>
                     {submissions.map((submission) => (
-                      <TableRow key={submission.id}>
+                      <TableRow 
+                        key={submission.id}
+                        className={`transition-all duration-500 ${
+                          highlightedPropertyId === submission.property_id 
+                            ? 'bg-secura-lime/20 border-2 border-secura-lime shadow-lg animate-pulse' 
+                            : ''
+                        }`}
+                      >
                         <TableCell>
                           <div>
                             <p className="font-medium">{submission.client.full_name}</p>
@@ -694,11 +747,27 @@ const AgencyDashboard = () => {
                         </TableCell>
                         <TableCell>{submission.agent.full_name}</TableCell>
                         <TableCell>
-                          <Badge variant="secondary">Pending Review</Badge>
+                          <Badge 
+                            variant={submission.status === 'processed' ? 'default' : 'secondary'}
+                            className={submission.status === 'processed' ? 'bg-green-100 text-green-800' : ''}
+                          >
+                            {submission.status === 'processed' ? 'Processed' : 'Pending Review'}
+                          </Badge>
                         </TableCell>
                         <TableCell>{new Date(submission.created_at).toLocaleDateString()}</TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
+                            {submission.status !== 'processed' && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal border-secura-lime"
+                                onClick={() => handleMarkAsProcessed(submission.id)}
+                              >
+                                <Check className="w-4 h-4 mr-2" />
+                                Mark Processed
+                              </Button>
+                            )}
                             <Button 
                               size="sm" 
                               variant="outline"

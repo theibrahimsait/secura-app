@@ -280,7 +280,10 @@ const AgencyNotifications = ({ agencyId }: AgencyNotificationsProps) => {
                     className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
                     onClick={() => {
                       // Navigate to task manager with property highlighted
-                      window.location.href = `/agency/dashboard?highlight=${selectedNotification.property_id}`;
+                      const url = new URL(window.location.href);
+                      url.searchParams.set('tab', 'tasks');
+                      url.searchParams.set('highlight', selectedNotification.property_id!);
+                      window.location.href = url.toString();
                     }}
                   >
                     <Eye className="w-4 h-4 mr-2" />
