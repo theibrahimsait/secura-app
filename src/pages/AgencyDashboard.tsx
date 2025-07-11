@@ -85,6 +85,7 @@ const AgencyDashboard = () => {
   }>>([]);
   const [viewingDocument, setViewingDocument] = useState<{url: string, name: string, error?: string} | null>(null);
   const [documentZoom, setDocumentZoom] = useState(100);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   const handleViewDocument = async (document: any) => {
     try {
@@ -293,6 +294,23 @@ const AgencyDashboard = () => {
       setAgencyName(data.name || '');
     } catch (error: any) {
       console.error('Error fetching agency name:', error);
+    }
+  };
+
+  const fetchUnreadNotificationCount = async () => {
+    if (!userProfile?.agency_id) return;
+
+    try {
+      const { count, error } = await supabase
+        .from('agency_notifications')
+        .select('id', { count: 'exact' })
+        .eq('agency_id', userProfile.agency_id)
+        .eq('is_read', false);
+
+      if (error) throw error;
+      setUnreadNotificationCount(count || 0);
+    } catch (error: any) {
+      console.error('Error fetching unread notification count:', error);
     }
   };
 
@@ -529,6 +547,7 @@ const AgencyDashboard = () => {
       fetchAgents();
       fetchSubmissions();
       fetchAgencyName();
+      fetchUnreadNotificationCount();
     }
   }, [userProfile]);
 
@@ -627,11 +646,11 @@ const AgencyDashboard = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 rounded-xl bg-secura-lime/10 flex items-center justify-center">
-                      <Activity className="w-6 h-6 text-secura-teal" />
+                      <FileText className="w-6 h-6 text-secura-teal" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Active Agents</p>
-                      <p className="text-2xl font-bold">{agents.filter(a => a.is_active).length}</p>
+                      <p className="text-sm text-muted-foreground">Today's Submissions</p>
+                      <p className="text-2xl font-bold">{submissions.filter(s => new Date(s.created_at).toDateString() === new Date().toDateString()).length}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -656,8 +675,8 @@ const AgencyDashboard = () => {
                       <Bell className="w-6 h-6 text-orange-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">New Notifications</p>
-                      <p className="text-2xl font-bold">-</p>
+                      <p className="text-sm text-muted-foreground">Unread Notifications</p>
+                      <p className="text-2xl font-bold">{unreadNotificationCount}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -686,7 +705,12 @@ const AgencyDashboard = () => {
                           <p className="text-xs text-gray-500">Agent: {submission.agent?.full_name || 'No Agent'}</p>
                         </div>
                         <div className="text-right">
-                          <Badge variant="secondary">Pending</Badge>
+                          <Badge 
+                            variant={submission.status === 'approved' ? 'default' : 'secondary'}
+                            className={submission.status === 'approved' ? 'bg-green-100 text-green-800' : ''}
+                          >
+                            {submission.status === 'approved' ? 'Approved' : 'Pending'}
+                          </Badge>
                           <p className="text-xs text-gray-500 mt-1">
                             {new Date(submission.created_at).toLocaleDateString()}
                           </p>
