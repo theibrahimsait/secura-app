@@ -275,15 +275,16 @@ const AgencyNotifications = ({ agencyId }: AgencyNotificationsProps) => {
 
               <div className="flex space-x-2">
                 {selectedNotification.property_id && (
-                  <Button size="sm" className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal">
+                  <Button 
+                    size="sm" 
+                    className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
+                    onClick={() => {
+                      // Navigate to task manager with property highlighted
+                      window.location.href = `/agency/dashboard?highlight=${selectedNotification.property_id}`;
+                    }}
+                  >
                     <Eye className="w-4 h-4 mr-2" />
-                    View Property
-                  </Button>
-                )}
-                {selectedNotification.client_id && (
-                  <Button variant="outline" size="sm">
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Contact Client
+                    Manage Property
                   </Button>
                 )}
               </div>
