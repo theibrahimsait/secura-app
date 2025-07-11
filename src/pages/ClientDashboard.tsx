@@ -557,8 +557,7 @@ const ClientDashboard = () => {
                 {agencyContext?.agencyName && (
                   <Button
                     onClick={() => setShowSubmissionModal(true)}
-                    variant="outline"
-                    className="w-full border-secura-teal text-secura-teal hover:bg-secura-mint"
+                    className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal shadow-lg hover:shadow-xl transition-all duration-300 border border-secura-lime/20 hover:shadow-secura-lime/20"
                     size="lg"
                   >
                     <Send className="w-4 h-4 mr-2" />
