@@ -257,7 +257,7 @@ const AgencyDashboard = () => {
     try {
       const { error } = await supabase
         .from('property_agency_submissions')
-        .update({ status: 'processed' })
+        .update({ status: 'approved' })
         .eq('id', submissionId);
 
       if (error) throw error;
@@ -267,7 +267,7 @@ const AgencyDashboard = () => {
 
       toast({
         title: "Success",
-        description: "Submission marked as processed",
+        description: "Property submission approved and marked as processed",
       });
     } catch (error) {
       console.error('Error updating submission status:', error);
@@ -748,24 +748,23 @@ const AgencyDashboard = () => {
                         <TableCell>{submission.agent.full_name}</TableCell>
                         <TableCell>
                           <Badge 
-                            variant={submission.status === 'processed' ? 'default' : 'secondary'}
-                            className={submission.status === 'processed' ? 'bg-green-100 text-green-800' : ''}
+                            variant={submission.status === 'approved' ? 'default' : 'secondary'}
+                            className={submission.status === 'approved' ? 'bg-green-100 text-green-800' : ''}
                           >
-                            {submission.status === 'processed' ? 'Processed' : 'Pending Review'}
+                            {submission.status === 'approved' ? 'Approved' : 'Pending Review'}
                           </Badge>
                         </TableCell>
                         <TableCell>{new Date(submission.created_at).toLocaleDateString()}</TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            {submission.status !== 'processed' && (
+                            {submission.status !== 'approved' && (
                               <Button 
                                 size="sm" 
                                 variant="outline"
-                                className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal border-secura-lime"
+                                className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal border-secura-lime p-2"
                                 onClick={() => handleMarkAsProcessed(submission.id)}
                               >
-                                <Check className="w-4 h-4 mr-2" />
-                                Mark Processed
+                                <Check className="w-4 h-4" />
                               </Button>
                             )}
                             <Button 
