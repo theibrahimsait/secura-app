@@ -28,7 +28,7 @@ const AgencyNotifications = ({ agencyId }: AgencyNotificationsProps) => {
   const { toast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  
 
   useEffect(() => {
     loadNotifications();
@@ -84,7 +84,14 @@ const AgencyNotifications = ({ agencyId }: AgencyNotificationsProps) => {
     if (!notification.is_read) {
       await markAsRead(notification.id);
     }
-    setSelectedNotification(notification);
+    
+    // Navigate directly to task manager with property highlighted
+    if (notification.property_id) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', 'tasks');
+      url.searchParams.set('highlight', notification.property_id);
+      window.location.href = url.toString();
+    }
   };
 
   const getNotificationIcon = (type: string) => {
@@ -218,83 +225,6 @@ const AgencyNotifications = ({ agencyId }: AgencyNotificationsProps) => {
         </CardContent>
       </Card>
 
-      {/* Notification Detail Modal */}
-      {selectedNotification && (
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="flex items-center">
-                  {getNotificationIcon(selectedNotification.type)}
-                  <span className="ml-2">{selectedNotification.title}</span>
-                </CardTitle>
-                <CardDescription>
-                  {formatTime(selectedNotification.created_at)}
-                </CardDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedNotification(null)}
-              >
-                ×
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p className="text-sm text-gray-700">{selectedNotification.message}</p>
-              
-              {selectedNotification.metadata && (
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-sm mb-2">Details:</h4>
-                  <div className="space-y-2 text-sm">
-                    {selectedNotification.metadata.property_title && (
-                      <div>
-                        <span className="font-medium">Property:</span> {selectedNotification.metadata.property_title}
-                      </div>
-                    )}
-                    {selectedNotification.metadata.property_location && (
-                      <div>
-                        <span className="font-medium">Location:</span> {selectedNotification.metadata.property_location}
-                      </div>
-                    )}
-                    {selectedNotification.metadata.client_name && (
-                      <div>
-                        <span className="font-medium">Client:</span> {selectedNotification.metadata.client_name}
-                      </div>
-                    )}
-                    {selectedNotification.metadata.agent_name && (
-                      <div>
-                        <span className="font-medium">Agent:</span> {selectedNotification.metadata.agent_name}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex space-x-2">
-                {selectedNotification.property_id && (
-                  <Button 
-                    size="sm" 
-                    className="bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
-                    onClick={() => {
-                      // Navigate to task manager with property highlighted
-                      const url = new URL(window.location.href);
-                      url.searchParams.set('tab', 'tasks');
-                      url.searchParams.set('highlight', selectedNotification.property_id!);
-                      window.location.href = url.toString();
-                    }}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Manage Property
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
