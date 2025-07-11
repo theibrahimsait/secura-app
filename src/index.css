@@ -155,4 +155,70 @@
       box-shadow: 0 0 30px hsl(var(--secura-lime) / 0.6), 0 0 40px hsl(var(--secura-mint) / 0.4);
     }
   }
+
+  @keyframes gradient-border {
+    0%, 100% {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(180deg);
+    }
+  }
+
+  @keyframes gradient-1 {
+    0%, 16.667%, 100% {
+      transform: translateX(0) translateY(0);
+    }
+    33.333% {
+      transform: translateX(100px) translateY(-100px);
+    }
+    50% {
+      transform: translateX(200px) translateY(0);
+    }
+    66.667% {
+      transform: translateX(100px) translateY(100px);
+    }
+    83.333% {
+      transform: translateX(0) translateY(100px);
+    }
+  }
+
+  @keyframes gradient-2 {
+    0%, 20%, 100% {
+      transform: translateX(0) translateY(0);
+    }
+    40% {
+      transform: translateX(-100px) translateY(-100px);
+    }
+    60% {
+      transform: translateX(-200px) translateY(0);
+    }
+    80% {
+      transform: translateX(-100px) translateY(100px);
+    }
+  }
+
+  @keyframes gradient-3 {
+    0%, 25%, 100% {
+      transform: translateX(0) translateY(0);
+    }
+    50% {
+      transform: translateX(100px) translateY(100px);
+    }
+    75% {
+      transform: translateX(-100px) translateY(100px);
+    }
+  }
+
+  @keyframes gradient-4 {
+    0%, 30%, 100% {
+      transform: translateX(0) translateY(0);
+    }
+    60% {
+      transform: translateX(-100px) translateY(-100px);
+    }
+    90% {
+      transform: translateX(100px) translateY(-100px);
+    }
+  }
 }

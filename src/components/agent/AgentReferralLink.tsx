@@ -1,8 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Copy } from 'lucide-react';
+import { Copy, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { GradientText } from '@/components/ui/gradient-text';
+import { useState } from 'react';
 
 interface AgentReferralLinkProps {
   referralLink: string;
@@ -10,20 +12,30 @@ interface AgentReferralLinkProps {
 
 export const AgentReferralLink = ({ referralLink }: AgentReferralLinkProps) => {
   const { toast } = useToast();
+  const [isCopying, setIsCopying] = useState(false);
 
   const copyToClipboard = async () => {
     if (referralLink) {
+      setIsCopying(true);
       await navigator.clipboard.writeText(`${window.location.origin}${referralLink}`);
-      toast({ title: 'Copied!', description: 'Referral link copied to clipboard.' });
+      toast({ 
+        title: '✨ Magic link copied!', 
+        description: 'Your special link is ready to share.' 
+      });
+      
+      // Reset animation after it completes
+      setTimeout(() => setIsCopying(false), 1000);
     }
   };
 
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle>Permanent Referral Link</CardTitle>
+        <CardTitle className="text-2xl">
+          Your <GradientText className="font-semibold">Magic</GradientText> Link
+        </CardTitle>
         <CardDescription>
-          This is your permanent referral link. Share it with clients to onboard them. The link will always be the same.
+          Share this special link with clients to instantly connect them to your agency. One link, infinite possibilities.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex items-center gap-2">
@@ -34,10 +46,23 @@ export const AgentReferralLink = ({ referralLink }: AgentReferralLinkProps) => {
           onClick={e => (e.target as HTMLInputElement).select()}
         />
         <Button
-          variant="outline"
           onClick={copyToClipboard}
+          className={`bg-secura-lime hover:bg-secura-lime/90 text-secura-black transition-all duration-300 ${
+            isCopying ? 'scale-110 shadow-lg shadow-secura-lime/50' : ''
+          }`}
+          disabled={isCopying}
         >
-          <Copy className="w-4 h-4 mr-1" /> Copy
+          {isCopying ? (
+            <>
+              <Sparkles className="w-4 h-4 mr-1 animate-spin" />
+              Copied!
+            </>
+          ) : (
+            <>
+              <Copy className="w-4 h-4 mr-1" />
+              Copy Magic Link
+            </>
+          )}
         </Button>
       </CardContent>
     </Card>
