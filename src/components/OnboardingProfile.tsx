@@ -10,13 +10,11 @@ interface OnboardingProfileProps {
     email: string;
   };
   onProfileChange: (data: { fullName: string; email: string }) => void;
-  onSubmit: (e: React.FormEvent) => void;
 }
 
 const OnboardingProfile: React.FC<OnboardingProfileProps> = ({
   profileData,
-  onProfileChange,
-  onSubmit
+  onProfileChange
 }) => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -28,34 +26,30 @@ const OnboardingProfile: React.FC<OnboardingProfileProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={onSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="fullName">Full Name *</Label>
-              <Input
-                id="fullName"
-                value={profileData.fullName}
-                onChange={(e) => onProfileChange({ ...profileData, fullName: e.target.value })}
-                placeholder="Enter your full name"
-                required
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="email">Email Address *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={profileData.email}
-                onChange={(e) => onProfileChange({ ...profileData, email: e.target.value })}
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-
-            <Button type="submit" className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal">
-              Continue
-            </Button>
-          </form>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="fullName">Full Name *</Label>
+            <Input
+              id="fullName"
+              value={profileData.fullName}
+              onChange={(e) => onProfileChange({ ...profileData, fullName: e.target.value })}
+              placeholder="Enter your full name"
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="email">Email Address *</Label>
+            <Input
+              id="email"
+              type="email"
+              value={profileData.email}
+              onChange={(e) => onProfileChange({ ...profileData, email: e.target.value })}
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+        </div>
         </CardContent>
       </Card>
     </div>

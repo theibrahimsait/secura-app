@@ -7,6 +7,7 @@ import OnboardingWelcome from '@/components/OnboardingWelcome';
 import OnboardingProfile from '@/components/OnboardingProfile';
 import OnboardingDocuments from '@/components/OnboardingDocuments';
 import OnboardingComplete from '@/components/OnboardingComplete';
+import ProgressIndicator from '@/components/ui/progress-indicator';
 
 interface Agency {
   id: string;
@@ -99,29 +100,47 @@ const ClientOnboarding = () => {
     }
   };
 
-  const handleAcceptTerms = () => {
-    if (!termsAccepted) {
-      toast({
-        title: "Terms Required",
-        description: "Please accept the terms and conditions to continue.",
-        variant: "destructive",
-      });
-      return;
+  const handleNext = () => {
+    if (step === 1) {
+      if (!termsAccepted) {
+        toast({
+          title: "Terms Required",
+          description: "Please accept the terms and conditions to continue.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setStep(2);
+    } else if (step === 2) {
+      if (!profileData.fullName || !profileData.email) {
+        toast({
+          title: "Missing Information",
+          description: "Please fill in all required fields.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setStep(3);
     }
-    setStep(2);
   };
 
-  const handleProfileSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!profileData.fullName || !profileData.email) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
+  const handleBack = () => {
+    if (step > 1) {
+      setStep(step - 1);
     }
-    setStep(3);
+  };
+
+  const canContinue = () => {
+    switch (step) {
+      case 1:
+        return termsAccepted;
+      case 2:
+        return !!(profileData.fullName && profileData.email);
+      case 3:
+        return true; // Documents are optional
+      default:
+        return false;
+    }
   };
 
   const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -240,45 +259,66 @@ const ClientOnboarding = () => {
     }
   };
 
-  if (step === 1) {
-    return (
-      <OnboardingWelcome
-        agency={agency}
-        agent={agent}
-        termsAccepted={termsAccepted}
-        onTermsChange={setTermsAccepted}
-        onContinue={handleAcceptTerms}
-      />
-    );
-  }
-
-  if (step === 2) {
-    return (
-      <OnboardingProfile
-        profileData={profileData}
-        onProfileChange={setProfileData}
-        onSubmit={handleProfileSubmit}
-      />
-    );
-  }
-
-  if (step === 3) {
-    return (
-      <OnboardingDocuments
-        documents={documents}
-        loading={loading}
-        onDocumentUpload={handleDocumentUpload}
-        onRemoveDocument={removeDocument}
-        onComplete={completeOnboarding}
-      />
-    );
-  }
+  const getStepContent = () => {
+    switch (step) {
+      case 1:
+        return (
+          <OnboardingWelcome
+            agency={agency}
+            agent={agent}
+            termsAccepted={termsAccepted}
+            onTermsChange={setTermsAccepted}
+          />
+        );
+      case 2:
+        return (
+          <OnboardingProfile
+            profileData={profileData}
+            onProfileChange={setProfileData}
+          />
+        );
+      case 3:
+        return (
+          <OnboardingDocuments
+            documents={documents}
+            loading={loading}
+            onDocumentUpload={handleDocumentUpload}
+            onRemoveDocument={removeDocument}
+          />
+        );
+      default:
+        return <OnboardingComplete />;
+    }
+  };
 
   if (step === 4) {
     return <OnboardingComplete />;
   }
 
-  return null;
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex flex-col min-h-screen">
+        <div className="flex-1">
+          {getStepContent()}
+        </div>
+        
+        {/* Progress Indicator at the bottom */}
+        <div className="bg-white border-t p-6">
+          <div className="max-w-md mx-auto">
+            <ProgressIndicator
+              step={step}
+              totalSteps={3}
+              onNext={handleNext}
+              onBack={handleBack}
+              onSubmit={completeOnboarding}
+              isLoading={loading}
+              canContinue={canContinue()}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default ClientOnboarding;

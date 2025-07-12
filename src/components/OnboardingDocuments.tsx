@@ -9,15 +9,13 @@ interface OnboardingDocumentsProps {
   loading: boolean;
   onDocumentUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveDocument: (index: number) => void;
-  onComplete: () => void;
 }
 
 const OnboardingDocuments: React.FC<OnboardingDocumentsProps> = ({
   documents,
   loading,
   onDocumentUpload,
-  onRemoveDocument,
-  onComplete
+  onRemoveDocument
 }) => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -64,25 +62,9 @@ const OnboardingDocuments: React.FC<OnboardingDocumentsProps> = ({
             </div>
           )}
 
-          <div className="space-y-2">
-            <Button
-              onClick={onComplete}
-              disabled={loading}
-              className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal"
-            >
-              {loading ? 'Setting up...' : 'Complete Setup'}
-            </Button>
-            
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onComplete}
-              disabled={loading}
-              className="w-full"
-            >
-              Skip for now
-            </Button>
-          </div>
+          <p className="text-sm text-gray-600 mt-4">
+            You can upload documents now or skip this step and add them later from your dashboard.
+          </p>
         </CardContent>
       </Card>
     </div>

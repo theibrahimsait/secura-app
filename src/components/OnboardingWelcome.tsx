@@ -12,7 +12,6 @@ interface OnboardingWelcomeProps {
   agent: { full_name: string } | null;
   termsAccepted: boolean;
   onTermsChange: (accepted: boolean) => void;
-  onContinue: () => void;
 }
 
 const features = [
@@ -37,37 +36,8 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
   agency,
   agent,
   termsAccepted,
-  onTermsChange,
-  onContinue
+  onTermsChange
 }) => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isExpanded, setIsExpanded] = useState(true);
-
-  const handleContinue = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
-      setIsExpanded(false);
-    } else if (currentStep === 3) {
-      // Final step - accept terms and continue
-      if (!termsAccepted) {
-        onTermsChange(true);
-      }
-      onContinue();
-    }
-  };
-
-  const handleBack = () => {
-    if (currentStep === 2) {
-      setIsExpanded(true);
-    }
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const isTermsStep = currentStep === 3;
-  const canContinue = !isTermsStep || termsAccepted;
-
   return (
     <AuroraBackground className="min-h-screen">
       {/* Secura Logo - positioned like landing page */}
@@ -83,7 +53,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-sm"
+          className="w-full max-w-md"
         >
           {/* Glassmorphic card matching landing page style */}
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white/20">
@@ -106,171 +76,58 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
               )}
             </div>
 
-            <div className="space-y-4">
-              {/* Feature content */}
-              <div className="mb-4">
-                <AnimatePresence mode="wait">
-                  {!isTermsStep ? (
-                    <motion.div
-                      key={`feature-${currentStep}`}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.3 }}
-                      className="text-center"
-                    >
-                      <div className="p-4 rounded-2xl bg-white/40 backdrop-blur-sm border border-white/20 mb-4">
-                        {React.createElement(features[currentStep - 1].icon, {
-                          className: "w-10 h-10 mx-auto mb-3 text-secura-teal"
-                        })}
-                        <h3 className="text-lg font-medium mb-2 text-foreground">
-                          {features[currentStep - 1].title}
-                        </h3>
-                        <p className="text-muted-foreground text-sm leading-relaxed">
-                          {features[currentStep - 1].description}
-                        </p>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="terms"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.3 }}
-                      className="text-center"
-                    >
-                      <div className="p-4 rounded-2xl bg-white/40 backdrop-blur-sm border border-white/20 mb-4">
-                        <CheckCircle className="w-10 h-10 mx-auto mb-3 text-secura-teal" />
-                        <h3 className="text-lg font-medium mb-4 text-foreground">
-                          Terms & Conditions
-                        </h3>
-                        <div className="flex items-start space-x-3">
-                          <Checkbox 
-                            id="terms" 
-                            checked={termsAccepted}
-                            onCheckedChange={(checked) => onTermsChange(checked as boolean)}
-                            className="mt-1"
-                          />
-                          <div className="text-sm text-left">
-                            <label htmlFor="terms" className="cursor-pointer text-muted-foreground">
-                              I agree to the{' '}
-                              <a href="/terms" target="_blank" className="text-secura-teal hover:underline font-medium">
-                                Terms of Service
-                              </a>{' '}
-                              and{' '}
-                              <a href="/privacy" target="_blank" className="text-secura-teal hover:underline font-medium">
-                                Privacy Policy
-                              </a>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+            <div className="space-y-6">
+              {/* Features showcase */}
+              {features.map((feature, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="p-4 rounded-2xl bg-white/40 backdrop-blur-sm border border-white/20"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-secura-lime/20 flex items-center justify-center">
+                      {React.createElement(feature.icon, {
+                        className: "w-5 h-5 text-secura-teal"
+                      })}
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-foreground">
+                        {feature.title}
+                      </h3>
+                      <p className="text-muted-foreground text-sm">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
 
-              {/* Progress Indicator */}
-              <div className="flex flex-col items-center justify-center gap-6">
-                {/* Progress bar */}
-                <div className="flex items-center gap-1 relative">
-                  {[1, 2, 3].map((dot, index) => (
-                    <div
-                      key={dot}
-                      className={cn(
-                        "w-2 h-2 rounded-full relative z-10 transition-colors",
-                        dot <= currentStep ? "bg-white" : "bg-gray-400"
-                      )}
-                    />
-                  ))}
-
-                  {/* Green progress overlay */}
-                  <motion.div
-                    initial={{ width: '8px' }}
-                    animate={{
-                      width: currentStep === 1 ? '8px' : currentStep === 2 ? '20px' : '32px',
-                    }}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-4 bg-green-500 rounded-full -z-10"
-                    transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 20,
-                      mass: 0.8,
-                      bounce: 0.25,
-                      duration: 0.6
-                    }}
+              {/* Terms & Conditions */}
+              <div className="p-4 rounded-2xl bg-white/40 backdrop-blur-sm border border-white/20">
+                <h3 className="font-medium mb-4 text-foreground">
+                  Terms & Conditions
+                </h3>
+                <div className="flex items-start space-x-3">
+                  <Checkbox 
+                    id="terms" 
+                    checked={termsAccepted}
+                    onCheckedChange={(checked) => onTermsChange(checked as boolean)}
+                    className="mt-1"
                   />
-                </div>
-
-                {/* Buttons */}
-                <div className="w-full max-w-sm">
-                  <motion.div
-                    className="flex items-center gap-1"
-                    animate={{
-                      justifyContent: isExpanded ? 'center' : 'space-between'
-                    }}
-                  >
-                    {!isExpanded && (
-                      <motion.button
-                        initial={{ opacity: 0, width: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, width: "64px", scale: 1 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 15,
-                          mass: 0.8,
-                          bounce: 0.25,
-                          duration: 0.6,
-                          opacity: { duration: 0.2 }
-                        }}
-                        onClick={handleBack}
-                        className="px-4 py-2 text-gray-600 bg-gray-200 font-medium rounded-full hover:bg-gray-300 transition-colors text-sm flex items-center justify-center"
-                      >
-                        Back
-                      </motion.button>
-                    )}
-                    <motion.button
-                      onClick={handleContinue}
-                      disabled={!canContinue}
-                      animate={{
-                        width: isExpanded ? "200px" : "140px",
-                      }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 15,
-                        mass: 0.8,
-                        bounce: 0.25,
-                        duration: 0.6
-                      }}
-                      className={cn(
-                        "px-8 py-2 rounded-full font-medium transition-all text-sm flex items-center justify-center",
-                        canContinue 
-                          ? "bg-secura-lime hover:bg-secura-lime/90 text-secura-teal" 
-                          : "bg-gray-400 cursor-not-allowed text-white"
-                      )}
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        {currentStep === 3 && termsAccepted && (
-                          <motion.div
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{
-                              type: "spring",
-                              stiffness: 500,
-                              damping: 15,
-                              mass: 0.5,
-                              bounce: 0.4
-                            }}
-                          >
-                            <CircleCheck size={16} />
-                          </motion.div>
-                        )}
-                        {currentStep === 3 ? 'Finish' : 'Continue'}
-                      </div>
-                    </motion.button>
-                  </motion.div>
+                  <div className="text-sm text-left">
+                    <label htmlFor="terms" className="cursor-pointer text-muted-foreground">
+                      I agree to the{' '}
+                      <a href="/terms" target="_blank" className="text-secura-teal hover:underline font-medium">
+                        Terms of Service
+                      </a>{' '}
+                      and{' '}
+                      <a href="/privacy" target="_blank" className="text-secura-teal hover:underline font-medium">
+                        Privacy Policy
+                      </a>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
