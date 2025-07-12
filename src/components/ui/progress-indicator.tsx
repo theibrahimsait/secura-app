@@ -121,7 +121,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
                   <CircleCheck size={16} />
                 </motion.div>
               )}
-              {isLoading ? 'Loading...' : (step === totalSteps ? 'Submit Property' : 'Continue')}
+              {isLoading ? 'Loading...' : (step === totalSteps ? 'Register' : 'Continue')}
             </div>
           </motion.button>
         </motion.div>
