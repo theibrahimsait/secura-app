@@ -2,20 +2,24 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
-import { Client } from '@/types/agent';
+import { Client, Property } from '@/types/agent';
 import { useAgentData } from '@/hooks/useAgentData';
 import { useAgencyName } from '@/hooks/useAgencyName';
 import { useReferralLink } from '@/hooks/useReferralLink';
+import { AgentStats } from '@/components/agent/AgentStats';
 import { AgentReferralLink } from '@/components/agent/AgentReferralLink';
 import { AgentClientsTable } from '@/components/agent/AgentClientsTable';
+import { AgentPropertiesTable } from '@/components/agent/AgentPropertiesTable';
 import { ClientPropertiesModal } from '@/components/agent/ClientPropertiesModal';
+import { PropertyDetailsModal } from '@/components/agent/PropertyDetailsModal';
 
 const AgentDashboard = () => {
   const { signOut, userProfile, loading, isAuthenticated } = useAuth();
-  const { clients } = useAgentData();
+  const { clients, properties } = useAgentData();
   const { agencyName } = useAgencyName();
   const { referralLink } = useReferralLink(agencyName);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -30,6 +34,9 @@ const AgentDashboard = () => {
     setSelectedClient(client);
   };
 
+  const handlePropertyClick = (property: Property) => {
+    setSelectedProperty(property);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -45,7 +52,7 @@ const AgentDashboard = () => {
               />
               <div>
                 <h1 className="text-2xl font-bold text-secura-black">Agent Dashboard</h1>
-                <p className="text-sm text-muted-foreground">Manage your clients and referrals</p>
+                <p className="text-sm text-muted-foreground">Manage your clients and properties</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -67,15 +74,26 @@ const AgentDashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Stats Cards */}
+        <AgentStats 
+          clients={clients} 
+          properties={properties} 
+          referralLink={referralLink} 
+        />
+
         {/* Permanent Referral Link */}
         <AgentReferralLink referralLink={referralLink} />
 
-        {/* My Clients */}
-        <div className="space-y-6">
+        {/* Tables */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <AgentClientsTable 
             clients={clients} 
             onClientClick={handleClientClick} 
+          />
+          <AgentPropertiesTable 
+            properties={properties} 
+            onPropertyClick={handlePropertyClick} 
           />
         </div>
         
@@ -86,6 +104,12 @@ const AgentDashboard = () => {
           onOpenChange={() => setSelectedClient(null)}
         />
         
+        {/* Property Details Modal */}
+        <PropertyDetailsModal
+          property={selectedProperty}
+          open={!!selectedProperty}
+          onOpenChange={() => setSelectedProperty(null)}
+        />
       </main>
     </div>
   );
