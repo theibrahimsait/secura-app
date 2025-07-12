@@ -296,23 +296,25 @@ const ClientOnboarding = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="flex-1 overflow-auto">
-        {getStepContent()}
-      </div>
-      
-      {/* Fixed Progress Indicator at the bottom */}
-      <div className="bg-white border-t p-6 flex-shrink-0">
-        <div className="max-w-md mx-auto">
-          <ProgressIndicator
-            step={step}
-            totalSteps={3}
-            onNext={handleNext}
-            onBack={handleBack}
-            onSubmit={completeOnboarding}
-            isLoading={loading}
-            canContinue={canContinue()}
-          />
+    <div className="bg-gray-50">
+      <div className="min-h-screen flex flex-col">
+        <div className="flex-1 px-4 py-6">
+          {getStepContent()}
+        </div>
+        
+        {/* Progress Indicator - sticky when content is short, normal flow when content is long */}
+        <div className="bg-white border-t p-4 sticky bottom-0 z-10">
+          <div className="max-w-md mx-auto">
+            <ProgressIndicator
+              step={step}
+              totalSteps={3}
+              onNext={handleNext}
+              onBack={handleBack}
+              onSubmit={completeOnboarding}
+              isLoading={loading}
+              canContinue={canContinue()}
+            />
+          </div>
         </div>
       </div>
     </div>
