@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send, Link, Home, Building, Trash2, ChevronLeft, ChevronRight, Settings, MessageSquare, Mail, History } from 'lucide-react';
-import PropertySubmissionFloatingPanel from '@/components/PropertySubmissionFloatingPanel';
+import PropertySubmissionModal from '@/components/PropertySubmissionModal';
 import { ClientSubmissionTimeline } from '@/components/ClientSubmissionTimeline';
 import { SubmissionAuditTrail } from '@/components/SubmissionAuditTrail';
 import { logSubmissionAction } from '@/lib/audit-logger';
@@ -84,6 +84,7 @@ const ClientDashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [allUpdates, setAllUpdates] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<PropertySubmission[]>([]);
+  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [showSubmissionsView, setShowSubmissionsView] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<PropertySubmission | null>(null);
   const [selectedAuditSubmission, setSelectedAuditSubmission] = useState<PropertySubmission | null>(null);
@@ -347,15 +348,24 @@ const ClientDashboard = () => {
           properties={properties}
           submissions={submissions}
           onAddProperty={handleAddProperty}
-          onSubmitToAgency={agencyContext?.agencyName ? () => {
-            // For mobile, we can show the floating panel or use the existing modal
-            // The floating panel will automatically handle mobile responsiveness
-          } : undefined}
+          onSubmitToAgency={agencyContext?.agencyName ? () => setShowSubmissionModal(true) : undefined}
           onOpenSubmission={(submission) => setSelectedSubmission(submission)}
           onOpenAudit={(submission) => setSelectedAuditSubmission(submission)}
           onLogout={handleLogout}
           onOpenSettings={() => navigate('/client/settings')}
         />
+
+        {/* Property Submission Modal */}
+        {agencyContext && clientData && (
+          <PropertySubmissionModal
+            isOpen={showSubmissionModal}
+            onClose={() => setShowSubmissionModal(false)}
+            properties={properties}
+            clientData={clientData}
+            agentAgencyInfo={agencyContext}
+            onSubmissionComplete={handleSubmissionComplete}
+          />
+        )}
 
         {/* Communication Timeline Modal */}
         {selectedSubmission && clientData && (
@@ -545,17 +555,14 @@ const ClientDashboard = () => {
                 </Button>
                 
                 {agencyContext?.agencyName && (
-                  <PropertySubmissionFloatingPanel
-                    properties={properties}
-                    clientData={clientData}
-                    agentAgencyInfo={agencyContext}
-                    onSubmissionComplete={handleSubmissionComplete}
-                    onAddProperty={handleAddProperty}
-                    triggerClassName="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal shadow-lg hover:shadow-xl transition-all duration-300 border border-secura-lime/20 hover:shadow-secura-lime/20 h-11 justify-center font-medium"
+                  <Button
+                    onClick={() => setShowSubmissionModal(true)}
+                    className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal shadow-lg hover:shadow-xl transition-all duration-300 border border-secura-lime/20 hover:shadow-secura-lime/20"
+                    size="lg"
                   >
                     <Send className="w-4 h-4 mr-2" />
                     Submit to {agencyContext.agencyName}
-                  </PropertySubmissionFloatingPanel>
+                  </Button>
                 )}
               </CardContent>
             </Card>
@@ -747,6 +754,17 @@ const ClientDashboard = () => {
         </div>
       </main>
 
+      {/* Property Submission Modal */}
+      {agencyContext && clientData && (
+        <PropertySubmissionModal
+          isOpen={showSubmissionModal}
+          onClose={() => setShowSubmissionModal(false)}
+          properties={properties}
+          clientData={clientData}
+          agentAgencyInfo={agencyContext}
+          onSubmissionComplete={handleSubmissionComplete}
+        />
+      )}
 
       {/* Submissions View Modal */}
       {showSubmissionsView && (
