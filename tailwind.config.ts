@@ -132,11 +132,16 @@ export default {
 						backgroundPosition: "350% 50%, 350% 50%",
 					},
 				},
+				shimmer: {
+					"0%": { transform: "translateX(-100%)" },
+					"100%": { transform: "translateX(200%)" },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				aurora: "aurora 60s linear infinite",
+				shimmer: "shimmer 2s ease-in-out infinite",
 			}
 		}
 	},

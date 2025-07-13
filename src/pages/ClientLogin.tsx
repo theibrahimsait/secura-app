@@ -377,17 +377,20 @@ const ClientLogin = () => {
           </div>
           
           {agencyInfo && (
-            <div className="mb-6 px-4 py-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl border border-primary/20 shadow-sm">
-              <div className="flex items-center justify-center">
+            <div className="mb-6 px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200/50 shadow-sm relative overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-100/30 to-transparent animate-shimmer"></div>
+              
+              <div className="flex items-center justify-center relative">
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                  <p className="text-sm font-medium text-primary">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <p className="text-sm font-medium text-green-800">
                     Sent by: {agencyInfo.name}
                   </p>
                 </div>
               </div>
               {agencyInfo.description && (
-                <p className="text-xs text-primary/70 mt-2 text-center">{agencyInfo.description}</p>
+                <p className="text-xs text-green-700/80 mt-2 text-center relative">{agencyInfo.description}</p>
               )}
             </div>
           )}
