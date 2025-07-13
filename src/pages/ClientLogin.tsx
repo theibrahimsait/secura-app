@@ -377,12 +377,17 @@ const ClientLogin = () => {
           </div>
           
           {agencyInfo && (
-            <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-800">
-                <span className="font-medium">Sent by:</span> {agencyInfo.name}
-              </p>
+            <div className="mb-6 px-4 py-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl border border-primary/20 shadow-sm">
+              <div className="flex items-center justify-center">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                  <p className="text-sm font-medium text-primary">
+                    Sent by: {agencyInfo.name}
+                  </p>
+                </div>
+              </div>
               {agencyInfo.description && (
-                <p className="text-xs text-blue-600 mt-1">{agencyInfo.description}</p>
+                <p className="text-xs text-primary/70 mt-2 text-center">{agencyInfo.description}</p>
               )}
             </div>
           )}
