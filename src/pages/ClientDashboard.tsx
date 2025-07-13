@@ -13,6 +13,13 @@ import { ClientSubmissionTimeline } from '@/components/ClientSubmissionTimeline'
 import { SubmissionAuditTrail } from '@/components/SubmissionAuditTrail';
 import { logSubmissionAction } from '@/lib/audit-logger';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { 
+  FloatingPanelRoot, 
+  FloatingPanelTrigger, 
+  FloatingPanelContent, 
+  FloatingPanelBody, 
+  FloatingPanelButton 
+} from '@/components/ui/floating-panel';
 import {
   Pagination,
   PaginationContent,
@@ -555,14 +562,63 @@ const ClientDashboard = () => {
                 </Button>
                 
                 {agencyContext?.agencyName && (
-                  <Button
-                    onClick={() => setShowSubmissionModal(true)}
-                    className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal shadow-lg hover:shadow-xl transition-all duration-300 border border-secura-lime/20 hover:shadow-secura-lime/20"
-                    size="lg"
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    Submit to {agencyContext.agencyName}
-                  </Button>
+                  <FloatingPanelRoot>
+                    <FloatingPanelTrigger
+                      title="Submit Properties"
+                      className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal shadow-lg hover:shadow-xl transition-all duration-300 border border-secura-lime/20 hover:shadow-secura-lime/20 h-11 justify-center font-medium"
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Submit to {agencyContext.agencyName}
+                    </FloatingPanelTrigger>
+                    <FloatingPanelContent className="w-80">
+                      <FloatingPanelBody>
+                        <div className="space-y-3">
+                          <div className="text-center pb-2">
+                            <h3 className="font-semibold text-foreground">Property Submission</h3>
+                            <p className="text-sm text-muted-foreground">
+                              Submit your properties to {agencyContext.agencyName}
+                            </p>
+                          </div>
+                          
+                          {properties.length === 0 ? (
+                            <div className="text-center py-6">
+                              <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                              <p className="text-sm text-muted-foreground mb-4">
+                                No properties available to submit
+                              </p>
+                              <FloatingPanelButton
+                                onClick={handleAddProperty}
+                                className="w-full bg-secura-teal hover:bg-secura-moss text-white"
+                              >
+                                <Plus className="w-4 h-4 mr-2" />
+                                Add Property
+                              </FloatingPanelButton>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium text-foreground">Quick Actions:</p>
+                                <FloatingPanelButton
+                                  onClick={() => setShowSubmissionModal(true)}
+                                  className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal border border-secura-lime/20"
+                                >
+                                  <Send className="w-4 h-4 mr-2" />
+                                  Select Properties to Submit
+                                </FloatingPanelButton>
+                                <FloatingPanelButton
+                                  onClick={handleAddProperty}
+                                  className="w-full border border-secura-teal text-secura-teal hover:bg-secura-mint"
+                                >
+                                  <Plus className="w-4 h-4 mr-2" />
+                                  Add New Property
+                                </FloatingPanelButton>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </FloatingPanelBody>
+                    </FloatingPanelContent>
+                  </FloatingPanelRoot>
                 )}
               </CardContent>
             </Card>

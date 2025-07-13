@@ -204,10 +204,12 @@ export function FloatingPanelContent({
             )}
             style={{
               borderRadius: 12,
-              left: "50%",
-              top: "50%",
-              transform: "translate(-50%, -50%)",
-              transformOrigin: "center",
+              left: triggerRect ? `min(${triggerRect.left}px, calc(100vw - 320px - 16px))` : "50%",
+              top: triggerRect ? triggerRect.bottom + 8 : "50%",
+              transform: triggerRect ? "none" : "translate(-50%, -50%)",
+              transformOrigin: triggerRect ? "top left" : "center",
+              maxWidth: "min(320px, calc(100vw - 32px))",
+              maxHeight: "min(400px, calc(100vh - 100px))",
             }}
             initial="hidden"
             animate="visible"
