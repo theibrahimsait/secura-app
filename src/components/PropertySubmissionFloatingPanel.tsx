@@ -188,7 +188,7 @@ const PropertySubmissionFloatingPanel = ({
     <FloatingPanelRoot>
       <FloatingPanelTrigger
         title={`Submit to ${agentAgencyInfo.agencyName}`}
-        className={triggerClassName}
+        className={`${triggerClassName} flex items-center justify-center gap-2`}
       >
         {children}
       </FloatingPanelTrigger>
