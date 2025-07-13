@@ -149,11 +149,13 @@ export function FloatingPanelTrigger({
 interface FloatingPanelContentProps {
   children: React.ReactNode
   className?: string
+  onOpen?: () => void
 }
 
 export function FloatingPanelContent({
   children,
   className,
+  onOpen,
 }: FloatingPanelContentProps) {
   const { isOpen, closeFloatingPanel, uniqueId, triggerRect, title } =
     useFloatingPanel()
@@ -184,6 +186,12 @@ export function FloatingPanelContent({
     hidden: { opacity: 0, scale: 0.9, y: 10 },
     visible: { opacity: 1, scale: 1, y: 0 },
   }
+
+  useEffect(() => {
+    if (isOpen && onOpen) {
+      onOpen();
+    }
+  }, [isOpen, onOpen]);
 
   return (
     <AnimatePresence>

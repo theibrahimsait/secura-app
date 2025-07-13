@@ -8,18 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Plus, FileText, CheckCircle, Clock, AlertCircle, User, Send, Link, Home, Building, Trash2, ChevronLeft, ChevronRight, Settings, MessageSquare, Mail, History } from 'lucide-react';
-import PropertySubmissionModal from '@/components/PropertySubmissionModal';
+import PropertySubmissionFloatingPanel from '@/components/PropertySubmissionFloatingPanel';
 import { ClientSubmissionTimeline } from '@/components/ClientSubmissionTimeline';
 import { SubmissionAuditTrail } from '@/components/SubmissionAuditTrail';
 import { logSubmissionAction } from '@/lib/audit-logger';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { 
-  FloatingPanelRoot, 
-  FloatingPanelTrigger, 
-  FloatingPanelContent, 
-  FloatingPanelBody, 
-  FloatingPanelButton 
-} from '@/components/ui/floating-panel';
 import {
   Pagination,
   PaginationContent,
@@ -91,7 +84,6 @@ const ClientDashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [allUpdates, setAllUpdates] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<PropertySubmission[]>([]);
-  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [showSubmissionsView, setShowSubmissionsView] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<PropertySubmission | null>(null);
   const [selectedAuditSubmission, setSelectedAuditSubmission] = useState<PropertySubmission | null>(null);
@@ -355,24 +347,15 @@ const ClientDashboard = () => {
           properties={properties}
           submissions={submissions}
           onAddProperty={handleAddProperty}
-          onSubmitToAgency={agencyContext?.agencyName ? () => setShowSubmissionModal(true) : undefined}
+          onSubmitToAgency={agencyContext?.agencyName ? () => {
+            // For mobile, we can show the floating panel or use the existing modal
+            // The floating panel will automatically handle mobile responsiveness
+          } : undefined}
           onOpenSubmission={(submission) => setSelectedSubmission(submission)}
           onOpenAudit={(submission) => setSelectedAuditSubmission(submission)}
           onLogout={handleLogout}
           onOpenSettings={() => navigate('/client/settings')}
         />
-
-        {/* Property Submission Modal */}
-        {agencyContext && clientData && (
-          <PropertySubmissionModal
-            isOpen={showSubmissionModal}
-            onClose={() => setShowSubmissionModal(false)}
-            properties={properties}
-            clientData={clientData}
-            agentAgencyInfo={agencyContext}
-            onSubmissionComplete={handleSubmissionComplete}
-          />
-        )}
 
         {/* Communication Timeline Modal */}
         {selectedSubmission && clientData && (
@@ -562,63 +545,17 @@ const ClientDashboard = () => {
                 </Button>
                 
                 {agencyContext?.agencyName && (
-                  <FloatingPanelRoot>
-                    <FloatingPanelTrigger
-                      title="Submit Properties"
-                      className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal shadow-lg hover:shadow-xl transition-all duration-300 border border-secura-lime/20 hover:shadow-secura-lime/20 h-11 justify-center font-medium"
-                    >
-                      <Send className="w-4 h-4 mr-2" />
-                      Submit to {agencyContext.agencyName}
-                    </FloatingPanelTrigger>
-                    <FloatingPanelContent className="w-80">
-                      <FloatingPanelBody>
-                        <div className="space-y-3">
-                          <div className="text-center pb-2">
-                            <h3 className="font-semibold text-foreground">Property Submission</h3>
-                            <p className="text-sm text-muted-foreground">
-                              Submit your properties to {agencyContext.agencyName}
-                            </p>
-                          </div>
-                          
-                          {properties.length === 0 ? (
-                            <div className="text-center py-6">
-                              <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                              <p className="text-sm text-muted-foreground mb-4">
-                                No properties available to submit
-                              </p>
-                              <FloatingPanelButton
-                                onClick={handleAddProperty}
-                                className="w-full bg-secura-teal hover:bg-secura-moss text-white"
-                              >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Add Property
-                              </FloatingPanelButton>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="space-y-2">
-                                <p className="text-sm font-medium text-foreground">Quick Actions:</p>
-                                <FloatingPanelButton
-                                  onClick={() => setShowSubmissionModal(true)}
-                                  className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal border border-secura-lime/20"
-                                >
-                                  <Send className="w-4 h-4 mr-2" />
-                                  Select Properties to Submit
-                                </FloatingPanelButton>
-                                <FloatingPanelButton
-                                  onClick={handleAddProperty}
-                                  className="w-full border border-secura-teal text-secura-teal hover:bg-secura-mint"
-                                >
-                                  <Plus className="w-4 h-4 mr-2" />
-                                  Add New Property
-                                </FloatingPanelButton>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </FloatingPanelBody>
-                    </FloatingPanelContent>
-                  </FloatingPanelRoot>
+                  <PropertySubmissionFloatingPanel
+                    properties={properties}
+                    clientData={clientData}
+                    agentAgencyInfo={agencyContext}
+                    onSubmissionComplete={handleSubmissionComplete}
+                    onAddProperty={handleAddProperty}
+                    triggerClassName="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal shadow-lg hover:shadow-xl transition-all duration-300 border border-secura-lime/20 hover:shadow-secura-lime/20 h-11 justify-center font-medium"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Submit to {agencyContext.agencyName}
+                  </PropertySubmissionFloatingPanel>
                 )}
               </CardContent>
             </Card>
@@ -810,17 +747,6 @@ const ClientDashboard = () => {
         </div>
       </main>
 
-      {/* Property Submission Modal */}
-      {agencyContext && clientData && (
-        <PropertySubmissionModal
-          isOpen={showSubmissionModal}
-          onClose={() => setShowSubmissionModal(false)}
-          properties={properties}
-          clientData={clientData}
-          agentAgencyInfo={agencyContext}
-          onSubmissionComplete={handleSubmissionComplete}
-        />
-      )}
 
       {/* Submissions View Modal */}
       {showSubmissionsView && (
