@@ -35,14 +35,11 @@ const FloatingPanelContext = createContext<
   FloatingPanelContextType | undefined
 >(undefined)
 
-function useFloatingPanel() {
+export function useFloatingPanel() {
   const context = useContext(FloatingPanelContext)
-  if (!context) {
-    throw new Error(
-      "useFloatingPanel must be used within a FloatingPanelProvider"
-    )
-  }
-  return context
+  // Return null if not in context instead of throwing error
+  // This allows components to optionally use the context
+  return context || null
 }
 
 function useFloatingPanelLogic() {
@@ -105,7 +102,11 @@ export function FloatingPanelTrigger({
   className,
   title,
 }: FloatingPanelTriggerProps) {
-  const { openFloatingPanel, uniqueId, setTitle } = useFloatingPanel()
+  const context = useFloatingPanel()
+  if (!context) {
+    throw new Error("FloatingPanelTrigger must be used within FloatingPanelRoot")
+  }
+  const { openFloatingPanel, uniqueId, setTitle } = context
   const triggerRef = useRef<HTMLButtonElement>(null)
 
   const handleClick = () => {
@@ -149,16 +150,17 @@ export function FloatingPanelTrigger({
 interface FloatingPanelContentProps {
   children: React.ReactNode
   className?: string
-  onOpen?: () => void
 }
 
 export function FloatingPanelContent({
   children,
   className,
-  onOpen,
 }: FloatingPanelContentProps) {
-  const { isOpen, closeFloatingPanel, uniqueId, triggerRect, title } =
-    useFloatingPanel()
+  const context = useFloatingPanel()
+  if (!context) {
+    throw new Error("FloatingPanelContent must be used within FloatingPanelRoot")
+  }
+  const { isOpen, closeFloatingPanel, uniqueId, triggerRect, title } = context
   const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -186,12 +188,6 @@ export function FloatingPanelContent({
     hidden: { opacity: 0, scale: 0.9, y: 10 },
     visible: { opacity: 1, scale: 1, y: 0 },
   }
-
-  useEffect(() => {
-    if (isOpen && onOpen) {
-      onOpen();
-    }
-  }, [isOpen, onOpen]);
 
   return (
     <AnimatePresence>
@@ -241,7 +237,11 @@ interface FloatingPanelTitleProps {
 }
 
 function FloatingPanelTitle({ children }: FloatingPanelTitleProps) {
-  const { uniqueId } = useFloatingPanel()
+  const context = useFloatingPanel()
+  if (!context) {
+    throw new Error("FloatingPanelTitle must be used within FloatingPanelRoot")
+  }
+  const { uniqueId } = context
 
   return (
     <motion.div
@@ -270,7 +270,11 @@ export function FloatingPanelForm({
   onSubmit,
   className,
 }: FloatingPanelFormProps) {
-  const { note, closeFloatingPanel } = useFloatingPanel()
+  const context = useFloatingPanel()
+  if (!context) {
+    throw new Error("FloatingPanelForm must be used within FloatingPanelRoot")
+  }
+  const { note, closeFloatingPanel } = context
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -299,7 +303,11 @@ export function FloatingPanelLabel({
   htmlFor,
   className,
 }: FloatingPanelLabelProps) {
-  const { note } = useFloatingPanel()
+  const context = useFloatingPanel()
+  if (!context) {
+    throw new Error("FloatingPanelLabel must be used within FloatingPanelRoot")
+  }
+  const { note } = context
 
   return (
     <motion.label
@@ -324,7 +332,11 @@ export function FloatingPanelTextarea({
   className,
   id,
 }: FloatingPanelTextareaProps) {
-  const { note, setNote } = useFloatingPanel()
+  const context = useFloatingPanel()
+  if (!context) {
+    throw new Error("FloatingPanelTextarea must be used within FloatingPanelRoot")
+  }
+  const { note, setNote } = context
 
   return (
     <textarea
@@ -413,7 +425,11 @@ interface FloatingPanelCloseButtonProps {
 export function FloatingPanelCloseButton({
   className,
 }: FloatingPanelCloseButtonProps) {
-  const { closeFloatingPanel } = useFloatingPanel()
+  const context = useFloatingPanel()
+  if (!context) {
+    throw new Error("FloatingPanelCloseButton must be used within FloatingPanelRoot")
+  }
+  const { closeFloatingPanel } = context
 
   return (
     <motion.button
@@ -463,7 +479,11 @@ export function FloatingPanelButton({
   onClick,
   className,
 }: FloatingPanelButtonProps) {
-  const { closeFloatingPanel } = useFloatingPanel()
+  const context = useFloatingPanel()
+  if (!context) {
+    throw new Error("FloatingPanelButton must be used within FloatingPanelRoot")
+  }
+  const { closeFloatingPanel } = context
 
   const handleClick = () => {
     onClick?.()

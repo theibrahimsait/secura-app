@@ -61,7 +61,14 @@ const PropertySubmissionFloatingPanel = ({
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Load existing submissions for this agency when panel opens
+  // Load existing submissions for this agency when needed
+  useEffect(() => {
+    if (agentAgencyInfo.agencyId && existingSubmissions.length === 0) {
+      loadExistingSubmissions();
+    }
+  }, [agentAgencyInfo.agencyId]);
+
+  // Load existing submissions for this agency
   const loadExistingSubmissions = async () => {
     setLoading(true);
     try {
@@ -177,10 +184,6 @@ const PropertySubmissionFloatingPanel = ({
     }
   };
 
-  const handlePanelOpen = () => {
-    loadExistingSubmissions();
-  };
-
   return (
     <FloatingPanelRoot>
       <FloatingPanelTrigger
@@ -189,7 +192,7 @@ const PropertySubmissionFloatingPanel = ({
       >
         {children}
       </FloatingPanelTrigger>
-      <FloatingPanelContent className="max-w-md" onOpen={handlePanelOpen}>
+      <FloatingPanelContent className="max-w-md">
         <FloatingPanelBody className="max-h-96 overflow-y-auto">
           <div className="space-y-4">
             <div className="text-center pb-2">
