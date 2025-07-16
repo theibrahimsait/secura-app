@@ -608,7 +608,11 @@ const AgencyDashboard = () => {
             {/* Logo/Header */}
             <div className="flex items-center space-x-3 mb-8 px-1">
               <div className="w-10 h-10 rounded-xl secura-gradient flex items-center justify-center flex-shrink-0">
-                <Shield className="w-6 h-6 text-white" />
+                <img 
+                  src="https://yugzvvgctlhfcdmmwaxj.supabase.co/storage/v1/object/public/images//secfav.png" 
+                  alt="Secura" 
+                  className="w-6 h-6"
+                />
               </div>
               <motion.span 
                 className="font-bold text-lg text-secura-black"
@@ -666,15 +670,22 @@ const AgencyDashboard = () => {
                 <p className="text-sm font-semibold text-secura-black truncate">{userProfile?.full_name}</p>
                 <p className="text-xs text-muted-foreground truncate">{agencyName || 'Agency Admin'}</p>
               </motion.div>
-              <Button
-                onClick={signOut}
-                variant="ghost"
-                size="sm"
-                className="p-2 hover:bg-red-50 hover:text-red-600 transition-colors flex-shrink-0"
-                title="Sign out"
+              <motion.div
+                animate={{
+                  display: sidebarOpen ? "block" : "none",
+                  opacity: sidebarOpen ? 1 : 0,
+                }}
               >
-                <LogOut className="w-4 h-4" />
-              </Button>
+                <Button
+                  onClick={signOut}
+                  variant="ghost"
+                  size="sm"
+                  className="p-2 hover:bg-red-50 hover:text-red-600 transition-colors flex-shrink-0"
+                  title="Sign out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </motion.div>
             </div>
           </div>
         </SidebarBody>
