@@ -7,9 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Shield, Plus, Users, User, Activity, LogOut, Mail, Bell, FileText, Send, MessageSquare, Check } from 'lucide-react';
+import { Shield, Plus, Users, User, Activity, LogOut, Mail, Bell, FileText, Send, MessageSquare, Check, LayoutDashboard, Settings } from 'lucide-react';
+import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import { useToast } from '@/hooks/use-toast';
 import AgencyNotifications from '@/components/AgencyNotifications';
 import { SubmissionTimeline } from '@/components/SubmissionTimeline';
@@ -64,6 +64,7 @@ const AgencyDashboard = () => {
   const [resendLoading, setResendLoading] = useState<string | null>(null);
   const [showDebug, setShowDebug] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [agencyName, setAgencyName] = useState<string>('');
   const [highlightedPropertyId, setHighlightedPropertyId] = useState<string | null>(null);
   const [form, setForm] = useState<CreateAgentForm>({
@@ -574,60 +575,82 @@ const AgencyDashboard = () => {
     setLoading(false);
   }, [agents, submissions]);
 
+  const links = [
+    {
+      label: "Overview",
+      href: "#overview",
+      icon: <LayoutDashboard className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+    },
+    {
+      label: "Notifications",
+      href: "#notifications",
+      icon: <Bell className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+    },
+    {
+      label: "Tasks",
+      href: "#tasks",
+      icon: <FileText className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+    },
+    {
+      label: "Agents",
+      href: "#agents",
+      icon: <Users className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 rounded-xl secura-gradient flex items-center justify-center">
-                <Shield className="w-6 h-6 text-white" />
+    <div className="min-h-screen bg-gray-50 flex">
+      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
+        <SidebarBody className="justify-between gap-10">
+          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+            <div className="flex items-center space-x-2 mb-8">
+              <div className="w-8 h-8 rounded-lg secura-gradient flex items-center justify-center">
+                <Shield className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-secura-black">Agency Dashboard</h1>
-                <p className="text-sm text-muted-foreground">Manage your agents and operations</p>
-              </div>
+              <span className="font-semibold text-secura-black">Agency Dashboard</span>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-secura-black">{userProfile?.full_name}</p>
-                <p className="text-xs text-muted-foreground">{agencyName || 'Agency Admin'}</p>
-              </div>
-              <Button
-                onClick={signOut}
-                variant="outline"
-                className="border-secura-moss text-secura-black hover:bg-secura-moss/10"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
+            <div className="flex flex-col gap-2">
+              {links.map((link, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => setActiveTab(link.href.replace('#', ''))}
+                  className={`cursor-pointer p-2 rounded-lg transition-colors ${
+                    activeTab === link.href.replace('#', '')
+                      ? 'bg-secura-lime/20 text-secura-teal'
+                      : 'hover:bg-neutral-100'
+                  }`}
+                >
+                  <SidebarLink link={link} />
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-      </header>
+          <div className="flex items-center space-x-2 p-2">
+            <div className="w-8 h-8 rounded-full bg-secura-teal flex items-center justify-center">
+              <User className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-secura-black truncate">{userProfile?.full_name}</p>
+              <p className="text-xs text-muted-foreground truncate">{agencyName || 'Agency Admin'}</p>
+            </div>
+            <Button
+              onClick={signOut}
+              variant="ghost"
+              size="sm"
+              className="p-1"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
+        </SidebarBody>
+      </Sidebar>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="notifications">
-              <Bell className="w-4 h-4 mr-2" />
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="tasks">
-              <FileText className="w-4 h-4 mr-2" />
-              Task Manager
-            </TabsTrigger>
-            <TabsTrigger value="agents">
-              <Users className="w-4 h-4 mr-2" />
-              Agents
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            {/* Stats Cards */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="p-8">
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card>
                 <CardContent className="p-6">
@@ -721,21 +744,25 @@ const AgencyDashboard = () => {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+            </div>
+          )}
 
-          <TabsContent value="notifications" className="space-y-6">
-            {userProfile?.agency_id && (
-              <AgencyNotifications agencyId={userProfile.agency_id} />
-            )}
-          </TabsContent>
+          {activeTab === 'notifications' && (
+            <div className="space-y-6">
+              {userProfile?.agency_id && (
+                <AgencyNotifications agencyId={userProfile.agency_id} />
+              )}
+            </div>
+          )}
 
-          <TabsContent value="tasks" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Task Manager</CardTitle>
-                <CardDescription>Manage all unprocessed client submissions and documents</CardDescription>
-              </CardHeader>
-              <CardContent>
+          {activeTab === 'tasks' && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Task Manager</CardTitle>
+                  <CardDescription>Manage all unprocessed client submissions and documents</CardDescription>
+                </CardHeader>
+                <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -841,9 +868,11 @@ const AgencyDashboard = () => {
                 </Table>
               </CardContent>
             </Card>
-          </TabsContent>
+            </div>
+          )}
 
-          <TabsContent value="agents" className="space-y-6">
+          {activeTab === 'agents' && (
+            <div className="space-y-6">
             {/* Add Agent Button */}
             <div className="flex justify-end">
               <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -945,8 +974,9 @@ const AgencyDashboard = () => {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+            </div>
+          )}
+        </div>
 
         {/* Debug Section */}
         {showDebug && (
