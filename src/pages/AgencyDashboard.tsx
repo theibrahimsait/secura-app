@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Shield, Plus, Users, User, Activity, LogOut, Mail, Bell, FileText, Send, MessageSquare, Check, LayoutDashboard, Settings } from 'lucide-react';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
+import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import AgencyNotifications from '@/components/AgencyNotifications';
 import { SubmissionTimeline } from '@/components/SubmissionTimeline';
@@ -602,46 +603,79 @@ const AgencyDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
-        <SidebarBody className="justify-between gap-10">
+        <SidebarBody className="justify-between">
           <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-            <div className="flex items-center space-x-2 mb-8">
-              <div className="w-8 h-8 rounded-lg secura-gradient flex items-center justify-center">
-                <Shield className="w-5 h-5 text-white" />
+            {/* Logo/Header */}
+            <div className="flex items-center space-x-3 mb-8 px-1">
+              <div className="w-10 h-10 rounded-xl secura-gradient flex items-center justify-center flex-shrink-0">
+                <Shield className="w-6 h-6 text-white" />
               </div>
-              <span className="font-semibold text-secura-black">Agency Dashboard</span>
+              <motion.span 
+                className="font-bold text-lg text-secura-black"
+                animate={{
+                  display: sidebarOpen ? "inline-block" : "none",
+                  opacity: sidebarOpen ? 1 : 0,
+                }}
+              >
+                Agency Dashboard
+              </motion.span>
             </div>
-            <div className="flex flex-col gap-2">
+            
+            {/* Navigation Links */}
+            <div className="flex flex-col gap-1">
               {links.map((link, idx) => (
                 <div
                   key={idx}
                   onClick={() => setActiveTab(link.href.replace('#', ''))}
-                  className={`cursor-pointer p-2 rounded-lg transition-colors ${
+                  className={`cursor-pointer rounded-lg transition-all duration-200 ${
                     activeTab === link.href.replace('#', '')
-                      ? 'bg-secura-lime/20 text-secura-teal'
-                      : 'hover:bg-neutral-100'
+                      ? 'bg-secura-lime/15 text-secura-teal shadow-sm'
+                      : 'hover:bg-neutral-100/70 text-neutral-700'
                   }`}
                 >
-                  <SidebarLink link={link} />
+                  <SidebarLink 
+                    link={{
+                      ...link,
+                      icon: React.cloneElement(link.icon as React.ReactElement, {
+                        className: `w-5 h-5 ${
+                          activeTab === link.href.replace('#', '')
+                            ? 'text-secura-teal'
+                            : 'text-neutral-600'
+                        }`
+                      })
+                    }} 
+                  />
                 </div>
               ))}
             </div>
           </div>
-          <div className="flex items-center space-x-2 p-2">
-            <div className="w-8 h-8 rounded-full bg-secura-teal flex items-center justify-center">
-              <User className="w-5 h-5 text-white" />
+          
+          {/* User Profile Section */}
+          <div className="border-t border-neutral-200 pt-4">
+            <div className="flex items-center space-x-3 px-3 py-2">
+              <div className="w-9 h-9 rounded-full bg-secura-teal flex items-center justify-center flex-shrink-0">
+                <User className="w-5 h-5 text-white" />
+              </div>
+              <motion.div 
+                className="flex-1 min-w-0"
+                animate={{
+                  display: sidebarOpen ? "block" : "none",
+                  opacity: sidebarOpen ? 1 : 0,
+                }}
+              >
+                <p className="text-sm font-semibold text-secura-black truncate">{userProfile?.full_name}</p>
+                <p className="text-xs text-muted-foreground truncate">{agencyName || 'Agency Admin'}</p>
+              </motion.div>
+              <Button
+                onClick={signOut}
+                variant="ghost"
+                size="sm"
+                className="p-2 hover:bg-red-50 hover:text-red-600 transition-colors flex-shrink-0"
+                title="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-secura-black truncate">{userProfile?.full_name}</p>
-              <p className="text-xs text-muted-foreground truncate">{agencyName || 'Agency Admin'}</p>
-            </div>
-            <Button
-              onClick={signOut}
-              variant="ghost"
-              size="sm"
-              className="p-1"
-            >
-              <LogOut className="w-4 h-4" />
-            </Button>
           </div>
         </SidebarBody>
       </Sidebar>
