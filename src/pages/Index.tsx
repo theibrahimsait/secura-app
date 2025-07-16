@@ -14,15 +14,9 @@ const sampleTestimonials: Testimonial[] = [
   },
   {
     avatarSrc: "https://randomuser.me/api/portraits/men/64.jpg",
-    name: "Vignesh Menon",
-    handle: "Owner - Sai Real Estate",
+    name: "Saqib Mohammed",
+    handle: "COO - Emireum",
     text: "Finally, a compliant way to collect documents from clients. Our agency loves it."
-  },
-  {
-    avatarSrc: "https://randomuser.me/api/portraits/men/32.jpg",
-    name: "David Martinez",
-    handle: "@davidcreates",
-    text: "Secure, simple, and exactly what the UAE real estate industry needed."
   },
 ];
 
