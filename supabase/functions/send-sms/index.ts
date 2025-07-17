@@ -42,6 +42,7 @@ const sendVerificationCode = async (phone: string) => {
   });
 
   console.log('Sending verification code to:', phone.slice(-4));
+  console.log('Full Twilio request body:', body.toString());
 
   const response = await fetch(
     `https://verify.twilio.com/v2/Services/${verifyServiceSid}/Verifications`,
@@ -79,7 +80,9 @@ const sendVerificationCode = async (phone: string) => {
     throw new Error(errorMessage);
   }
 
-  return await response.json();
+  const twilioResponse = await response.json();
+  console.log('Twilio response:', twilioResponse);
+  return twilioResponse;
 };
 
 const verifyCode = async (phone: string, code: string) => {
