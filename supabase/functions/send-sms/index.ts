@@ -39,6 +39,7 @@ const sendVerificationCode = async (phone: string) => {
   const body = new URLSearchParams({
     To: phone,
     Channel: 'sms',
+    Locale: 'en',
   });
 
   console.log('Sending verification code to:', phone.slice(-4));
