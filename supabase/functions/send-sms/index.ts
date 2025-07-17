@@ -38,12 +38,10 @@ const sendVerificationCode = async (phone: string) => {
   
   const body = new URLSearchParams({
     To: phone,
-    Channel: 'sms',
-    Locale: 'en'
+    Channel: 'sms'
   });
 
   console.log('Sending verification code to:', phone.slice(-4));
-  console.log('Full Twilio request body:', body.toString());
 
   const response = await fetch(
     `https://verify.twilio.com/v2/Services/${verifyServiceSid}/Verifications`,
@@ -81,9 +79,7 @@ const sendVerificationCode = async (phone: string) => {
     throw new Error(errorMessage);
   }
 
-  const twilioResponse = await response.json();
-  console.log('Twilio response:', twilioResponse);
-  return twilioResponse;
+  return await response.json();
 };
 
 const verifyCode = async (phone: string, code: string) => {
