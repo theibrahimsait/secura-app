@@ -9,11 +9,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Shield, Plus, Users, User, Activity, LogOut, Mail, Bell, FileText, Send, MessageSquare, Check, LayoutDashboard, Settings } from 'lucide-react';
+import { Shield, Plus, Users, User, Activity, LogOut, Mail, Bell, FileText, Send, MessageSquare, Check, LayoutDashboard, Settings, UserCheck } from 'lucide-react';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import AgencyNotifications from '@/components/AgencyNotifications';
+import { AgencyBuyersSection } from '@/components/AgencyBuyersSection';
 import { SubmissionTimeline } from '@/components/SubmissionTimeline';
 import { logAgencySubmissionAction } from '@/lib/audit-logger';
 
@@ -55,11 +56,28 @@ interface ClientSubmission {
   };
 }
 
+interface BuyerSubmission {
+  id: string;
+  client_id: string;
+  agent_id: string;
+  created_at: string;
+  status: string;
+  client: {
+    full_name: string;
+    phone: string;
+    email: string;
+  };
+  agent: {
+    full_name: string;
+  };
+}
+
 const AgencyDashboard = () => {
   const { signOut, userProfile, user } = useAuth();
   const { toast } = useToast();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [submissions, setSubmissions] = useState<ClientSubmission[]>([]);
+  const [buyers, setBuyers] = useState<BuyerSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
@@ -351,7 +369,8 @@ const AgencyDashboard = () => {
     if (!userProfile?.agency_id) return;
     
     try {
-      const { data, error } = await supabase
+      // Fetch property submissions (property_id is NOT null)
+      const { data: propertySubmissions, error: propertyError } = await supabase
         .from('property_agency_submissions')
         .select(`
           id,
@@ -377,11 +396,12 @@ const AgencyDashboard = () => {
           )
         `)
         .eq('agency_id', userProfile.agency_id)
+        .not('property_id', 'is', null)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (propertyError) throw propertyError;
       
-      const formattedSubmissions = data?.map(submission => ({
+      const formattedSubmissions = propertySubmissions?.map(submission => ({
         id: submission.id,
         client_id: submission.client_id,
         property_id: submission.property_id,
@@ -392,16 +412,49 @@ const AgencyDashboard = () => {
         property: submission.client_properties,
         agent: submission.users || { full_name: 'No Agent' }
       }))
-      // Filter out submissions with null properties (should be rare now with proper RLS)
-      .filter(submission => {
-        if (!submission.property) {
-          console.warn('Filtered out submission with null property:', submission);
-          return false;
-        }
-        return true;
-      }) || [];
+      // Filter out submissions with null properties or clients
+      .filter(submission => submission.property && submission.client) || [];
       
       setSubmissions(formattedSubmissions);
+
+      // Fetch buyer submissions (property_id IS null - ID document submissions)
+      const { data: buyerSubmissions, error: buyerError } = await supabase
+        .from('property_agency_submissions')
+        .select(`
+          id,
+          client_id,
+          agent_id,
+          agency_id,
+          status,
+          created_at,
+          clients (
+            full_name,
+            phone,
+            email
+          ),
+          users!property_agency_submissions_agent_id_fkey (
+            full_name
+          )
+        `)
+        .eq('agency_id', userProfile.agency_id)
+        .is('property_id', null)
+        .order('created_at', { ascending: false });
+
+      if (buyerError) throw buyerError;
+
+      const formattedBuyers = buyerSubmissions?.map(submission => ({
+        id: submission.id,
+        client_id: submission.client_id,
+        agent_id: submission.agent_id,
+        created_at: submission.created_at,
+        status: submission.status,
+        client: submission.clients,
+        agent: submission.users || { full_name: 'No Agent' }
+      }))
+      .filter(buyer => buyer.client) || [];
+
+      setBuyers(formattedBuyers);
+
     } catch (error) {
       console.error('Error fetching submissions:', error);
       toast({
@@ -575,7 +628,7 @@ const AgencyDashboard = () => {
 
   useEffect(() => {
     setLoading(false);
-  }, [agents, submissions]);
+  }, [agents, submissions, buyers]);
 
   const links = [
     {
@@ -592,6 +645,11 @@ const AgencyDashboard = () => {
       label: "Tasks",
       href: "#tasks",
       icon: <FileText className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+    },
+    {
+      label: "Buyers",
+      href: "#buyers",
+      icon: <UserCheck className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
     },
     {
       label: "Agents",
@@ -914,6 +972,41 @@ const AgencyDashboard = () => {
                 </Table>
               </CardContent>
             </Card>
+            </div>
+          )}
+
+          {activeTab === 'buyers' && (
+            <div className="space-y-6">
+              <AgencyBuyersSection
+                buyers={buyers}
+                onApproveBuyer={async (buyerId) => {
+                  try {
+                    await supabase
+                      .from('property_agency_submissions')
+                      .update({ status: 'approved' })
+                      .eq('id', buyerId);
+                    
+                    // Refresh data
+                    fetchSubmissions();
+                    
+                    toast({
+                      title: "Success",
+                      description: "Buyer approved successfully",
+                    });
+                  } catch (error) {
+                    console.error('Error approving buyer:', error);
+                    toast({
+                      title: "Error",
+                      description: "Failed to approve buyer",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                onContactBuyer={(buyer) => {
+                  console.log('Contact buyer:', buyer);
+                  // Could open communication modal here
+                }}
+              />
             </div>
           )}
 

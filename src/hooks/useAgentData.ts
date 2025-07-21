@@ -4,12 +4,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Client, Property } from '@/types/agent';
 
+interface Buyer {
+  id: string;
+  client_id: string;
+  created_at: string;
+  status: string;
+  client: {
+    full_name: string;
+    phone: string;
+    email: string;
+  };
+}
+
 export const useAgentData = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
   
   const [clients, setClients] = useState<Client[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
+  const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchClientsAndProperties = async () => {
@@ -156,6 +169,9 @@ export const useAgentData = () => {
       setClients(uniqueClients);
       setProperties(propertiesWithClients);
 
+      // Fetch buyers (ID document submissions - property_id is null)
+      await fetchBuyers();
+
     } catch (error: any) {
       console.error('Error fetching data:', error);
       toast({
@@ -168,6 +184,43 @@ export const useAgentData = () => {
     }
   };
 
+  const fetchBuyers = async () => {
+    if (!userProfile?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('property_agency_submissions')
+        .select(`
+          id,
+          client_id,
+          created_at,
+          status,
+          clients (
+            full_name,
+            phone,
+            email
+          )
+        `)
+        .eq('agent_id', userProfile.id)
+        .is('property_id', null); // ID document submissions have null property_id
+
+      if (error) throw error;
+
+      const buyersData = data?.map(submission => ({
+        id: submission.id,
+        client_id: submission.client_id,
+        created_at: submission.created_at,
+        status: submission.status,
+        client: submission.clients
+      })).filter(buyer => buyer.client) || [];
+
+      setBuyers(buyersData);
+      console.log('Buyers fetched:', buyersData);
+    } catch (error) {
+      console.error('Error fetching buyers:', error);
+    }
+  };
+
   useEffect(() => {
     if (userProfile) {
       fetchClientsAndProperties();
@@ -177,6 +230,7 @@ export const useAgentData = () => {
   return {
     clients,
     properties,
+    buyers,
     loading,
     refetch: fetchClientsAndProperties
   };

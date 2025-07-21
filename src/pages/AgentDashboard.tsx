@@ -11,12 +11,13 @@ import { AgentStats } from '@/components/agent/AgentStats';
 import { AgentReferralLink } from '@/components/agent/AgentReferralLink';
 import { AgentClientsTable } from '@/components/agent/AgentClientsTable';
 import { AgentPropertiesTable } from '@/components/agent/AgentPropertiesTable';
+import { AgentBuyersTable } from '@/components/agent/AgentBuyersTable';
 import { ClientPropertiesModal } from '@/components/agent/ClientPropertiesModal';
 import { PropertyDetailsModal } from '@/components/agent/PropertyDetailsModal';
 
 const AgentDashboard = () => {
   const { signOut, userProfile, loading, isAuthenticated } = useAuth();
-  const { clients, properties } = useAgentData();
+  const { clients, properties, buyers } = useAgentData();
   const { agencyName } = useAgencyName();
   const { referralLink } = useReferralLink(agencyName);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -88,6 +89,7 @@ const AgentDashboard = () => {
         <AgentStats 
           clients={clients} 
           properties={properties} 
+          buyers={buyers}
           referralLink={referralLink} 
         />
 
@@ -95,15 +97,29 @@ const AgentDashboard = () => {
         <AgentReferralLink referralLink={referralLink} />
 
         {/* Tables */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
-          <AgentClientsTable 
-            clients={clients} 
-            onClientClick={handleClientClick} 
-          />
-          <AgentPropertiesTable 
-            properties={properties} 
-            onPropertyClick={handlePropertyClick} 
-          />
+        <div className="space-y-4 md:space-y-8">
+          {/* Properties and Clients Tables */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
+            <AgentClientsTable 
+              clients={clients} 
+              onClientClick={handleClientClick} 
+            />
+            <AgentPropertiesTable 
+              properties={properties} 
+              onPropertyClick={handlePropertyClick} 
+            />
+          </div>
+          
+          {/* Buyers Table */}
+          <div className="grid grid-cols-1">
+            <AgentBuyersTable 
+              buyers={buyers}
+              onContactBuyer={(buyer) => {
+                // Handle contacting buyer - could open a modal or navigate to communication
+                console.log('Contact buyer:', buyer);
+              }}
+            />
+          </div>
         </div>
         
         {/* Client Properties Modal */}
