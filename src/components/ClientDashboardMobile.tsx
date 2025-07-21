@@ -4,6 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, FileText, CheckCircle, Clock, AlertCircle, Send, Link, Settings, LogOut, History, MessageSquare } from 'lucide-react';
+import SubmissionTypeModal from '@/components/SubmissionTypeModal';
+import PropertySubmissionModal from '@/components/PropertySubmissionModal';
+import IdDocumentSubmissionModal from '@/components/IdDocumentSubmissionModal';
 import { useAgencyContext, type AgencyContext } from '@/hooks/useAgencyContext';
 
 interface Property {
@@ -44,20 +47,45 @@ interface PropertySubmission {
   property_location?: string;
 }
 
+interface ClientData {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string;
+}
+
 interface ClientDashboardMobileProps {
   properties: Property[];
   submissions?: PropertySubmission[];
+  clientData: ClientData;
   onAddProperty: () => void;
   onSubmitToAgency?: () => void;
   onOpenSubmission?: (submission: PropertySubmission) => void;
   onOpenAudit?: (submission: PropertySubmission) => void;
   onLogout?: () => void;
   onOpenSettings?: () => void;
+  onSubmissionComplete: () => void;
 }
 
-const ClientDashboardMobile = ({ properties, submissions = [], onAddProperty, onSubmitToAgency, onOpenSubmission, onOpenAudit, onLogout, onOpenSettings }: ClientDashboardMobileProps) => {
+const ClientDashboardMobile = ({ 
+  properties, 
+  submissions = [], 
+  clientData, 
+  onAddProperty, 
+  onSubmitToAgency, 
+  onOpenSubmission, 
+  onOpenAudit, 
+  onLogout, 
+  onOpenSettings,
+  onSubmissionComplete 
+}: ClientDashboardMobileProps) => {
   // Use the new session-safe agency context hook
   const { agencyContext } = useAgencyContext();
+  
+  // State for managing different modal types
+  const [showSubmissionTypeModal, setShowSubmissionTypeModal] = React.useState(false);
+  const [showPropertySubmissionModal, setShowPropertySubmissionModal] = React.useState(false);
+  const [showIdDocumentModal, setShowIdDocumentModal] = React.useState(false);
   
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -126,9 +154,9 @@ const ClientDashboardMobile = ({ properties, submissions = [], onAddProperty, on
               Add New Property
             </Button>
             
-            {agencyContext?.agencyName && onSubmitToAgency && (
+            {agencyContext?.agencyName && (
               <Button
-                onClick={onSubmitToAgency}
+                onClick={() => setShowSubmissionTypeModal(true)}
                 className="w-full bg-secura-lime hover:bg-secura-lime/90 text-secura-teal shadow-lg hover:shadow-xl transition-all duration-300 border border-secura-lime/20 hover:shadow-secura-lime/20 h-12 text-base font-medium"
               >
                 <Send className="w-5 h-5 mr-2" />
@@ -272,6 +300,46 @@ const ClientDashboardMobile = ({ properties, submissions = [], onAddProperty, on
           )}
         </div>
       </div>
+
+      {/* Submission Type Selection Modal */}
+      {agencyContext && clientData && (
+        <SubmissionTypeModal
+          isOpen={showSubmissionTypeModal}
+          onClose={() => setShowSubmissionTypeModal(false)}
+          agentAgencyInfo={agencyContext}
+          onSubmitProperty={() => {
+            setShowSubmissionTypeModal(false);
+            setShowPropertySubmissionModal(true);
+          }}
+          onSubmitIdDocuments={() => {
+            setShowSubmissionTypeModal(false);
+            setShowIdDocumentModal(true);
+          }}
+        />
+      )}
+
+      {/* Property Submission Modal */}
+      {agencyContext && clientData && (
+        <PropertySubmissionModal
+          isOpen={showPropertySubmissionModal}
+          onClose={() => setShowPropertySubmissionModal(false)}
+          properties={properties}
+          clientData={clientData}
+          agentAgencyInfo={agencyContext}
+          onSubmissionComplete={onSubmissionComplete}
+        />
+      )}
+
+      {/* ID Document Submission Modal */}
+      {agencyContext && clientData && (
+        <IdDocumentSubmissionModal
+          isOpen={showIdDocumentModal}
+          onClose={() => setShowIdDocumentModal(false)}
+          clientData={clientData}
+          agentAgencyInfo={agencyContext}
+          onSubmissionComplete={onSubmissionComplete}
+        />
+      )}
     </div>
   );
 };
