@@ -817,7 +817,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           notes: string | null
-          property_id: string
+          property_id: string | null
           reviewed_at: string | null
           sold_at: string | null
           sold_by: string | null
@@ -835,7 +835,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           notes?: string | null
-          property_id: string
+          property_id?: string | null
           reviewed_at?: string | null
           sold_at?: string | null
           sold_by?: string | null
@@ -853,7 +853,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           notes?: string | null
-          property_id?: string
+          property_id?: string | null
           reviewed_at?: string | null
           sold_at?: string | null
           sold_by?: string | null
