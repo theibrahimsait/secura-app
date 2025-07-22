@@ -975,7 +975,7 @@ const AgencyDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'buyers' && (
+          {activeTab === 'buyers' && ( // Buyers section
             <div className="space-y-6">
               <AgencyBuyersSection
                 buyers={buyers}

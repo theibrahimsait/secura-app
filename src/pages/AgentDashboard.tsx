@@ -110,7 +110,7 @@ const AgentDashboard = () => {
             />
           </div>
           
-          <div className="grid grid-cols-1">
+          <div className="grid grid-cols-1"> {/* Buyers table */}
             <AgentBuyersTable 
               buyers={buyers}
             />
