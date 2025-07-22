@@ -110,14 +110,9 @@ const AgentDashboard = () => {
             />
           </div>
           
-          {/* Buyers Table */}
           <div className="grid grid-cols-1">
             <AgentBuyersTable 
               buyers={buyers}
-              onContactBuyer={(buyer) => {
-                // Handle contacting buyer - could open a modal or navigate to communication
-                console.log('Contact buyer:', buyer);
-              }}
             />
           </div>
         </div>

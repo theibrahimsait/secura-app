@@ -1002,10 +1002,6 @@ const AgencyDashboard = () => {
                     });
                   }
                 }}
-                onContactBuyer={(buyer) => {
-                  console.log('Contact buyer:', buyer);
-                  // Could open communication modal here
-                }}
               />
             </div>
           )}
