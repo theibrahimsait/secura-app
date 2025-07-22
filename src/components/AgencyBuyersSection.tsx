@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { UserCheck, MessageSquare, Phone, Mail, Check } from 'lucide-react';
+import { UserCheck, Eye, Phone, Mail, Check } from 'lucide-react';
 
 interface Buyer {
   id: string;
@@ -23,13 +23,11 @@ interface Buyer {
 interface AgencyBuyersSectionProps {
   buyers: Buyer[];
   onApproveBuyer?: (buyerId: string) => void;
-  onContactBuyer?: (buyer: Buyer) => void;
 }
 
 export const AgencyBuyersSection = ({ 
   buyers, 
-  onApproveBuyer, 
-  onContactBuyer 
+  onApproveBuyer
 }: AgencyBuyersSectionProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -196,17 +194,26 @@ export const AgencyBuyersSection = ({
                             Approve
                           </Button>
                         )}
-                        {onContactBuyer && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onContactBuyer(buyer)}
-                            className="text-secura-teal border-secura-teal hover:bg-secura-mint"
-                          >
-                            <MessageSquare className="w-4 h-4 mr-2" />
-                            Contact
-                          </Button>
-                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const details = `
+Buyer Information:
+Name: ${buyer.client.full_name}
+Phone: ${buyer.client.phone}
+Email: ${buyer.client.email}
+Agent: ${buyer.agent.full_name}
+Registered: ${new Date(buyer.created_at).toLocaleDateString()} at ${new Date(buyer.created_at).toLocaleTimeString()}
+Status: ${buyer.status === 'submitted' ? 'Pending Review' : buyer.status.replace('_', ' ')}
+                            `;
+                            alert(details.trim());
+                          }}
+                          className="text-secura-teal border-secura-teal hover:bg-secura-mint"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Details
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
