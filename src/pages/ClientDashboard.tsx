@@ -178,8 +178,8 @@ const ClientDashboard = () => {
           submitted_at: submission.created_at,
           agencies: submission.agencies,
           users: submission.users,
-          property_title: submission.client_properties?.title || 'Unknown Property',
-          property_location: submission.client_properties?.location || ''
+          property_title: submission.property_id ? submission.client_properties?.title || 'Unknown Property' : 'ID Documents - Buyer Registration',
+          property_location: submission.property_id ? submission.client_properties?.location || '' : 'Buyer Registration'
         }));
         setSubmissions(transformedSubmissions);
       }
@@ -758,15 +758,18 @@ const ClientDashboard = () => {
                                 {new Date(submission.submitted_at).toLocaleDateString()}
                               </p>
                             </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setSelectedSubmission(submission)}
-                              className="text-secura-teal border-secura-teal hover:bg-secura-mint"
-                            >
-                              <MessageSquare className="w-4 h-4 mr-1" />
-                              Chat
-                            </Button>
+                            {/* Show chat button only for property submissions (not buyer submissions) */}
+                            {submission.property_id && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setSelectedSubmission(submission)}
+                                className="text-secura-teal border-secura-teal hover:bg-secura-mint"
+                              >
+                                <MessageSquare className="w-4 h-4 mr-1" />
+                                Chat
+                              </Button>
+                            )}
                             <Button
                               size="sm"
                               variant="outline"
@@ -862,18 +865,33 @@ const ClientDashboard = () => {
                             {new Date(submission.submitted_at).toLocaleDateString()}
                           </p>
                         </div>
-                        <div className="ml-4">
+                        <div className="ml-4 flex gap-2">
+                          {/* Show chat button only for property submissions (not buyer submissions) */}
+                          {submission.property_id && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedSubmission(submission);
+                                setShowSubmissionsView(false); // Close submissions modal when opening chat
+                              }}
+                              className="text-secura-teal border-secura-teal hover:bg-secura-mint"
+                            >
+                              <MessageSquare className="w-4 h-4 mr-1" />
+                              Chat
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              setSelectedSubmission(submission);
-                              setShowSubmissionsView(false); // Close submissions modal when opening chat
+                              setSelectedAuditSubmission(submission);
+                              setShowSubmissionsView(false);
                             }}
-                            className="text-secura-teal border-secura-teal hover:bg-secura-mint"
+                            className="text-secura-moss border-secura-moss hover:bg-secura-mint"
                           >
-                            <MessageSquare className="w-4 h-4 mr-1" />
-                            Chat
+                            <History className="w-4 h-4 mr-1" />
+                            Audit
                           </Button>
                         </div>
                       </div>

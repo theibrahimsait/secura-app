@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { UserCheck, Phone, Mail, User, Calendar, Download, Eye, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logAgencySubmissionAction } from '@/lib/audit-logger';
 
 interface Buyer {
   id: string;
@@ -87,6 +88,14 @@ export const BuyerDetailsModal = ({ buyer, open, onOpenChange }: BuyerDetailsMod
         title: "Download Started",
         description: `Downloading ${document.file_name}`,
       });
+
+      // Log audit action for downloading document
+      await logAgencySubmissionAction({
+        submissionId: buyer.id,
+        actorType: 'agency_admin',
+        action: 'downloaded_id_document',
+        fileName: document.file_name
+      });
     } catch (error) {
       console.error('Error downloading document:', error);
       toast({
@@ -104,7 +113,60 @@ export const BuyerDetailsModal = ({ buyer, open, onOpenChange }: BuyerDetailsMod
         .getPublicUrl(document.file_path);
 
       if (data?.publicUrl) {
-        window.open(data.publicUrl, '_blank');
+        // Create an iframe modal to view the document
+        const modal = window.document.createElement('div');
+        modal.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.8);
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        `;
+        
+        const iframe = window.document.createElement('iframe');
+        iframe.src = data.publicUrl;
+        iframe.style.cssText = `
+          width: 90%;
+          height: 90%;
+          border: none;
+          border-radius: 8px;
+        `;
+        
+        const closeButton = window.document.createElement('button');
+        closeButton.innerHTML = '×';
+        closeButton.style.cssText = `
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          background: white;
+          border: none;
+          font-size: 24px;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          cursor: pointer;
+          z-index: 10000;
+        `;
+        
+        closeButton.onclick = () => window.document.body.removeChild(modal);
+        modal.onclick = (e) => e.target === modal && window.document.body.removeChild(modal);
+        
+        modal.appendChild(iframe);
+        modal.appendChild(closeButton);
+        window.document.body.appendChild(modal);
+
+        // Log audit action for viewing document
+        await logAgencySubmissionAction({
+          submissionId: buyer.id,
+          actorType: 'agency_admin',
+          action: 'viewed_id_document',
+          fileName: document.file_name
+        });
       }
     } catch (error) {
       console.error('Error viewing document:', error);
