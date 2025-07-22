@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { UserCheck, Eye, Phone, Mail, Check } from 'lucide-react';
+import { BuyerDetailsModal } from '@/components/BuyerDetailsModal';
 
 interface Buyer {
   id: string;
@@ -29,6 +30,7 @@ export const AgencyBuyersSection = ({
   buyers, 
   onApproveBuyer
 }: AgencyBuyersSectionProps) => {
+  const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'submitted':
@@ -197,18 +199,7 @@ export const AgencyBuyersSection = ({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            const details = `
-Buyer Information:
-Name: ${buyer.client.full_name}
-Phone: ${buyer.client.phone}
-Email: ${buyer.client.email}
-Agent: ${buyer.agent.full_name}
-Registered: ${new Date(buyer.created_at).toLocaleDateString()} at ${new Date(buyer.created_at).toLocaleTimeString()}
-Status: ${buyer.status === 'submitted' ? 'Pending Review' : buyer.status.replace('_', ' ')}
-                            `;
-                            alert(details.trim());
-                          }}
+                          onClick={() => setSelectedBuyer(buyer)}
                           className="text-secura-teal border-secura-teal hover:bg-secura-mint"
                         >
                           <Eye className="w-4 h-4 mr-2" />
@@ -223,6 +214,13 @@ Status: ${buyer.status === 'submitted' ? 'Pending Review' : buyer.status.replace
           </div>
         </CardContent>
       </Card>
+
+      {/* Buyer Details Modal */}
+      <BuyerDetailsModal
+        buyer={selectedBuyer}
+        open={!!selectedBuyer}
+        onOpenChange={() => setSelectedBuyer(null)}
+      />
     </div>
   );
 };

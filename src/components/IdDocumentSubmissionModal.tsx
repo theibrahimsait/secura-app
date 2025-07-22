@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { clientSupabase } from '@/lib/client-supabase';
 import { logSubmissionAction } from '@/lib/audit-logger';
 import { type AgencyContext } from '@/hooks/useAgencyContext';
-import { UserCheck, FileCheck, AlertCircle } from 'lucide-react';
+import { UserCheck, FileCheck, AlertCircle, Upload, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ClientData {
@@ -31,9 +33,73 @@ const IdDocumentSubmissionModal = ({
   onSubmissionComplete
 }: IdDocumentSubmissionModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const { toast } = useToast();
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const validFiles = files.filter(file => {
+      const isValidType = file.type.startsWith('image/') || file.type === 'application/pdf';
+      const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
+      return isValidType && isValidSize;
+    });
+
+    if (validFiles.length !== files.length) {
+      toast({
+        title: "Invalid Files",
+        description: "Only images and PDF files under 10MB are allowed.",
+        variant: "destructive",
+      });
+    }
+
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadDocuments = async (submissionId: string) => {
+    const uploadPromises = selectedFiles.map(async (file, index) => {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${submissionId}_${Date.now()}_${index}.${fileExt}`;
+      const filePath = `clients/${clientData.id}/id-documents/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await clientSupabase.storage
+        .from('property-documents')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Save document record to database
+      const { error: dbError } = await clientSupabase
+        .from('client_documents')
+        .insert({
+          client_id: clientData.id,
+          file_name: file.name,
+          file_path: filePath,
+          file_size: file.size,
+          mime_type: file.type,
+          document_type: 'identity'
+        });
+
+      if (dbError) throw dbError;
+    });
+
+    await Promise.all(uploadPromises);
+  };
+
   const handleSubmit = async () => {
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "No Documents Selected",
+        description: "Please select at least one ID document to submit.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!agentAgencyInfo.agentId) {
       toast({
         title: "Missing Agent Information",
@@ -63,6 +129,11 @@ const IdDocumentSubmissionModal = ({
         .single();
 
       if (submissionError) throw submissionError;
+
+      // Upload ID documents
+      if (submissionData) {
+        await uploadDocuments(submissionData.id);
+      }
 
       // Log audit event for ID document submission
       if (submissionData) {
@@ -126,6 +197,63 @@ const IdDocumentSubmissionModal = ({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* File Upload Section */}
+          <div className="space-y-3">
+            <Label htmlFor="id-documents">Upload ID Documents</Label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+              <div className="text-center">
+                <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                <Label htmlFor="id-documents" className="cursor-pointer">
+                  <span className="text-sm font-medium text-secura-teal hover:text-secura-moss">
+                    Click to upload files
+                  </span>
+                  <span className="text-sm text-gray-500 block">
+                    or drag and drop your ID documents
+                  </span>
+                </Label>
+                <Input
+                  id="id-documents"
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Supported formats: Images (JPG, PNG) and PDF. Max 10MB per file.
+                </p>
+              </div>
+            </div>
+
+            {/* Selected Files */}
+            {selectedFiles.length > 0 && (
+              <div className="space-y-2">
+                <Label>Selected Documents ({selectedFiles.length})</Label>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <div className="flex items-center space-x-2">
+                        <FileCheck className="w-4 h-4 text-secura-teal" />
+                        <span className="text-sm truncate">{file.name}</span>
+                        <span className="text-xs text-gray-500">
+                          ({(file.size / 1024 / 1024).toFixed(1)} MB)
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
