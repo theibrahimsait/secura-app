@@ -97,14 +97,14 @@ const termsOfServiceContent = `
 These Terms of Service ("Terms") govern your use of the Secura platform ("Platform") operated by Secura ("we," "our," or "us"). By accessing or using the Platform, you ("Client," "you," or "your") agree to be bound by these Terms.
 
 **1. Definitions**
-• **Platform**: The online and mobile application operated by Secura enabling secure document sharing, property submissions, management of portfolios, and communication with authorized real estate agencies and agents.
-• **Client**: An individual property owner who uses the Platform.
-• **Agency**: Real estate agencies registered and authorized to access submitted documents and property details via the Platform.
-• **Agent**: Authorized representatives of an Agency with limited access to certain information as determined by the Platform.
-• **Documents**: Any uploaded materials including identity documents, passports, Emirates IDs, title deeds, proof of ownership, and other property-related documents.
-• **Portfolio**: The collection of property details and related documents managed by the Client on the Platform.
-• **Magic Link**: A secure and unique link provided by agents to Clients allowing controlled access and submissions on the Platform.
-• **Audit Trail**: Digital record of activities performed on documents and property information, accessible to Clients.
+• Platform: The online and mobile application operated by Secura enabling secure document sharing, property submissions, management of portfolios, and communication with authorized real estate agencies and agents.
+• Client: An individual property owner who uses the Platform.
+• Agency: Real estate agencies registered and authorized to access submitted documents and property details via the Platform.
+• Agent: Authorized representatives of an Agency with limited access to certain information as determined by the Platform.
+• Documents: Any uploaded materials including identity documents, passports, Emirates IDs, title deeds, proof of ownership, and other property-related documents.
+• Portfolio: The collection of property details and related documents managed by the Client on the Platform.
+• Magic Link: A secure and unique link provided by agents to Clients allowing controlled access and submissions on the Platform.
+• Audit Trail: Digital record of activities performed on documents and property information, accessible to Clients.
 
 **2. Acceptance and Eligibility**
 • You affirm you are legally authorized to manage and submit information related to properties.
