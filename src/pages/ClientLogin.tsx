@@ -469,27 +469,19 @@ const ClientLogin = () => {
                 </div>
                 
                 {/* Certification logos */}
-                <div className="flex items-center justify-center gap-2 opacity-40">
-                  <img 
-                    src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/AES-256%20compliance.svg" 
-                    alt="AES-256 Compliance" 
-                    className="h-6 w-auto grayscale"
-                  />
-                  <img 
-                    src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/HIPAA_compliance.svg" 
-                    alt="HIPAA Compliance" 
-                    className="h-8 w-auto grayscale"
-                  />
-                  <img 
-                    src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/SOC2compliance.svg" 
-                    alt="SOC 2 Compliance" 
-                    className="h-8 w-auto grayscale"
-                  />
-                  <img 
-                    src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images/compliance/TLS_compliant.svg" 
-                    alt="TLS Compliant" 
-                    className="h-6 w-auto grayscale"
-                  />
+                <div className="flex items-center justify-center gap-3 opacity-50">
+                  <div className="flex items-center justify-center bg-gray-100 rounded-md px-2 py-1 h-6">
+                    <span className="text-xs font-medium text-gray-600">AES-256</span>
+                  </div>
+                  <div className="flex items-center justify-center bg-gray-100 rounded-md px-2 py-1 h-6">
+                    <span className="text-xs font-medium text-gray-600">HIPAA</span>
+                  </div>
+                  <div className="flex items-center justify-center bg-gray-100 rounded-md px-2 py-1 h-6">
+                    <span className="text-xs font-medium text-gray-600">SOC 2</span>
+                  </div>
+                  <div className="flex items-center justify-center bg-gray-100 rounded-md px-2 py-1 h-6">
+                    <span className="text-xs font-medium text-gray-600">TLS</span>
+                  </div>
                 </div>
               </div>
             </form>
