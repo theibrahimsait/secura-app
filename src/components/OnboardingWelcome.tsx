@@ -43,7 +43,7 @@ const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
       {/* Secura Logo - positioned like landing page */}
       <div className="absolute top-8 left-8 z-20">
         <img 
-          src="https://yugzvvgctlhfcdmmwaxj.storage.supabase.co/v1/object/public/images//secfav.png" 
+          src="https://yugzvvgctlhfcdmmwaxj.supabase.co/storage/v1/object/public/images/secfav.png" 
           alt="Secura" 
           className="h-8 w-auto"
         />
