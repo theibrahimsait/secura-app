@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Plus, Users, Building, Activity, LogOut, Mail } from 'lucide-react';
+import { Shield, Plus, Users, Building, Activity, LogOut, Mail, FileText, Home } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Agency {
@@ -28,6 +28,13 @@ const SuperAdminDashboard = () => {
   const { signOut, userProfile } = useAuth();
   const { toast } = useToast();
   const [agencies, setAgencies] = useState<Agency[]>([]);
+  const [stats, setStats] = useState({
+    activeBrokerages: 0,
+    totalPropertyOwners: 0,
+    totalDocuments: 0,
+    totalAgents: 0,
+    totalProperties: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
@@ -52,6 +59,40 @@ const SuperAdminDashboard = () => {
       toast({
         title: "Error",
         description: "Failed to load agencies",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      // Fetch all stats in parallel
+      const [
+        agenciesResult,
+        clientsResult,
+        documentsResult,
+        agentsResult,
+        propertiesResult
+      ] = await Promise.all([
+        supabase.from('agencies').select('*', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('clients').select('*', { count: 'exact', head: true }),
+        supabase.from('client_documents').select('*', { count: 'exact', head: true }),
+        supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'agent'),
+        supabase.from('client_properties').select('*', { count: 'exact', head: true })
+      ]);
+
+      setStats({
+        activeBrokerages: agenciesResult.count || 0,
+        totalPropertyOwners: clientsResult.count || 0,
+        totalDocuments: documentsResult.count || 0,
+        totalAgents: agentsResult.count || 0,
+        totalProperties: propertiesResult.count || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard statistics",
         variant: "destructive",
       });
     } finally {
@@ -204,7 +245,10 @@ const SuperAdminDashboard = () => {
   };
 
   useEffect(() => {
-    fetchAgencies();
+    const loadData = async () => {
+      await Promise.all([fetchAgencies(), fetchStats()]);
+    };
+    loadData();
   }, []);
 
   return (
@@ -243,16 +287,16 @@ const SuperAdminDashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-secura-lime/10 flex items-center justify-center">
-                  <Building className="w-6 h-6 text-secura-teal" />
+                <div className="w-12 h-12 rounded-xl bg-secura-mint/20 flex items-center justify-center">
+                  <Building className="w-6 h-6 text-secura-moss" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Agencies</p>
-                  <p className="text-2xl font-bold text-secura-black">{agencies.length}</p>
+                  <p className="text-sm text-muted-foreground">Active Brokerage Accounts</p>
+                  <p className="text-2xl font-bold text-secura-black">{stats.activeBrokerages}</p>
                 </div>
               </div>
             </CardContent>
@@ -261,14 +305,12 @@ const SuperAdminDashboard = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-secura-mint/20 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-secura-moss" />
+                <div className="w-12 h-12 rounded-xl bg-secura-lime/10 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-secura-teal" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Active Agencies</p>
-                  <p className="text-2xl font-bold text-secura-black">
-                    {agencies.filter(a => a.is_active).length}
-                  </p>
+                  <p className="text-sm text-muted-foreground">Total Property Owners</p>
+                  <p className="text-2xl font-bold text-secura-black">{stats.totalPropertyOwners}</p>
                 </div>
               </div>
             </CardContent>
@@ -278,11 +320,39 @@ const SuperAdminDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 rounded-xl bg-secura-teal/10 flex items-center justify-center">
-                  <Activity className="w-6 h-6 text-secura-teal" />
+                  <FileText className="w-6 h-6 text-secura-teal" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">System Status</p>
-                  <p className="text-lg font-semibold text-green-600">Operational</p>
+                  <p className="text-sm text-muted-foreground">Total Documents</p>
+                  <p className="text-2xl font-bold text-secura-black">{stats.totalDocuments}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-xl bg-secura-moss/10 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-secura-moss" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Agents</p>
+                  <p className="text-2xl font-bold text-secura-black">{stats.totalAgents}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-xl bg-secura-lime/20 flex items-center justify-center">
+                  <Home className="w-6 h-6 text-secura-teal" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Properties</p>
+                  <p className="text-2xl font-bold text-secura-black">{stats.totalProperties}</p>
                 </div>
               </div>
             </CardContent>
