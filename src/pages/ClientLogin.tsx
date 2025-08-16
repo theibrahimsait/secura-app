@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Phone, Shield, MessageSquare } from 'lucide-react';
+import { Phone, Shield, MessageSquare, CheckCircle } from 'lucide-react';
 
 const countryCodes = [
   { code: '+971', country: 'UAE', flag: '🇦🇪' },
@@ -377,20 +377,32 @@ const ClientLogin = () => {
           </div>
           
           {agencyInfo && (
-            <div className="mb-6 px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200/50 shadow-sm relative overflow-hidden">
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-100/30 to-transparent animate-shimmer"></div>
-              
-              <div className="flex items-center justify-center relative">
+            <div className="mb-6 px-4 py-4 bg-background/50 rounded-xl border border-border/50 shadow-sm backdrop-blur-sm">
+              <div className="flex items-center justify-center space-x-3">
+                {agencyInfo.logo_url && (
+                  <img 
+                    src={agencyInfo.logo_url} 
+                    alt={`${agencyInfo.name} logo`} 
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                )}
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <p className="text-sm font-medium text-green-800">
-                    Sent by: {agencyInfo.name}
-                  </p>
+                  <span className="text-foreground font-medium text-base">
+                    {agencyInfo.name}
+                  </span>
+                  <CheckCircle 
+                    className="w-5 h-5 text-blue-500 fill-blue-500" 
+                    style={{ 
+                      color: agencyInfo.primary_color || '#3b82f6',
+                      fill: agencyInfo.primary_color || '#3b82f6'
+                    }}
+                  />
                 </div>
               </div>
               {agencyInfo.description && (
-                <p className="text-xs text-green-700/80 mt-2 text-center relative">{agencyInfo.description}</p>
+                <p className="text-sm text-muted-foreground mt-3 text-center leading-relaxed">
+                  {agencyInfo.description}
+                </p>
               )}
             </div>
           )}
