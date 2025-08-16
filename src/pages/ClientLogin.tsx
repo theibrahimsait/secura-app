@@ -377,7 +377,7 @@ const ClientLogin = () => {
           </div>
           
           {agencyInfo && (
-            <div className="mb-6 px-6 py-5 bg-gradient-to-r from-slate-50/80 via-white/90 to-slate-50/80 rounded-2xl border border-slate-200/60 shadow-lg backdrop-blur-sm relative overflow-hidden">
+            <div className="mb-4 px-4 py-3 bg-gradient-to-r from-slate-50/80 via-white/90 to-slate-50/80 rounded-xl border border-slate-200/60 shadow-lg backdrop-blur-sm relative overflow-hidden">
               {/* Constant shimmer effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_2s_ease-in-out_infinite] translate-x-[-100%]" style={{
                 background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
