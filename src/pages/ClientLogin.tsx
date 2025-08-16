@@ -377,30 +377,40 @@ const ClientLogin = () => {
           </div>
           
           {agencyInfo && (
-            <div className="mb-6 px-4 py-4 bg-background/50 rounded-xl border border-border/50 shadow-sm backdrop-blur-sm">
-              <div className="flex items-center justify-center space-x-3">
+            <div className="mb-6 px-6 py-5 bg-gradient-to-r from-slate-50/80 via-white/90 to-slate-50/80 rounded-2xl border border-slate-200/60 shadow-lg backdrop-blur-sm relative overflow-hidden">
+              {/* Constant shimmer effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_2s_ease-in-out_infinite] translate-x-[-100%]" style={{
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+                animation: 'shimmer 2s ease-in-out infinite'
+              }}></div>
+              
+              <div className="flex items-center justify-center space-x-3 relative z-10">
                 {agencyInfo.logo_url && (
-                  <img 
-                    src={agencyInfo.logo_url} 
-                    alt={`${agencyInfo.name} logo`} 
-                    className="h-8 w-8 rounded-full object-cover"
-                  />
+                  <div className="relative">
+                    <img 
+                      src={agencyInfo.logo_url} 
+                      alt={`${agencyInfo.name} logo`} 
+                      className="h-10 w-10 rounded-full object-cover border-2 border-white shadow-md"
+                    />
+                  </div>
                 )}
                 <div className="flex items-center space-x-2">
-                  <span className="text-foreground font-medium text-base">
+                  <span className="text-slate-800 font-semibold text-lg">
                     {agencyInfo.name}
                   </span>
-                  <CheckCircle 
-                    className="w-5 h-5 text-blue-500 fill-blue-500" 
-                    style={{ 
-                      color: agencyInfo.primary_color || '#3b82f6',
-                      fill: agencyInfo.primary_color || '#3b82f6'
-                    }}
-                  />
+                  <div className="relative">
+                    <CheckCircle 
+                      className="w-6 h-6 drop-shadow-sm" 
+                      style={{ 
+                        color: agencyInfo.primary_color || '#3b82f6',
+                        fill: agencyInfo.primary_color || '#3b82f6'
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
               {agencyInfo.description && (
-                <p className="text-sm text-muted-foreground mt-3 text-center leading-relaxed">
+                <p className="text-sm text-slate-600 mt-3 text-center leading-relaxed relative z-10">
                   {agencyInfo.description}
                 </p>
               )}
