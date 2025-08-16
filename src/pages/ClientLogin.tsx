@@ -399,13 +399,31 @@ const ClientLogin = () => {
                     {agencyInfo.name}
                   </span>
                   <div className="relative">
-                    <CheckCircle 
-                      className="w-6 h-6 drop-shadow-sm" 
-                      style={{ 
-                        color: agencyInfo.primary_color || '#3b82f6',
-                        fill: agencyInfo.primary_color || '#3b82f6'
-                      }}
-                    />
+                    {/* Verification badge with shimmer */}
+                    <div className="relative overflow-hidden rounded-full">
+                      <div 
+                        className="w-6 h-6 rounded-full flex items-center justify-center relative"
+                        style={{ 
+                          backgroundColor: agencyInfo.primary_color || '#3b82f6'
+                        }}
+                      >
+                        {/* Shimmer effect for checkmark */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_1.5s_ease-in-out_infinite] rounded-full"></div>
+                        
+                        {/* White checkmark */}
+                        <svg 
+                          className="w-4 h-4 text-white relative z-10" 
+                          fill="currentColor" 
+                          viewBox="0 0 20 20"
+                        >
+                          <path 
+                            fillRule="evenodd" 
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                            clipRule="evenodd" 
+                          />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
