@@ -254,7 +254,7 @@ const ClientLogin = () => {
       // Create session token for client
       const sessionToken = crypto.randomUUID();
       const { error: sessionError } = await supabase
-        .rpc('create_client_session', {
+        .rpc('create_client_session' as any, {
           p_client_id: client.id,
           p_session_token: sessionToken
         });
