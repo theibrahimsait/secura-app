@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1267,16 +1267,16 @@ export type Database = {
       get_client_submission_updates: {
         Args: { p_client_session_token: string; p_submission_id?: string }
         Returns: {
-          id: string
-          submission_id: string
-          sender_role: string
-          sender_id: string
-          client_id: string
-          message: string
-          created_at: string
-          is_read: boolean
-          sender_name: string
           attachments: Json
+          client_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          sender_id: string
+          sender_name: string
+          sender_role: string
+          submission_id: string
         }[]
       }
       get_current_client_id: {
@@ -1300,14 +1300,14 @@ export type Database = {
       }
       log_audit_event: {
         Args: {
-          p_user_id: string
-          p_client_id: string
           p_action: Database["public"]["Enums"]["audit_action"]
-          p_resource_type: string
-          p_resource_id: string
+          p_client_id: string
           p_details?: Json
           p_ip_address?: unknown
+          p_resource_id: string
+          p_resource_type: string
           p_user_agent?: string
+          p_user_id: string
         }
         Returns: string
       }
@@ -1323,11 +1323,11 @@ export type Database = {
         Args: { referral_code: string }
         Returns: {
           agency_id: string
+          agency_logo_url: string
           agency_name: string
+          agency_primary_color: string
           agent_id: string
           agent_name: string
-          agency_logo_url: string
-          agency_primary_color: string
         }[]
       }
     }
