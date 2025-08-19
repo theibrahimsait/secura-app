@@ -53,28 +53,20 @@ serve(async (req) => {
         );
       }
 
-      // Get client ID from session
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('client_sessions')
-        .select('client_id')
-        .eq('session_token', sessionToken)
-        .gt('expires_at', new Date().toISOString())
-        .single();
+      // Get client ID from session via RPC (token is hashed server-side)
+      const { data: authClientId, error: authErr } = await supabase
+        .rpc('authenticate_client_request', { client_session_token: sessionToken });
 
-      console.log('🔍 Session validation:', { 
-        sessionToken: sessionToken?.substring(0, 8) + '...', 
-        sessionData, 
-        sessionError 
-      });
+      console.log('🔍 Session validation via RPC:', { ok: !!authClientId, authErr });
 
-      if (!sessionData) {
+      if (!authClientId) {
         return new Response(
           JSON.stringify({ error: 'Invalid or expired session' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      clientId = sessionData.client_id;
+      clientId = authClientId as string;
 
       // Check if client has access to this submission
       const { data: submissionData, error: submissionError } = await supabase
