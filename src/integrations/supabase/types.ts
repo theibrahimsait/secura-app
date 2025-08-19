@@ -1460,6 +1460,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      rls_auth_user_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       rls_can_read_client: {
         Args: { p_client_id: string }
         Returns: boolean
