@@ -254,11 +254,9 @@ const ClientLogin = () => {
       // Create session token for client
       const sessionToken = crypto.randomUUID();
       const { error: sessionError } = await supabase
-        .from('client_sessions')
-        .insert({
-          client_id: client.id,
-          session_token: sessionToken,
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+        .rpc('create_client_session', {
+          p_client_id: client.id,
+          p_session_token: sessionToken
         });
 
       if (sessionError) {
