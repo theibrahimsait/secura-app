@@ -116,6 +116,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "agency_notifications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_agent_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "agency_notifications_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
@@ -177,6 +184,13 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "agent_referral_links_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_agent_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       audit_logs: {
@@ -222,6 +236,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_agent_view"
             referencedColumns: ["id"]
           },
           {
@@ -279,6 +300,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_agent_view"
             referencedColumns: ["id"]
           },
           {
@@ -393,6 +421,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "client_notifications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_agent_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "client_notifications_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
@@ -473,6 +508,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "client_properties_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_agent_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "client_properties_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
@@ -519,6 +561,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_agent_view"
             referencedColumns: ["id"]
           },
         ]
@@ -592,6 +641,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_tasks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_agent_view"
             referencedColumns: ["id"]
           },
           {
@@ -741,6 +797,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_agent_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "documents_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
@@ -803,6 +866,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_agent_view"
             referencedColumns: ["id"]
           },
         ]
@@ -882,6 +952,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_agency_submissions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_agent_view"
             referencedColumns: ["id"]
           },
           {
@@ -970,6 +1047,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_agent_view"
             referencedColumns: ["id"]
           },
           {
@@ -1153,6 +1237,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_submission_updates_client"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_agent_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fk_submission_updates_sender"
             columns: ["sender_id"]
             isOneToOne: false
@@ -1245,7 +1336,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      clients_agent_view: {
+        Row: {
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       authenticate_client_request: {
@@ -1329,6 +1440,34 @@ export type Database = {
           agent_id: string
           agent_name: string
         }[]
+      }
+      rls_auth_agency_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      rls_auth_agent_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      rls_auth_client_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      rls_auth_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      rls_can_read_client: {
+        Args: { p_client_id: string }
+        Returns: boolean
+      }
+      rls_is_identity_doc: {
+        Args: { p_doc_type: string }
+        Returns: boolean
+      }
+      rls_is_superadmin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {

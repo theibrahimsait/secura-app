@@ -30,7 +30,10 @@ export const useAgentData = () => {
 
     setLoading(true);
     try {
-      console.log('Fetching data for agent:', userProfile.id);
+      console.log('Fetching data for user:', userProfile.id, 'role:', userProfile.role);
+      
+      // Use agent-safe view for agents to prevent PII access
+      const clientsTableName = userProfile.role === 'agent' ? 'clients_agent_view' : 'clients';
       
       // Query with LEFT JOINs to preserve all submissions
       const { data: submissions, error: submissionsError } = await supabase
@@ -45,18 +48,12 @@ export const useAgentData = () => {
             created_at,
             client_id,
             status
-          ),
-          clients (
-            id,
-            full_name,
-            phone,
-            email,
-            created_at
           )
         `)
-        .eq('agent_id', userProfile.id);
+        .eq(userProfile.role === 'agent' ? 'agent_id' : 'agency_id', 
+            userProfile.role === 'agent' ? userProfile.id : userProfile.agency_id);
 
-      console.log('Submissions with LEFT joins result:', { submissions, submissionsError });
+      console.log('Submissions result:', { submissions, submissionsError });
 
       if (submissionsError) {
         console.error('Submissions error:', submissionsError);
@@ -64,10 +61,39 @@ export const useAgentData = () => {
       }
 
       if (!submissions || submissions.length === 0) {
-        console.log('No submissions found for agent');
+        console.log('No submissions found');
         setClients([]);
         setProperties([]);
         return;
+      }
+
+      // Get unique client IDs from submissions
+      const clientIds = [...new Set(submissions.map(s => s.client_id))];
+      
+      // Fetch client details using appropriate table/view
+      let clientsData, clientsError;
+      
+      if (userProfile.role === 'agent') {
+        // Use agent-safe view for agents (no PII)
+        const result = await supabase
+          .from('clients_agent_view')
+          .select('*')
+          .in('id', clientIds);
+        clientsData = result.data;
+        clientsError = result.error;
+      } else {
+        // Use full clients table for agency admins and superadmins
+        const result = await supabase
+          .from('clients')
+          .select('*')
+          .in('id', clientIds);
+        clientsData = result.data;
+        clientsError = result.error;
+      }
+
+      if (clientsError) {
+        console.error('Clients error:', clientsError);
+        throw clientsError;
       }
 
       // DIAGNOSTIC LOGGING
@@ -79,8 +105,6 @@ export const useAgentData = () => {
           client_id: submission.client_id,
           client_properties_exists: !!submission.client_properties,
           client_properties_id: submission.client_properties?.id,
-          clients_exists: !!submission.clients,
-          clients_id: submission.clients?.id
         });
       });
 
@@ -104,14 +128,11 @@ export const useAgentData = () => {
         }
       }
 
-      // Extract unique clients (filter out null clients)
+      // Create client map for easy lookup
       const clientsMap = new Map();
-      submissions.forEach(submission => {
-        if (submission.clients && submission.clients.id) {
-          clientsMap.set(submission.clients.id, submission.clients);
-        }
+      clientsData?.forEach(client => {
+        clientsMap.set(client.id, client);
       });
-      const uniqueClients = Array.from(clientsMap.values());
       
       // Extract properties with client names - include both joined and directly fetched
       const propertiesWithClients: Property[] = [];
@@ -123,13 +144,14 @@ export const useAgentData = () => {
       submissions
         .filter(submission => submission.client_properties && submission.client_properties.id)
         .forEach(submission => {
+          const client = clientsMap.get(submission.client_id);
           const propertyData = {
             id: submission.client_properties.id,
             location: submission.client_properties.location,
             property_type: submission.client_properties.property_type,
             client_id: submission.client_properties.client_id,
             created_at: submission.client_properties.created_at,
-            client_name: submission.clients?.full_name || 'N/A',
+            client_name: client?.full_name || 'N/A',
             source: 'joined' as const
           };
           propertiesWithClients.push(propertyData);
@@ -141,14 +163,14 @@ export const useAgentData = () => {
         // Check if property already exists from joined data
         const existsInJoined = propertiesWithClients.some(p => p.id === prop.id);
         if (!existsInJoined) {
-          const matchingSubmission = submissions.find(s => s.property_id === prop.id);
+          const client = clientsMap.get(prop.client_id);
           const propertyData = {
             id: prop.id,
             location: prop.location,
             property_type: prop.property_type,
             client_id: prop.client_id,
             created_at: prop.created_at,
-            client_name: matchingSubmission?.clients?.full_name || 'N/A',
+            client_name: client?.full_name || 'N/A',
             source: 'direct' as const
           };
           propertiesWithClients.push(propertyData);
@@ -158,12 +180,15 @@ export const useAgentData = () => {
       
       console.log('Property source mapping:', Object.fromEntries(propertySourceMap));
 
+      const uniqueClients = Array.from(clientsMap.values());
+      
       console.log('Final processed data:', { 
         clients: uniqueClients, 
         properties: propertiesWithClients,
         submissionsCount: submissions.length,
-        validSubmissions: submissions.filter(s => s.client_properties && s.clients),
-        directlyFetchedProperties: directProperties.length
+        validSubmissions: submissions.filter(s => s.client_properties),
+        directlyFetchedProperties: directProperties.length,
+        usingAgentView: userProfile.role === 'agent'
       });
 
       setClients(uniqueClients);
