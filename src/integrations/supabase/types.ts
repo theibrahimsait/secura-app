@@ -537,7 +537,8 @@ export type Database = {
           expires_at: string
           id: string
           last_used_at: string | null
-          session_token: string
+          session_token: string | null
+          token_hash: string
         }
         Insert: {
           client_id: string
@@ -545,7 +546,8 @@ export type Database = {
           expires_at?: string
           id?: string
           last_used_at?: string | null
-          session_token: string
+          session_token?: string | null
+          token_hash: string
         }
         Update: {
           client_id?: string
@@ -553,7 +555,8 @@ export type Database = {
           expires_at?: string
           id?: string
           last_used_at?: string | null
-          session_token?: string
+          session_token?: string | null
+          token_hash?: string
         }
         Relationships: [
           {
