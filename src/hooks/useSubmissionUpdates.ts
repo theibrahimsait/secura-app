@@ -103,7 +103,16 @@ export const useSubmissionUpdates = (submissionId: string | null) => {
 
       if (updateError) throw updateError;
 
-      // Upload files if any
+      // Log audit action for message (if any text)
+      if (data.message && data.message.trim().length > 0) {
+        await logAgencySubmissionAction({
+          submissionId: data.submission_id,
+          actorType: 'agency_admin',
+          actorId: userProfile.id,
+          action: 'message_sent'
+        });
+      }
+
       if (data.files && data.files.length > 0) {
         const attachmentPromises = data.files.map(async (file) => {
           const fileName = `${Date.now()}-${file.name}`;
