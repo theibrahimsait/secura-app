@@ -115,54 +115,29 @@ const ClientLogin = () => {
 
     setLoading(true);
     try {
-      // Check if client exists and update/create
-      const { data: existingClient } = await supabase
+      // Create client if not exists (avoid unique constraint by ignoring duplicates)
+      const payload = {
+        phone: formattedPhone,
+        mobile_number: formattedPhone,
+        referral_token: referralToken,
+        updated_at: new Date().toISOString(),
+      } as const;
+
+      const { error: upsertError } = await supabase
         .from('clients')
-        .select('*')
-        .eq('phone', formattedPhone)
-        .single();
+        .upsert(payload, {
+          onConflict: 'phone',
+          ignoreDuplicates: true, // translates to DO NOTHING on conflict
+        } as any);
 
-      if (existingClient) {
-        // Update existing client with new referral info if provided
-        const updateData: any = {
-          mobile_number: formattedPhone,
-          updated_at: new Date().toISOString(),
-        };
-        
-        // If there's a referral token, update it and reset agency/agent assignment
-        if (referralToken) {
-          updateData.referral_token = referralToken;
-          // Clear existing agency/agent to allow trigger to reassign
-          updateData.agent_id = null;
-          updateData.agency_id = null;
-        }
-
-        const { error } = await supabase
-          .from('clients')
-          .update(updateData)
-          .eq('id', existingClient.id);
-
-        if (error) throw error;
-      } else {
-        // Create new client
-        const { error } = await supabase
-          .from('clients')
-          .insert({
-            phone: formattedPhone,
-            mobile_number: formattedPhone,
-            referral_token: referralToken,
-            updated_at: new Date().toISOString(),
-          });
-
-        if (error) throw error;
-      }
+      if (upsertError) throw upsertError;
 
       // Send SMS via Twilio Verify
       const { data, error: smsError } = await supabase.functions.invoke('send-sms', {
         body: {
           phone: formattedPhone,
           action: 'send',
-          clientId: existingClient?.id || null
+          clientId: null,
         }
       });
 
