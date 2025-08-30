@@ -677,6 +677,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          is_quarantined: boolean
           is_verified: boolean | null
           last_login: string | null
           mobile_number: string
@@ -685,7 +686,10 @@ export type Database = {
           otp_code: string | null
           otp_expires_at: string | null
           phone: string
+          phone_e164: string | null
           profile_completed: boolean | null
+          quarantine_reason: string | null
+          quarantined_at: string | null
           referral_link_id: string | null
           referral_token: string | null
           terms_accepted_at: string | null
@@ -698,6 +702,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_quarantined?: boolean
           is_verified?: boolean | null
           last_login?: string | null
           mobile_number: string
@@ -706,7 +711,10 @@ export type Database = {
           otp_code?: string | null
           otp_expires_at?: string | null
           phone: string
+          phone_e164?: string | null
           profile_completed?: boolean | null
+          quarantine_reason?: string | null
+          quarantined_at?: string | null
           referral_link_id?: string | null
           referral_token?: string | null
           terms_accepted_at?: string | null
@@ -719,6 +727,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_quarantined?: boolean
           is_verified?: boolean | null
           last_login?: string | null
           mobile_number?: string
@@ -727,7 +736,10 @@ export type Database = {
           otp_code?: string | null
           otp_expires_at?: string | null
           phone?: string
+          phone_e164?: string | null
           profile_completed?: boolean | null
+          quarantine_reason?: string | null
+          quarantined_at?: string | null
           referral_link_id?: string | null
           referral_token?: string | null
           terms_accepted_at?: string | null
@@ -1428,6 +1440,10 @@ export type Database = {
       mark_submission_updates_as_read: {
         Args: { p_submission_id: string }
         Returns: undefined
+      }
+      normalize_phone: {
+        Args: { p: string }
+        Returns: string
       }
       refresh_jwt_metadata: {
         Args: Record<PropertyKey, never>
