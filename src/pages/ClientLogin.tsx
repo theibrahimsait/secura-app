@@ -126,8 +126,9 @@ const ClientLogin = () => {
       const { error: upsertError } = await supabase
         .from('clients')
         .upsert(payload, {
-          onConflict: 'phone',
-          ignoreDuplicates: true, // translates to DO NOTHING on conflict
+          onConflict: 'phone_e164',
+          ignoreDuplicates: true,
+          returning: 'minimal',
         } as any);
 
       if (upsertError) throw upsertError;
