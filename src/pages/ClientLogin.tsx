@@ -123,9 +123,9 @@ const ClientLogin = () => {
         updated_at: new Date().toISOString(),
       } as const;
 
-      const { error: upsertError } = await supabase
+      const { error: insertError } = await supabase
         .from('clients')
-        .upsert([
+        .insert([
           { phone: formattedPhone, mobile_number: formattedPhone, referral_token: referralToken }
         ], {
           onConflict: 'phone_e164',
@@ -133,7 +133,7 @@ const ClientLogin = () => {
           returning: 'minimal',
         } as any);
 
-      if (upsertError) throw upsertError;
+      if (insertError) throw insertError;
 
       // Send SMS via Twilio Verify
       const { data, error: smsError } = await supabase.functions.invoke('send-sms', {
