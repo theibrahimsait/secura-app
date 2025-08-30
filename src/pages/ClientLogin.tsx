@@ -125,7 +125,9 @@ const ClientLogin = () => {
 
       const { error: upsertError } = await supabase
         .from('clients')
-        .upsert(payload, {
+        .upsert([
+          { phone: formattedPhone, mobile_number: formattedPhone, referral_token: referralToken }
+        ], {
           onConflict: 'phone_e164',
           ignoreDuplicates: true,
           returning: 'minimal',
