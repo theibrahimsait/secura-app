@@ -115,25 +115,24 @@ const ClientLogin = () => {
 
     setLoading(true);
     try {
-      // Create client if not exists (avoid unique constraint by ignoring duplicates)
-      const payload = {
-        phone: formattedPhone,
-        mobile_number: formattedPhone,
-        referral_token: referralToken,
-        updated_at: new Date().toISOString(),
-      } as const;
-
-      const { error: insertError } = await supabase
+      // Create client if not exists (ignore duplicates on existing numbers)
+      const { error: upsertError } = await supabase
         .from('clients')
-        .insert([
-          { phone: formattedPhone, mobile_number: formattedPhone, referral_token: referralToken }
-        ], {
-          onConflict: 'phone_e164',
-          ignoreDuplicates: true,
-          returning: 'minimal',
-        } as any);
+        .upsert(
+          [{ phone: formattedPhone, mobile_number: formattedPhone, referral_token: referralToken }],
+          { onConflict: 'mobile_number', ignoreDuplicates: true, returning: 'minimal' } as any
+        );
 
-      if (insertError) throw insertError;
+      if (upsertError) {
+        // Fallback: ignore duplicates on normalized phone as well
+        const { error: fallbackError } = await supabase
+          .from('clients')
+          .upsert(
+            [{ phone: formattedPhone, mobile_number: formattedPhone, referral_token: referralToken }],
+            { onConflict: 'phone_e164', ignoreDuplicates: true, returning: 'minimal' } as any
+          );
+        if (fallbackError && !`${fallbackError.message}`.includes('duplicate key value')) throw fallbackError;
+      }
 
       // Send SMS via Twilio Verify
       const { data, error: smsError } = await supabase.functions.invoke('send-sms', {
