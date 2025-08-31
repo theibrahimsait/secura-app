@@ -1378,6 +1378,10 @@ export type Database = {
         Args: { client_session_token: string }
         Returns: string
       }
+      client_next_route: {
+        Args: { p_client_id: string }
+        Returns: string
+      }
       debug_client_session: {
         Args: Record<PropertyKey, never>
         Returns: Json

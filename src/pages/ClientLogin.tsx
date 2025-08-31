@@ -248,14 +248,39 @@ const ClientLogin = () => {
         description: "Welcome to Secura!",
       });
 
-      // For now, always redirect to onboarding since we don't have client data
-      // The onboarding process will handle checking completion status
-      let onboardingUrl = '/client/onboarding';
-      if (referralToken) {
-        onboardingUrl += `?ref=${referralToken}`;
-        sessionStorage.setItem('agency_ref', referralToken);
+      // Determine next route server-side
+      const { data: nextRoute, error: routeError } = await supabase
+        .rpc('client_next_route', { p_client_id: clientId });
+
+      if (routeError) {
+        console.error('Route determination error:', routeError);
+        // Fallback to onboarding if RPC fails
+        let onboardingUrl = '/client/onboarding';
+        if (referralToken) {
+          onboardingUrl += `?ref=${referralToken}`;
+          sessionStorage.setItem('agency_ref', referralToken);
+        }
+        navigate(onboardingUrl);
+        return;
       }
-      navigate(onboardingUrl);
+
+      // Navigate based on server response
+      if (nextRoute === 'dashboard') {
+        let dashboardUrl = '/client/dashboard';
+        if (referralToken) {
+          dashboardUrl += `?ref=${referralToken}`;
+          sessionStorage.setItem('agency_ref', referralToken);
+        }
+        navigate(dashboardUrl);
+      } else {
+        // 'onboarding' or any other value defaults to onboarding
+        let onboardingUrl = '/client/onboarding';
+        if (referralToken) {
+          onboardingUrl += `?ref=${referralToken}`;
+          sessionStorage.setItem('agency_ref', referralToken);
+        }
+        navigate(onboardingUrl);
+      }
 
     } catch (error: any) {
       console.error('Verification error:', error);
