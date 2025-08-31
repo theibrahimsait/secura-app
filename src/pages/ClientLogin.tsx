@@ -224,27 +224,11 @@ const ClientLogin = () => {
         throw markError;
       }
 
-      // Now get client data for navigation logic
-      const { data: client, error } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('id', clientId)
-        .single();
-
-      if (error || !client) {
-        toast({
-          title: "Error",
-          description: "Failed to find client record. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
       // Create session token for client
       const sessionToken = crypto.randomUUID();
       const { error: sessionError } = await supabase
         .rpc('create_client_session' as any, {
-          p_client_id: client.id,
+          p_client_id: clientId,
           p_session_token: sessionToken
         });
 
@@ -252,9 +236,9 @@ const ClientLogin = () => {
         console.error('Session creation error:', sessionError);
       }
 
-      // Store client session with token
+      // Store minimal client data with session
       const clientWithSession = {
-        ...client,
+        id: clientId,
         session_token: sessionToken
       };
       localStorage.setItem('client_data', JSON.stringify(clientWithSession));
@@ -264,41 +248,14 @@ const ClientLogin = () => {
         description: "Welcome to Secura!",
       });
 
-      // Check if onboarding is completed or if all onboarding steps are done
-      const onboardingStatus = client.onboarding_status as any;
-      const isOnboardingDone = client.onboarding_completed || 
-        (onboardingStatus && 
-         onboardingStatus.intro_complete && 
-         onboardingStatus.tos_accepted && 
-         onboardingStatus.profile_set);
-
-      if (!isOnboardingDone) {
-        // Redirect to onboarding with referral parameters if present
-        let onboardingUrl = '/client/onboarding';
-        if (referralToken) {
-          onboardingUrl += `?ref=${referralToken}`;
-          // Store referral in sessionStorage for the new tab-safe system
-          sessionStorage.setItem('agency_ref', referralToken);
-        }
-        navigate(onboardingUrl);
-      } else {
-        // If onboarding steps are done but flag not set, update it
-        if (!client.onboarding_completed && onboardingStatus?.profile_set) {
-          await supabase
-            .from('clients')
-            .update({ onboarding_completed: true })
-            .eq('id', client.id);
-        }
-        
-        // Client has completed onboarding, go directly to dashboard with referral parameters
-        let dashboardUrl = '/client/dashboard';
-        if (referralToken) {
-          dashboardUrl += `?ref=${referralToken}`;
-          // Store referral in sessionStorage for the new tab-safe system  
-          sessionStorage.setItem('agency_ref', referralToken);
-        }
-        navigate(dashboardUrl);
+      // For now, always redirect to onboarding since we don't have client data
+      // The onboarding process will handle checking completion status
+      let onboardingUrl = '/client/onboarding';
+      if (referralToken) {
+        onboardingUrl += `?ref=${referralToken}`;
+        sessionStorage.setItem('agency_ref', referralToken);
       }
+      navigate(onboardingUrl);
 
     } catch (error: any) {
       console.error('Verification error:', error);
