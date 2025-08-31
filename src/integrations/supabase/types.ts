@@ -1382,6 +1382,10 @@ export type Database = {
         Args: { p_client_id: string }
         Returns: string
       }
+      create_client_session: {
+        Args: { p_client_id: string; p_token?: string; p_ttl?: unknown }
+        Returns: string
+      }
       debug_client_session: {
         Args: Record<PropertyKey, never>
         Returns: Json
