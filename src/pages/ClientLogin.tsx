@@ -115,20 +115,26 @@ const ClientLogin = () => {
 
     setLoading(true);
     try {
-      // Create client if not exists (INSERT and ignore unique-violation)
-      const { error: insertError } = await supabase
-        .from('clients')
-        .insert([
-          { phone: formattedPhone, mobile_number: formattedPhone, referral_token: referralToken }
-        ]);
+      // Register client by phone (write-only RPC)
+      const { data, error: rpcError } = await supabase.rpc('register_client_by_phone', {
+        p_phone: formattedPhone,
+        p_referral_token: referralToken
+      });
 
-      if (insertError && insertError.code !== '23505') {
-        // 23505 = unique_violation -> safe to ignore (client already exists)
-        throw insertError;
+      if (rpcError) {
+        throw rpcError;
       }
 
+      const [result] = data;
+      if (!result?.client_id) {
+        throw new Error('Failed to register client');
+      }
+
+      // Store client_id in sessionStorage for OTP verification
+      sessionStorage.setItem('client_id', result.client_id);
+
       // Send SMS via Twilio Verify
-      const { data, error: smsError } = await supabase.functions.invoke('send-sms', {
+      const { data: smsData, error: smsError } = await supabase.functions.invoke('send-sms', {
         body: {
           phone: formattedPhone,
           action: 'send',
@@ -178,6 +184,18 @@ const ClientLogin = () => {
 
     setLoading(true);
     try {
+      // Get client_id from sessionStorage
+      const clientId = sessionStorage.getItem('client_id');
+      if (!clientId) {
+        toast({
+          title: "Session Error",
+          description: "Please restart the login process.",
+          variant: "destructive",
+        });
+        setStep('phone');
+        return;
+      }
+
       // Verify code via Twilio Verify
       const { data, error: verifyError } = await supabase.functions.invoke('send-sms', {
         body: {
@@ -196,11 +214,21 @@ const ClientLogin = () => {
         return;
       }
 
-      // Get client data
+      // Mark client as verified (write-only RPC)
+      const { error: markError } = await supabase.rpc('mark_client_verified', {
+        p_client_id: clientId
+      });
+
+      if (markError) {
+        console.error('Mark verified error:', markError);
+        throw markError;
+      }
+
+      // Now get client data for navigation logic
       const { data: client, error } = await supabase
         .from('clients')
         .select('*')
-        .eq('phone', phoneNumber)
+        .eq('id', clientId)
         .single();
 
       if (error || !client) {
@@ -211,15 +239,6 @@ const ClientLogin = () => {
         });
         return;
       }
-
-      // Update client as verified
-      await supabase
-        .from('clients')
-        .update({
-          is_verified: true,
-          last_login: new Date().toISOString(),
-        })
-        .eq('id', client.id);
 
       // Create session token for client
       const sessionToken = crypto.randomUUID();

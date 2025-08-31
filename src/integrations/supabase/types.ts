@@ -1437,6 +1437,10 @@ export type Database = {
         }
         Returns: string
       }
+      mark_client_verified: {
+        Args: { p_client_id: string }
+        Returns: undefined
+      }
       mark_submission_updates_as_read: {
         Args: { p_submission_id: string }
         Returns: undefined
@@ -1448,6 +1452,13 @@ export type Database = {
       refresh_jwt_metadata: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      register_client_by_phone: {
+        Args: { p_phone: string; p_referral_token?: string }
+        Returns: {
+          client_id: string
+          is_new: boolean
+        }[]
       }
       resolve_referral_context: {
         Args: { referral_code: string }
