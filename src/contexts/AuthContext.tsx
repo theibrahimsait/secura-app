@@ -148,26 +148,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     console.log('Setting up auth listeners...');
-    
     let mounted = true;
-    
-    // Get initial session
+
+    // Listen for auth changes FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth event:', event);
+      if (!mounted) return;
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        setTimeout(async () => {
+          try {
+            const profile = await fetchUserProfile(session.user);
+            setUserProfile(profile);
+          } catch (e) {
+            console.error('Profile load error:', e);
+          } finally {
+            setLoading(false);
+          }
+        }, 0);
+      } else {
+        setUserProfile(null);
+        setLoading(false);
+      }
+    });
+
+    // Then get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Initial session check:', session ? 'found' : 'not found');
       if (mounted) {
-        handleAuthStateChange(session);
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          setTimeout(async () => {
+            const profile = await fetchUserProfile(session.user);
+            setUserProfile(profile);
+            setLoading(false);
+          }, 0);
+        } else {
+          setLoading(false);
+        }
       }
     });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth event:', event);
-      if (mounted) {
-        await handleAuthStateChange(session);
-      }
-    });
-
-    // Set a fallback timeout to ensure loading doesn't get stuck
+    // Fallback timeout
     const loadingTimeout = setTimeout(() => {
       if (mounted && loading) {
         console.log('Auth loading timeout reached, setting loading to false');

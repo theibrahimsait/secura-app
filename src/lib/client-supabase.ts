@@ -1,14 +1,8 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  throw new Error(
-    "Supabase URL or Anonymous Key is missing. Make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your Vercel environment variables."
-  );
-}
+const SUPABASE_URL = 'https://yugzvvgctlhfcdmmwaxj.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1Z3p2dmdjdGxoZmNkbW13YXhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1Nzg0MjUsImV4cCI6MjA2NjE1NDQyNX0.VFiQYl32DVznDs0vEei6Ez7F_9OjAn74NdrAM1WQaG4';
 
 // Create a custom client for authenticated client requests
 class ClientSupabaseClient {
