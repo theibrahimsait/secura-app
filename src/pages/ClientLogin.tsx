@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { clientSupabase } from '@/lib/client-supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -224,24 +225,31 @@ const ClientLogin = () => {
         throw markError;
       }
 
-      // Create session token for client
-      const sessionToken = crypto.randomUUID();
-      const { error: sessionError } = await supabase
-        .rpc('create_client_session' as any, {
-          p_client_id: clientId,
-          p_session_token: sessionToken
+      // Create session token for client (server-generated)
+      const { data: newToken, error: sessionError } = await supabase
+        .rpc('create_client_session', {
+          p_client_id: clientId
         });
 
-      if (sessionError) {
+      if (sessionError || !newToken) {
         console.error('Session creation error:', sessionError);
+        toast({
+          title: "Session Error",
+          description: "Failed to create session. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
 
       // Store minimal client data with session
       const clientWithSession = {
         id: clientId,
-        session_token: sessionToken
+        session_token: newToken
       };
       localStorage.setItem('client_data', JSON.stringify(clientWithSession));
+
+      // Refresh the client instance to use the new token
+      clientSupabase.refreshAuth();
 
       toast({
         title: "Login Successful",
