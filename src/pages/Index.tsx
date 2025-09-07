@@ -5,6 +5,8 @@ import { AuroraBackground } from '@/components/ui/aurora-background';
 import { GradientText } from '@/components/ui/gradient-text';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import securaLogo from '@/assets/securaa-logo.svg';
+import heroImage from '@/assets/hero-image.jpg';
 const sampleTestimonials: Testimonial[] = [
   {
     avatarSrc: "https://randomuser.me/api/portraits/women/57.jpg",
@@ -100,7 +102,7 @@ const Index = () => {
             </span>
           }
           description="Secure document sharing for UAE real estate"
-          heroImageSrc="https://yugzvvgctlhfcdmmwaxj.supabase.co/storage/v1/object/public/images/IMG_4350.JPG"
+          heroImageSrc={heroImage}
           testimonials={sampleTestimonials}
           onSignIn={handleSignIn}
           onResetPassword={handleResetPassword}
@@ -111,7 +113,7 @@ const Index = () => {
       {/* Secura Logo */}
       <div className="absolute top-8 left-8 z-20">
         <img 
-          src="https://ngmwdebxyofxudrbesqs.supabase.co/storage/v1/object/public/nullstack//securaa.svg" 
+          src={securaLogo} 
           alt="Secura" 
           className="h-8 w-auto"
         />
