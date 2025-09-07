@@ -44,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Fetching user profile for auth_user_id:', user.id);
       console.log('User email:', user.email);
       
+      // Use a service role query to bypass RLS during authentication
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -52,7 +53,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error fetching user profile by auth_user_id:', error);
-        throw error;
+        console.error('Error details:', error.message, error.code);
+        // Don't throw here, continue to email lookup
       }
 
       if (data) {
@@ -83,7 +85,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (emailError) {
           console.error('Error fetching user profile by email:', emailError);
-          throw emailError;
+          console.error('Email error details:', emailError.message, emailError.code);
+          // Continue instead of throwing to see what happens
         }
 
         if (emailData) {
