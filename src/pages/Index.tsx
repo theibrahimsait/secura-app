@@ -5,7 +5,6 @@ import { AuroraBackground } from '@/components/ui/aurora-background';
 import { GradientText } from '@/components/ui/gradient-text';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { SupabaseTest } from '@/components/SupabaseTest';
 import securaLogo from '@/assets/securaa-logo.svg';
 import heroImage from '@/assets/hero-image.jpg';
 const sampleTestimonials: Testimonial[] = [
@@ -119,8 +118,6 @@ const Index = () => {
           className="h-8 w-auto"
         />
       </div>
-      {/* Debug Panel */}
-      <SupabaseTest />
     </AuroraBackground>
   );
 };
