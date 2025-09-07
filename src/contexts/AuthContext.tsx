@@ -41,20 +41,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserProfile = async (user: User) => {
     try {
-      console.log('Fetching user profile for auth_user_id:', user.id);
-      console.log('User email:', user.email);
+      console.log('🔍 Fetching user profile for auth_user_id:', user.id);
+      console.log('📧 User email:', user.email);
       
       // Use the secure function that binds to JWT auth for auth/linking
       const { data, error } = await supabase.rpc('get_user_profile_for_auth');
 
+      console.log('📊 RPC Response:', { data, error });
+
       if (error) {
-        console.error('Error fetching user profile:', error);
+        console.error('❌ Error fetching user profile:', error);
         return null;
       }
 
       if (data && data.length > 0) {
         const profile = data[0];
-        console.log('User profile found:', profile);
+        console.log('✅ User profile found:', profile);
         
         // If the user is a client, fetch onboarding_status
         if (profile.role === 'client') {
@@ -71,10 +73,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { ...profile, onboarding_status: null };
       }
 
-      console.log('User profile not found');
+      console.log('⚠️ User profile not found in database');
       return null;
     } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
+      console.error('💥 Error in fetchUserProfile:', error);
       return null;
     }
   };
