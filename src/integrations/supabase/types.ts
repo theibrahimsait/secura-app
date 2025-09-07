@@ -1428,6 +1428,23 @@ export type Database = {
           unread_count: number
         }[]
       }
+      get_user_profile_for_auth: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          agency_id: string
+          auth_user_id: string
+          created_at: string
+          created_by: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          last_login: string
+          phone: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }[]
+      }
       is_client_authorized: {
         Args: { target_client_id: string }
         Returns: boolean

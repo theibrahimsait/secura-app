@@ -44,70 +44,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Fetching user profile for auth_user_id:', user.id);
       console.log('User email:', user.email);
       
-      // Use a service role query to bypass RLS during authentication
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('auth_user_id', user.id)
-        .maybeSingle();
+      // Use the secure function that binds to JWT auth for auth/linking
+      const { data, error } = await supabase.rpc('get_user_profile_for_auth');
 
       if (error) {
-        console.error('Error fetching user profile by auth_user_id:', error);
-        console.error('Error details:', error.message, error.code);
-        // Don't throw here, continue to email lookup
+        console.error('Error fetching user profile:', error);
+        return null;
       }
 
-      if (data) {
-        console.log('Found user profile by auth_user_id:', data);
+      if (data && data.length > 0) {
+        const profile = data[0];
+        console.log('User profile found:', profile);
+        
         // If the user is a client, fetch onboarding_status
-        if (data.role === 'client') {
+        if (profile.role === 'client') {
           const { data: clientData, error: clientError } = await supabase
             .from('clients')
             .select('onboarding_status')
-            .eq('id', data.id)
+            .eq('id', profile.id)
             .maybeSingle();
           if (!clientError && clientData) {
-            return { ...data, onboarding_status: clientData.onboarding_status };
+            return { ...profile, onboarding_status: clientData.onboarding_status };
           }
         }
         // For non-client users, add null onboarding_status
-        return { ...data, onboarding_status: null };
+        return { ...profile, onboarding_status: null };
       }
 
-      // If no profile found by auth_user_id, try by email
-      if (user.email) {
-        console.log('No profile found by auth_user_id, trying by email:', user.email);
-        const { data: emailData, error: emailError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('email', user.email)
-          .maybeSingle();
-
-        if (emailError) {
-          console.error('Error fetching user profile by email:', emailError);
-          console.error('Email error details:', emailError.message, emailError.code);
-          // Continue instead of throwing to see what happens
-        }
-
-        if (emailData) {
-          console.log('Found user by email, updating auth_user_id...');
-          const { error: updateError } = await supabase
-            .from('users')
-            .update({ auth_user_id: user.id })
-            .eq('id', emailData.id);
-
-          if (updateError) {
-            console.error('Error updating auth_user_id:', updateError);
-          }
-          // Add onboarding_status field for non-client users found by email
-          return { ...emailData, onboarding_status: null };
-        }
-      }
-
-      console.log('No user profile found for user:', user.id);
+      console.log('User profile not found');
       return null;
     } catch (error) {
-      console.error('Exception in fetchUserProfile:', error);
+      console.error('Error in fetchUserProfile:', error);
       return null;
     }
   };
